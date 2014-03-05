@@ -1,0 +1,235 @@
+package hu.bme.mit.inf.lookaheadmatcher.impl;
+
+import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
+
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.viatra2.emf.incquery.runtime.api.IPatternMatch;
+import org.eclipse.viatra2.emf.incquery.runtime.api.IncQueryEngine;
+import org.eclipse.viatra2.emf.incquery.runtime.api.IncQueryMatcher;
+import org.eclipse.viatra2.emf.incquery.runtime.exception.IncQueryException;
+import org.eclipse.viatra2.emf.incquery.runtime.extensibility.MatcherFactoryRegistry;
+import org.eclipse.viatra2.gtasm.patternmatcher.incremental.rete.construction.RetePatternBuildException;
+import org.eclipse.viatra2.gtasm.patternmatcher.incremental.rete.tuple.Tuple;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.IntValue;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.LiteralValueReference;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.ParameterRef;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.Pattern;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.PatternCall;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.StringValue;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.ValueReference;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.Variable;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.VariableValue;
+
+public class FindConstraint extends AxisConstraint implements IConstraint
+{
+	private ArrayList<LookVariable> affectedVariables;
+	private PatternCall patternCall;
+	private IncQueryEngine engineRef;
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<Object[]> GetMatchingsFromPartial(HashMap<LookVariable, Object> MatchingVariables)
+	{
+		/*if (!AllAffectedVariableMatched(MatchingVariables))
+		{
+			System.err.println("Unimplemented: not all variables match");
+			return null; // heh?
+		}*/
+		
+		Pattern findPattern = patternCall.getPatternRef();
+		
+		//CorePatternLanguageHelper.
+		
+		// vanemár
+		// engineRef.getSanitizer().getAdmittedPatterns();
+		
+		// use own code
+		// if can be matched, then return false, if cannot, return true (NAC)
+		//public LookaheadMatching[] matchAll(IncQueryEngine engine, Pattern pattern, ArrayList<Object> knownValues)
+		ArrayList<Object> knownValues = new ArrayList<Object>();
+		
+		EList<ValueReference> parameters = this.patternCall.getParameters();
+		for (int i = 0; i < parameters.size(); i++)
+		{
+			ValueReference valRef = parameters.get(i);
+			Variable var = null;
+			Object knownIfNotVar = null;
+			if (valRef instanceof VariableValue)
+			{
+				VariableValue varvalref = (VariableValue) valRef;
+				if (varvalref.getValue().getVariable() instanceof ParameterRef)
+					var = ((ParameterRef) varvalref.getValue().getVariable()).getReferredParam();
+				else var = ((VariableValue) valRef).getValue().getVariable();
+			}
+			else if (valRef instanceof LiteralValueReference)
+			{
+				LiteralValueReference lvr = (LiteralValueReference) valRef;
+				if (lvr instanceof IntValue)
+				{
+					knownIfNotVar = ((IntValue) lvr).getValue();
+				}
+				else if (lvr instanceof StringValue)
+				{
+					knownIfNotVar = ((StringValue) lvr).getValue();
+				}
+				// var==null   STAYS!!
+			}
+			LookVariable thisvar = null;
+			for (LookVariable v : this.affectedVariables)
+			{
+				if (v.getVariable() == null && var == null)
+				{
+					// literal alcazott variable
+					break;
+				}
+				else if (v.getVariable().equals(var))
+				{
+					thisvar = v;
+					break;
+				}
+			}
+			if (var == null)
+			{
+				knownValues.add(knownIfNotVar); // it is a (NEM LITERAL?!) running variable (futo valtozo, na): _V
+			}
+			else if (var.getName().startsWith("_"))
+			{
+				knownValues.add(null); // it is a running variable (futo valtozo, na)
+				// run! https://www.youtube.com/watch?v=sgxVPwTW-1E
+			}
+			else if (thisvar != null)
+				knownValues.add(MatchingVariables.get(thisvar));
+			else
+			{
+				System.err.println("FindConstraint matching ERROR1");
+			}
+		}
+		
+		boolean[] mask = new boolean[knownValues.size()];
+		for (int i = 0; i < mask.length; i++)
+		{
+			mask[i] = knownValues.get(i) == null ? false : true;
+		}
+		
+		// direct Rete call
+		
+		try
+		{
+			ArrayList<Tuple> reti = engineRef.getReteEngine().accessMatcher(findPattern).matchAll(knownValues.toArray(), mask);
+			if (reti != null)
+			{
+				System.out.println("Direct RETE call returned a match list of " + reti.size() + " elements.");
+				ArrayList<Object[]> ret = new ArrayList<Object[]>();
+				for (Tuple tuple : reti)
+				{
+					ret.add(tuple.getElements());
+				}
+				return ret;
+			}
+			System.out.println("Direct RETE call returned a big NULL.");
+			return null;
+		}
+		catch (RetePatternBuildException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (IncQueryException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		// IQ interface call
+		try
+		{
+			IncQueryMatcher matcher = null;
+			matcher = MatcherFactoryRegistry.getOrCreateMatcherFactory(findPattern).getMatcher(engineRef);
+			IPatternMatch partialMatch = matcher.newMatch(knownValues.toArray());
+			Collection matches = matcher.getAllMatches(partialMatch);
+			System.out.println("RETE from interface NAC call returned " + matches.size() + " variables.");
+			//return matches.toArray();
+			System.err.println("IQ interface call returns a non-typed collection.");
+			return null;
+		}
+		catch (IncQueryException e)
+		{
+			e.printStackTrace();
+		}
+		
+		// bukta eseten sajat kod
+
+		LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
+		MultiSet<LookaheadMatching> matches = lmi.matchAll(engineRef, findPattern, knownValues);//tryMatch(engineRef, findPattern, knownValues);
+		System.out.println("My (Lookahead Pattern Matches) positive call returned a multiset containing " + matches.size() + " elements.");
+		//return matches.getInnerMap().keySet();
+
+		ArrayList<Object[]> ret = new ArrayList<Object[]>();
+		for (Entry<LookaheadMatching, Integer> match : matches.getInnerMap().entrySet())
+		{
+			ret.add(match.getKey().getParameterMatchValuesOnlyAsArray());
+		}
+		return ret;
+	}
+	
+	public boolean AllAffectedVariableMatched(HashMap<LookVariable, Object> MatchingVariables)
+	{
+		for (LookVariable v : this.affectedVariables)
+		{
+			if (MatchingVariables.get(v) == null)
+			{
+				if (v.getVariable().getName().startsWith("_") == false)
+					return false;
+				// else v is a running variable
+			}
+		}
+		return true; // canna be
+	}
+	
+	@Override
+	public String toString()
+	{
+		return this.patternCall.getPatternRef().getName() + "(" + writeArray(this.affectedVariables) + ")";
+	}
+	
+	private String writeArray(ArrayList<LookVariable> vv)
+	{
+		String ret = "";
+		for (LookVariable v : vv)
+		{
+			ret += v.getVariableName() + ",";
+		}
+		ret = ret.substring(0, ret.length() - 1);
+		return ret;
+	}
+	
+	public ArrayList<LookVariable> getAffectedVariables()
+	{
+		return affectedVariables;
+	}
+
+	public PatternCall getPatternCall()
+	{
+		return patternCall;
+	}
+
+	@SuppressWarnings("unused")
+	private FindConstraint()
+	{
+	}
+	
+	public FindConstraint(Collection<LookVariable> affected, PatternCall targetPatternCall, IncQueryEngine engine)
+	{
+		this.affectedVariables = new ArrayList<LookVariable>();
+		this.affectedVariables.addAll(affected);
+		this.patternCall = targetPatternCall;
+		this.engineRef = engine;
+	}
+}

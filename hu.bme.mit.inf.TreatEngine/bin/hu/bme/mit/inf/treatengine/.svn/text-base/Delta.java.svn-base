@@ -1,0 +1,64 @@
+package hu.bme.mit.inf.treatengine;
+
+import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
+import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.Pattern;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+// a pattern match set changed: either added (+) or deleted(-) and it references to a pattern
+// references to a changeset (+-) and 
+public class Delta
+{
+	private Pattern pattern;
+	private Multimap<LookaheadMatching, Boolean> changeset;
+	private AheadStructure structure;
+	
+	public Pattern getPattern()
+	{
+		return pattern;
+	}
+	
+	public void setPattern(Pattern pattern)
+	{
+		this.pattern = pattern;
+	}
+	
+	public Multimap<LookaheadMatching, Boolean> getChangeset()
+	{
+		return changeset;
+	}
+	
+	public void setChangeset(Multimap<LookaheadMatching, Boolean> changeset)
+	{
+		this.changeset = changeset;
+	}
+	
+	
+	public AheadStructure getStructure()
+	{
+		return structure;
+	}
+
+	public void setStructure(AheadStructure structure)
+	{
+		this.structure = structure;
+	}
+
+	public Delta(Pattern changedPattern, Multimap<LookaheadMatching, Boolean> changes)
+	{
+		this.pattern = changedPattern;
+		this.changeset = HashMultimap.create();//<LookaheadMatching,Boolean>();
+		// copy
+		/*for (Entry<LookaheadMatching, Boolean> mac : changes.entrySet())
+		{
+			changeset.put(mac.getKey(), mac.getValue());
+		}*/
+		this.changeset = changes;
+	}
+}

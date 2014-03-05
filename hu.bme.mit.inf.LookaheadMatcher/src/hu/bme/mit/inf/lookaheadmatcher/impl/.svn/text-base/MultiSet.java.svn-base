@@ -1,0 +1,101 @@
+package hu.bme.mit.inf.lookaheadmatcher.impl;
+
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+public class MultiSet<T>
+{
+    private Map<T,Integer> counts;
+
+    public MultiSet()
+    {
+        counts = new HashMap<T,Integer>();
+    }
+    
+    public Map<T,Integer> getInnerMap()
+    {
+    	return this.counts;
+    }
+
+    @Override
+    public String toString()
+    {
+        return counts.toString();
+    }
+
+    public int size()
+    {
+        int total = 0;
+
+        for (Integer occurs : counts.values())
+            total += occurs;
+
+        return total;
+    }
+
+    public void add(T x)
+    {
+        Integer occurs = counts.get(x);
+
+        if(occurs == null)
+            counts.put(x, 1);
+        else
+            counts.put(x, occurs + 1);
+    }
+    
+    public void addAll(Collection<? extends T> x)
+    {
+        Integer occurs = counts.get(x);
+
+        for (T t : x) {
+            if(occurs == null)
+                counts.put(t, 1);
+            else
+                counts.put(t, occurs + 1);
+		}
+    }
+
+    // Remove an item.
+    // If x is not found, return false.
+    // If x is present with count 1, remove it from the map.
+    // If x is present with count > 1, drop count
+    public boolean remove(T x)
+    {
+        Integer occurs = counts.get(x);
+
+        if (occurs == null)
+            return false;
+
+        if (occurs == 1)
+            counts.remove(x);
+        else
+            counts.put(x, occurs - 1);
+
+        return true;
+    }
+
+    public boolean contains(T x)
+    {
+        return counts.get(x) != null;
+    }
+    
+    public ArrayList<T> toArrayList()
+    {
+    	ArrayList<T> retArray = new ArrayList<T>();
+    	for (T t : counts.keySet()) {
+			retArray.add(t);
+		}
+    	return retArray;
+    }
+
+	public void addAll(MultiSet<T> collection)
+	{
+		for (T elem : collection.toArrayList())
+		{
+			this.add(elem);
+		}
+	}
+}

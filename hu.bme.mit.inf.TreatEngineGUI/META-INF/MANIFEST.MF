@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: LookaheadMatcher
+Bundle-SymbolicName: hu.bme.mit.inf.TreatEngineGUI;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: hu.bme.mit.inf.treatenginegui.Activator
+Require-Bundle: hu.bme.mit.inf.LookaheadMatcher;bundle-version="1.0.0",
+ hu.bme.mit.inf.TreatEngine;bundle-version="1.0.0",
+ org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.apache.log4j;bundle-version="1.2.15",
+ org.eclipse.xtext.xbase,
+ org.eclipse.incquery.tooling.ui;bundle-version="0.8.0"
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

@@ -1,0 +1,34 @@
+package hu.bme.mit.inf.lookaheadmatcher.impl;
+
+public class EasyConstraint extends AxisConstraint // implements IConstraint
+{
+	private LookVariable lookvariable;
+	private Object knownValue;
+	public LookVariable getLookvariable() {
+		return lookvariable;
+	}
+	public void setLookvariable(LookVariable lookvariable) {
+		this.lookvariable = lookvariable;
+	}
+	public Object getKnownValue() {
+		return knownValue;
+	}
+	public void setKnownValue(Object knownValue) {
+		this.knownValue = knownValue;
+	}
+	
+	@SuppressWarnings("unused")
+	private EasyConstraint(){}
+	
+	public EasyConstraint(LookVariable lookVariable, Object alreadyKnownValue)
+	{
+		this.lookvariable = lookVariable;
+		this.knownValue = alreadyKnownValue;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return this.lookvariable.toString()+"="+this.knownValue.toString();
+	}
+}

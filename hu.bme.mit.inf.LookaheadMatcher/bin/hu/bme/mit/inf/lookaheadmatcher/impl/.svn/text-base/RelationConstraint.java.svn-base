@@ -1,0 +1,59 @@
+package hu.bme.mit.inf.lookaheadmatcher.impl;
+
+import org.eclipse.emf.ecore.EAttribute;
+import org.eclipse.emf.ecore.EStructuralFeature;
+
+public class RelationConstraint extends AxisConstraint // implements IConstraint
+{
+	// source, target and the relation
+	
+	private LookVariable source;
+	public LookVariable getSource() {
+		return source;
+	}
+	public void setSource(LookVariable source) {
+		this.source = source;
+	}
+
+	private LookVariable target;
+	public LookVariable getTarget() {
+		return target;
+	}
+	public void setTarget(LookVariable target) {
+		this.target = target;
+	}
+	
+	private EStructuralFeature edge; 
+	public EStructuralFeature getEdge() {
+		return edge;
+	}
+	public void setEdge(EStructuralFeature edge) {
+		this.edge = edge;
+	}
+	
+	private boolean pointsToAttribute;
+	public boolean PointsToAttribute()
+	{
+		return this.pointsToAttribute;
+	}
+	
+	@SuppressWarnings("unused")
+	private RelationConstraint(){}
+	
+	public RelationConstraint(LookVariable Source, LookVariable Target, EStructuralFeature Edge)
+	{
+		this.source = Source;
+		this.target = Target;
+		this.edge = Edge;
+		if (Edge instanceof EAttribute)
+			pointsToAttribute = true;
+		else
+			pointsToAttribute = false;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return this.source.getVariableName()+"->-"+this.edge.getName()+"->-"+this.target.getVariableName();
+	}
+}

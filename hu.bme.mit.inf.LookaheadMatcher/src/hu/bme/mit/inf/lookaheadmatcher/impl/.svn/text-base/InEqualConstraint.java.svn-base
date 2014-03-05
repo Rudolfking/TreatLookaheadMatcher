@@ -1,0 +1,60 @@
+package hu.bme.mit.inf.lookaheadmatcher.impl;
+
+import java.util.HashMap;
+
+public class InEqualConstraint extends CheckableConstraint implements IConstraint
+{
+	private LookVariable leftVariable;
+	public LookVariable getLeftVariable() {
+		return leftVariable;
+	}
+
+	public void setLeftVariable(LookVariable leftVariable) {
+		this.leftVariable = leftVariable;
+	}
+
+	public LookVariable getRightVariable() {
+		return rightVariable;
+	}
+
+	public void setRightVariable(LookVariable rightVariable) {
+		this.rightVariable = rightVariable;
+	}
+
+	private LookVariable rightVariable;
+
+	@Override
+	public boolean Evaluate(HashMap<LookVariable, Object> MatchingVariables)
+	{
+		LookVariable leftRoot = this.leftVariable.findRoot();
+		LookVariable rightRoot = this.rightVariable.findRoot();
+		if (MatchingVariables.get(leftRoot)==null ||MatchingVariables.get(rightRoot)==null)
+			return false; // can be evaluated? forgot to call? :)
+		if (MatchingVariables.get(leftRoot).equals(MatchingVariables.get(rightRoot)))
+			return false; // they are equal and they cannot be
+		return true; // not equal, okay
+	}
+
+	@Override
+	public boolean CanBeEvaluated(HashMap<LookVariable, Object> MatchingVariables)
+	{
+		if (MatchingVariables.get(this.leftVariable)==null ||MatchingVariables.get(this.rightVariable)==null)
+			return false; // can be evaluated? forgot to call? :)
+		return true; // not equal, okay
+	}
+	
+	@SuppressWarnings("unused")
+	private InEqualConstraint(){}
+	
+	public InEqualConstraint(LookVariable left, LookVariable right)
+	{
+		this.leftVariable = left;
+		this.rightVariable = right;
+	}
+
+	@Override
+	public String toString()
+	{
+		return this.leftVariable.toString()+"=/="+this.rightVariable.toString();
+	}
+}

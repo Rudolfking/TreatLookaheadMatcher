@@ -1,0 +1,664 @@
+package hu.bme.mit.inf.lookaheadmatcher.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.Stack;
+
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EClassifier;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.viatra2.emf.incquery.runtime.api.IncQueryEngine;
+import org.eclipse.viatra2.patternlanguage.core.helper.CorePatternLanguageHelper;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.CheckConstraint;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.CompareConstraint;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.CompareFeature;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.Constraint;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.IntValue;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.LiteralValueReference;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.ParameterRef;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.PathExpressionConstraint;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.PathExpressionHead;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.PathExpressionTail;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.Pattern;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.PatternBody;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.PatternCall;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.PatternCompositionConstraint;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.StringValue;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.ValueReference;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.Variable;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.VariableReference;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.VariableValue;
+import org.eclipse.viatra2.patternlanguage.eMFPatternLanguage.ClassType;
+import org.eclipse.viatra2.patternlanguage.eMFPatternLanguage.EClassifierConstraint;
+import org.eclipse.viatra2.patternlanguage.eMFPatternLanguage.ReferenceType;
+import org.eclipse.xtext.xbase.XExpression;
+import org.eclipse.xtext.common.types.JvmIdentifiableElement;
+
+public class PatternProcessor
+{
+	// aheads, yeah
+	private Stack<AheadStructure> aheadStack = new Stack<AheadStructure>();
+	
+	// flatten?
+	private boolean flatteningEnabled = false;
+	
+	IncQueryEngine engineRef;
+	
+	@SuppressWarnings("unused")
+	private PatternProcessor()
+	{
+	}
+	
+	public PatternProcessor(IncQueryEngine engine)
+	{
+		this.engineRef = engine;
+	}
+	
+	//flattened final list
+	private ArrayList<AheadStructure> flattenedPatterns;
+	
+	@SuppressWarnings("unchecked")
+	public ArrayList<AheadStructure> Process(Pattern pattern)
+	{
+		// parameters
+		EList<Variable> symbolicVariables = pattern.getParameters();
+		LookVariable[] symbolicLookVariables = new LookVariable[symbolicVariables.size()];
+		for (int i = 0; i < symbolicVariables.size(); i++)
+		{
+			LookVariable symLV = new LookVariable(symbolicVariables.get(i), symbolicVariables.get(i).getName());
+			symLV.setSymbolic(true);
+			symbolicLookVariables[i] = symLV;
+		}
+		AheadStructure patternDef = new AheadStructure(symbolicLookVariables);
+		for (int i = 0; i < symbolicLookVariables.length; i++)
+		{
+			patternDef.MatchingVariables.put(symbolicLookVariables[i], null);
+		}
+		
+		HashMap<Variable, LookVariable> variableMap = new HashMap<Variable, LookVariable>();
+		for (int i = 0; i < symbolicLookVariables.length; i++)
+		{
+			variableMap.put(symbolicVariables.get(i), symbolicLookVariables[i]);
+			Variable varIfParamType = symbolicVariables.get(i);
+			if (varIfParamType.getType() != null)
+			{
+				if (varIfParamType.getType() instanceof ClassType)
+				{
+					EClassifier symTyp = ((ClassType) varIfParamType.getType()).getClassname();
+					if (symTyp instanceof EClass)
+					{
+						// add a searched constraint
+						patternDef.SearchedConstraints.add(new TypeConstraint(variableMap.get(varIfParamType), (EClass) symTyp));
+					}
+					else
+					{
+						System.out.println("Hopszi2, parameter type classname ugyan EClassifier de nem EClass, tehat: " + symTyp.toString());
+					}
+				}
+				else
+				{
+					System.out.println("Hopszi1, parameter type nem ClassType, hanem: " + varIfParamType.getType().toString());
+				}
+			}
+		}
+		
+		// init flattened list
+		this.flattenedPatterns = new ArrayList<AheadStructure>();
+		
+		for (int i = 0; i < pattern.getBodies().size(); i++)
+		{
+			// process all the pattern bodies, and he will add 
+			ProcessBody(patternDef.clone(), pattern.getBodies().get(i), (HashMap<Variable, LookVariable>) variableMap.clone(), pattern);
+		}
+		return flattenedPatterns;
+	}
+	
+	// processes one body
+	public void ProcessBody(AheadStructure patternDef, PatternBody patternBody, HashMap<Variable, LookVariable> variableMap, Pattern refiPattern)
+	{
+		
+		EList<Variable> localVariables = patternBody.getVariables();
+		LookVariable[] localLookVariables = new LookVariable[localVariables.size()];
+		for (int i = 0; i < localVariables.size(); i++)
+		{
+			LookVariable locLV = null;
+			//locLV = new LookVariable(((ParameterRef)localVariables.get(i)).getReferredParam(), ((ParameterRef)localVariables.get(i)).getReferredParam().getName());
+			if (!(localVariables.get(i) instanceof ParameterRef))
+			{
+				// only inspect if they are NOT references to symbolic
+				locLV = new LookVariable(localVariables.get(i), localVariables.get(i).getName());
+				patternDef.MatchingVariables.put(locLV, null);
+				localLookVariables[i] = locLV;
+				variableMap.put(localVariables.get(i), locLV);
+			}
+		}
+		
+		ProcessAllConstraints(patternDef, patternBody, variableMap, "", refiPattern);
+		/*ArrayList<AxisConstraint> axisConstraints = collectAxisConstraints(patternDef, variableMap, patternBody, "");
+		patternDef.SearchedConstraints.addAll(axisConstraints);
+
+		ArrayList<CheckableConstraint> checkableConstraints = collectCheckableConstraints(variableMap,patternBody);
+		patternDef.CheckConstraints.addAll(checkableConstraints);*/
+
+		//push first
+		aheadStack.push(patternDef.clone());
+		
+		if (flatteningEnabled == true)
+		{
+			// PatternCall
+			for (Constraint calls : patternBody.getConstraints())
+			{
+				if (calls instanceof PatternCompositionConstraint)
+				{
+					PatternCompositionConstraint patternCall = (PatternCompositionConstraint) calls;
+					if (patternCall.isNegative() == true)
+						continue; // NAC, not flatten
+					ArrayList<AheadStructure> popped = new ArrayList<AheadStructure>();
+					while (aheadStack.isEmpty() == false)
+						popped.add(aheadStack.pop());
+					
+					for (AheadStructure poppedStr : popped)
+						flatten(patternBody, poppedStr, patternCall.getCall(), "", variableMap);
+				}
+			}
+			
+		}
+		
+		
+		while (aheadStack.isEmpty() == false)
+			flattenedPatterns.add(aheadStack.pop());
+		// if finished, empty the stack: they are the finals
+	}
+	
+	// flattens....
+	@SuppressWarnings("unchecked")
+	private void flatten(PatternBody bodyToFlattenTo, AheadStructure currentPatternDef, PatternCall patternCallToFlatten, String prefixForActual, HashMap<Variable, LookVariable> variableMapToClone)
+	{
+		
+		// here is the flatten prefix
+		String flattenPrefix = RandomPrefixesGenerator.get(); // static getPrefix method
+		
+		HashMap<Variable, LookVariable> variableMap = (HashMap<Variable, LookVariable>) variableMapToClone.clone();
+		
+		
+		Pattern patternToFlatten = patternCallToFlatten.getPatternRef();
+		
+		// parameters of the CALLED pattern
+		EList<Variable> flattenParameters = patternToFlatten.getParameters();
+		LookVariable[] flattenLocalLooks = new LookVariable[flattenParameters.size()];
+		// lookvariable for all CALLED pattern parameter
+		for (int i = 0; i < flattenParameters.size(); i++)
+		{
+			Variable pv = flattenParameters.get(i);
+			LookVariable symLV = new LookVariable(pv.getName(), flattenPrefix, pv);
+			symLV.setSymbolic(true);
+			flattenLocalLooks[i] = symLV;
+		}
+		
+		// variables of the PATTERN CALL
+		EList<ValueReference> callParams = patternCallToFlatten.getParameters();
+		
+		HashMap<Integer, LookVariable> LiteralLookVarFromIndex = new HashMap<Integer, LookVariable>();
+		for (int i = 0; i < callParams.size(); i++)
+		{
+			ValueReference valRef = callParams.get(i);
+			
+			// a következõ rizsa azért van, mert literálnál át lehet adni konkrétat, pl. A(X,"Béla"); vagy B(Y,5);
+			Object knownIfNotVar = null;
+			if (valRef instanceof LiteralValueReference)
+			{
+				LiteralValueReference lvr = (LiteralValueReference) valRef;
+				if (lvr instanceof IntValue)
+				{
+					knownIfNotVar = ((IntValue) lvr).getValue();
+				}
+				else if (lvr instanceof StringValue)
+				{
+					knownIfNotVar = ((StringValue) lvr).getValue();
+				}
+				LookVariable ecoLV = new LookVariable(RandomPrefixesGenerator.get(), prefixForActual);
+				currentPatternDef.MatchingVariables.put(ecoLV, null);
+				EasyConstraint eco = new EasyConstraint(ecoLV, knownIfNotVar);
+				currentPatternDef.SearchedConstraints.add(eco);
+				LiteralLookVarFromIndex.put(i, ecoLV);
+			}
+			else if (valRef instanceof VariableValue)
+			{
+				// the new variable
+				VariableValue va = (VariableValue) valRef;
+				
+				LookVariable masik = flattenLocalLooks[i];
+				LookVariable toBeEqual = null;
+				if (va.getValue().getVariable() instanceof ParameterRef)
+				{
+					ParameterRef refi = (ParameterRef) va.getValue().getVariable();
+					toBeEqual = variableMap.get(refi.getReferredParam());
+				}
+				else if (va.getValue().getVariable() instanceof VariableReference)
+				{
+					VariableReference varefi = (VariableReference) va.getValue().getVariable();
+					toBeEqual = variableMap.get(varefi.getVariable());
+				}
+				else if (va.getValue().getVariable() instanceof Variable)
+				{
+					toBeEqual = variableMap.get(va.getValue().getVariable());
+				}
+				else
+				{
+					int h = 0;
+					int g = 5 / h;
+				}
+				/*if (toBeEqual == null)
+				{
+					// well, it must come from listeral easyconstraint
+					toBeEqual = LiteralLookVarFromIndex.get(i);
+				}*/
+				makeEquals(toBeEqual, masik);
+			}
+		}
+		
+		
+		
+		
+		// add equals to symbolics (until it is not added to the pattern definition):
+		/*for (int i=0;i<flattenParameters.size();i++)
+		{
+			// to be equal: the original LookVariable
+			LookVariable toBeEqual = null;
+			for (Variable isThis : variableMap.keySet())
+			{
+				if (isThis.getName().equals(flattenParameters.get(i).getName())) {
+					toBeEqual = variableMap.get(isThis);
+					break;
+				}
+			}
+			// the new variable
+			LookVariable masik = flattenLocalLooks[i];
+			if (toBeEqual == null)
+			{
+				// well, it must come from listeral easyconstraint
+				toBeEqual = LiteralLookVarFromIndex.get(i);
+			}
+			makeEquals(toBeEqual, masik);
+		}*/
+		
+		
+		// add symbolics
+		for (LookVariable lVarNow : flattenLocalLooks)
+		{
+			currentPatternDef.MatchingVariables.put(lVarNow, null); // add to hashMap, we want to find ALL, renamed!
+		}
+		
+		// add to variableGroups
+		//currentPattern.prefixDistinct.put(flattenPrefix, patternToFlatten.isDistinctMatching());
+		//currentPattern.variableReferenceGroups.put(flattenPrefix, symVariablesRenamed);
+		// no, rather not, because symbolics are already added to a group - only locals are necessary
+		
+		
+		int bodyCount = patternToFlatten.getBodies().size();
+		for (int i = 0; i < bodyCount; i++)
+		{
+			// call the (recursion utelagazkodas?) body flatten
+			flattenTheBody(bodyToFlattenTo, currentPatternDef.clone(), patternToFlatten.getBodies().get(i), patternToFlatten, flattenPrefix, variableMap);
+		}
+		
+		// flattenedPatterns.add(currentPattern);
+		
+	}
+	
+	// this function flattens a selected body to the currentPattern, including special restrictions, variables (local, renamed etc.)
+	// but mostly it is based on the "bodyProcess" method (warning: code duplication, resource-outsorcing is needed!)
+	@SuppressWarnings("unchecked")
+	private void flattenTheBody(PatternBody bodyToFlattenInto, AheadStructure currentPatternDef, PatternBody thisOneBody, Pattern refiPattern, String flattenPrefix, HashMap<Variable, LookVariable> variableMapToClone)
+	{
+		//HashMap<Variable,LookVariable> remoteVariableMap = (HashMap<Variable, LookVariable>) variableMapToClone.clone();
+		
+		HashMap<Variable, LookVariable> localVariableMap = (HashMap<Variable, LookVariable>) variableMapToClone.clone();
+		
+		// the local variables to be renamed and added to the cloned currentPattern
+		ArrayList<LookVariable> localVariablesRenamed = new ArrayList<LookVariable>();
+		// get the local variables:
+		EList<Variable> localVariables = thisOneBody.getVariables();// e.g.: G H
+		for (int j = 0; j < localVariables.size(); j++)
+		{
+			Variable pv = localVariables.get(j);
+			if (pv instanceof ParameterRef)
+			{
+				// it already exists
+				LookVariable nye = null;
+				for (LookVariable v : currentPatternDef.MatchingVariables.keySet())
+				{
+					if (v.getVariable() != null && v.getVariable().equals(((ParameterRef) pv).getReferredParam()))
+						nye = v;
+				}
+				if (nye == null)
+				{
+					System.out.println("Oooooo wtf, nagy a baj, nagy a baj, jajjaj, 1");
+				}
+				else
+				{
+					localVariableMap.put(((ParameterRef) pv).getReferredParam(), nye);
+				}
+				continue; // wait a minute.. this is not local variable!!
+			}
+			else
+			{
+				LookVariable loce = new LookVariable(pv.getName(), flattenPrefix, pv); // if new variable
+				localVariablesRenamed.add(loce);
+				localVariableMap.put(pv, loce);
+			}
+		} // getting local variables finished
+			// add locals:
+		for (LookVariable lVarNow : localVariablesRenamed)
+		{
+			currentPatternDef.MatchingVariables.put(lVarNow, null); // add to hashMap, we want to find ALL, renamed!
+		}
+		
+		ProcessAllConstraints(currentPatternDef, thisOneBody, localVariableMap, flattenPrefix, refiPattern);
+		// collect common restrictions
+		
+		
+		// call the flatten method AGAIN (flatten also adds the final restriction to the flattenedPatterns AS list)
+		boolean calledHappened = false;
+		for (Constraint calls : thisOneBody.getConstraints())
+		{
+			if (calls instanceof PatternCompositionConstraint)
+			{
+				PatternCompositionConstraint patternCall = (PatternCompositionConstraint) calls;
+				if (patternCall.isNegative() == true)
+					continue; // NAC, not flatten
+				calledHappened = true;
+				flatten(bodyToFlattenInto, currentPatternDef, patternCall.getCall(), flattenPrefix, localVariableMap);
+			}
+		}
+		
+		// this body is flattened into this aheadstructure
+		if (calledHappened == false)
+			aheadStack.push(currentPatternDef.clone());
+	}
+	
+	// collects all constraints (NAC but not simple find)
+	private void ProcessAllConstraints(AheadStructure currentPatternDef, PatternBody thisOneBody, HashMap<Variable, LookVariable> localVariableMap, String flattenPrefix, Pattern actPattern)
+	{
+		// type- and relationconstraints, easy
+		currentPatternDef.SearchedConstraints.addAll(collectAxisConstraints(currentPatternDef, localVariableMap, thisOneBody, flattenPrefix));
+		
+		// checkable's (equal and inequal)
+		currentPatternDef.CheckConstraints.addAll(collectCheckableConstraints(localVariableMap, thisOneBody, actPattern));
+		
+		// NAC, vegyes, FIND
+		EList<Constraint> constraintList = thisOneBody.getConstraints();
+		for (Constraint constraint : constraintList)
+		{
+			if (constraint instanceof PatternCompositionConstraint)
+			{
+				PatternCompositionConstraint patternCall = (PatternCompositionConstraint) constraint;
+				if (patternCall.isNegative() == false && flatteningEnabled == true)
+					continue; // this will be (or was) flattened
+				EList<ValueReference> nacHeader = patternCall.getCall().getParameters();
+				ArrayList<LookVariable> affected = new ArrayList<LookVariable>();
+				
+				for (ValueReference valRef : nacHeader)
+				{
+					if (valRef instanceof VariableValue)
+					{
+						// if variablevalue, then we are saved
+						LookVariable vari = null;
+						if (((VariableValue) valRef).getValue().getVariable() instanceof ParameterRef)
+							vari = localVariableMap.get(((ParameterRef) ((VariableValue) valRef).getValue().getVariable()).getReferredParam());
+						else vari = localVariableMap.get(((VariableValue) valRef).getValue().getVariable());
+						affected.add(vari);
+					}
+					else if (valRef instanceof LiteralValueReference)
+					{
+						LiteralValueReference lvr = (LiteralValueReference) valRef;
+						Object micsoda = null;
+						LookVariable spec = new LookVariable(RandomPrefixesGenerator.get(), flattenPrefix);
+						if (lvr instanceof IntValue)
+						{
+							micsoda = ((IntValue) lvr).getValue();
+						}
+						else if (lvr instanceof StringValue)
+						{
+							micsoda = ((StringValue) lvr).getValue();
+						}
+						EasyConstraint ea = new EasyConstraint(spec, micsoda); // oo, this is axis
+						currentPatternDef.SearchedConstraints.add(ea);
+						currentPatternDef.MatchingVariables.put(spec, null);
+						affected.add(spec);
+					}
+				}
+				if (affected.size() != nacHeader.size())
+					System.out.println("Unable to process NAC, ignored.");
+				else if (patternCall.isNegative() == true)
+				{
+					NACConstraint naco = new NACConstraint(affected, patternCall.getCall(), engineRef);
+					currentPatternDef.CheckConstraints.add(naco);
+				}
+				else if (patternCall.isNegative() == false)
+				{
+					// positive call, create find!
+					FindConstraint ficoTheRobertFico = new FindConstraint(affected, patternCall.getCall(), engineRef);
+					currentPatternDef.SearchedConstraints.add(ficoTheRobertFico);
+				}
+			}
+		}
+	}
+	
+	// checkableconstraints
+	private ArrayList<CheckableConstraint> collectCheckableConstraints(HashMap<Variable, LookVariable> variableMap, PatternBody patternBody, Pattern actPattern/*, ArrayList<AxisConstraint> someAxisMaybe*/)
+	{
+		// collect check-constraints
+		ArrayList<CheckableConstraint> checkableConstraints = new ArrayList<CheckableConstraint>();
+		EList<Constraint> constraintList = patternBody.getConstraints();
+		for (Constraint constraint : constraintList)
+		{
+			if (constraint instanceof CompareConstraint)
+			{
+				// this is no constraint, just use equality
+				CompareConstraint coCo = (CompareConstraint) constraint;
+				if (coCo.getFeature() == CompareFeature.EQUALITY)
+				{
+					LookVariable bal = variableMap.get(((VariableValue) coCo.getLeftOperand()).getValue().getVariable());
+					LookVariable jobb = variableMap.get(((VariableValue) coCo.getRightOperand()).getValue().getVariable());
+					makeEquals(bal, jobb); // union-where
+				}
+				else if (coCo.getFeature() == CompareFeature.INEQUALITY)
+				{
+					// use difference-constraint
+					LookVariable bal = variableMap.get(((VariableValue) coCo.getLeftOperand()).getValue().getVariable());
+					LookVariable jobb = variableMap.get(((VariableValue) coCo.getRightOperand()).getValue().getVariable());
+					checkableConstraints.add(new InEqualConstraint(bal, jobb));
+				}
+			}
+			else if (constraint instanceof CheckConstraint)
+			{
+				CheckConstraint cc = (CheckConstraint) constraint;
+				XExpression xPress = cc.getExpression();
+				
+				
+				// affected variables
+				Set<Variable> variables = CorePatternLanguageHelper.getReferencedPatternVariablesOfXExpression(xPress);
+				LookVariable[] affecteds = new LookVariable[variables.size()];
+				int cu = 0;
+				for (Variable vare : variables)
+				{
+					LookVariable lookForThis = variableMap.get(vare);
+					affecteds[cu++] = lookForThis;
+				}
+				
+				CheckExpressionConstraint myCh = new CheckExpressionConstraint(xPress, actPattern, affecteds);
+				checkableConstraints.add(myCh);
+			}
+		}
+		return checkableConstraints;
+	}
+	
+	// axis constraints
+	private ArrayList<AxisConstraint> collectAxisConstraints(AheadStructure currentPatternDef, HashMap<Variable, LookVariable> variableMap, PatternBody patternBody, String flattenPrefix)
+	{
+		// collect type-constraints
+		ArrayList<AxisConstraint> axisConstraints = new ArrayList<AxisConstraint>();
+		
+		// all the constraints in the body
+		EList<Constraint> constraintList = patternBody.getConstraints();
+		for (Constraint constraint : constraintList)
+		{
+			if (constraint instanceof EClassifierConstraint)
+			{
+				// a typeconstraint it will be, Master Yoda
+				
+				EClassifier classnameTYPE = ((ClassType) ((EClassifierConstraint) constraint).getType()).getClassname();
+				
+				// this is an eclasstype constraint, so a typeconstraint to a "real" stuff
+				
+				boolean constraintVarFound = false;
+				// get variables from symbolic...
+				Variable varItt = null;
+				if (((EClassifierConstraint) constraint).getVar().getVariable() instanceof ParameterRef)
+					varItt = ((ParameterRef) ((EClassifierConstraint) constraint).getVar().getVariable()).getReferredParam();
+				else varItt = ((EClassifierConstraint) constraint).getVar().getVariable();
+				
+				if (variableMap.get(varItt) != null)
+				{
+					axisConstraints.add(new TypeConstraint(variableMap.get(varItt), (EClass) classnameTYPE));
+					constraintVarFound = true;
+				}
+				if (!constraintVarFound)
+				{
+					// no var fount for this constraint, ajjaj
+					System.out.println("No found LookVariable for typeconstraint! Error 0x012323 : " + constraint.toString());
+				}
+			}
+			else if (constraint instanceof PathExpressionConstraint)
+			{
+				// navigate through whole list, make many temporary local variables, etc.
+				PathExpressionHead headNow = null;
+				PathExpressionTail tailNow = null;
+				PathExpressionConstraint pathExp = ((PathExpressionConstraint) constraint);
+				
+				headNow = pathExp.getHead();
+				tailNow = headNow.getTail();
+				LookVariable previousSource = null;
+				if (headNow.getSrc().getVariable() instanceof ParameterRef)
+					previousSource = variableMap.get(((ParameterRef) (headNow.getSrc().getVariable())).getReferredParam());
+				else previousSource = variableMap.get(headNow.getSrc().getVariable());
+				// constraint to head
+				TypeConstraint headCons = new TypeConstraint(previousSource, ((ClassType) (headNow.getType())).getClassname());
+				axisConstraints.add(headCons);
+				do
+				{
+					if (tailNow.getTail() == null)
+					{
+						// this is the end of the pathExpression
+						ValueReference valRef = (ValueReference) headNow.getDst(); // destination valueref
+						
+						
+						if (valRef instanceof VariableValue)
+						{
+							// if variablevalue, then we are saved
+							
+							LookVariable target = null;
+							if (((VariableValue) valRef).getValue().getVariable() instanceof ParameterRef)
+								target = variableMap.get(((ParameterRef) ((VariableValue) valRef).getValue().getVariable()).getReferredParam());
+							else target = variableMap.get(((VariableValue) valRef).getValue().getVariable());
+							EStructuralFeature edge = ((ReferenceType) tailNow.getType()).getRefname();
+							axisConstraints.add(new RelationConstraint(previousSource, target, edge));
+						}
+						else if (valRef instanceof LiteralValueReference)
+						{
+							LiteralValueReference lvr = (LiteralValueReference) valRef;
+							Object micsoda = null;
+							LookVariable spec = new LookVariable(RandomPrefixesGenerator.get(), flattenPrefix);
+							if (lvr instanceof IntValue)
+							{
+								micsoda = ((IntValue) lvr).getValue();
+							}
+							else if (lvr instanceof StringValue)
+							{
+								micsoda = ((StringValue) lvr).getValue();
+							}
+							EasyConstraint ea = new EasyConstraint(spec, micsoda);
+							axisConstraints.add(ea);
+							EStructuralFeature edge = ((ReferenceType) tailNow.getType()).getRefname();
+							axisConstraints.add(new RelationConstraint(previousSource, spec, edge));
+							currentPatternDef.MatchingVariables.put(spec, null);
+						}
+					}
+					else
+					{
+						// more hops than one
+						
+						// create random var
+						LookVariable temporalST = new LookVariable(RandomPrefixesGenerator.get(), flattenPrefix);
+						
+						// add relation
+						EStructuralFeature edge = ((ReferenceType) tailNow.getType()).getRefname();
+						axisConstraints.add(new RelationConstraint(previousSource, temporalST, edge));
+						currentPatternDef.MatchingVariables.put(temporalST, null);
+						
+						// hop to the next
+						previousSource = temporalST; // hihi shift left
+					}
+					tailNow = tailNow.getTail(); // see DeclarativeProgramming
+				} while (tailNow != null);
+			}
+		}
+		return axisConstraints;
+	}
+	
+	// union where paraszt implementation
+	private void makeEquals(LookVariable bal, LookVariable jobb)
+	{
+		// 4 stages:
+		// -left ancestor null right not
+		// -left not null, right null
+		// -left right null
+		// noone is null
+		if (bal.getAncestor() == null && jobb.getAncestor() == null)
+		{
+			// either roots or standalone variables
+			bal.setAncestor(jobb);
+			jobb.Children.add(bal);
+		}
+		else if (bal.getAncestor() != null && jobb.getAncestor() != null)
+		{
+			// they all have ancestors
+			LookVariable balRoot = bal.findRoot();
+			LookVariable jobbRoot = jobb.findRoot();
+			if (balRoot != jobbRoot)
+			{
+				// not the best way (not optimal, where are the weights?)
+				balRoot.setAncestor(jobbRoot);
+				jobbRoot.Children.add(balRoot);
+			}
+			// else they are already equal
+		}
+		else
+		{
+			// one of bal/jobb's ancestion is null
+			if (bal.getAncestor() == null)
+			{
+				LookVariable jobbRoot = jobb.findRoot();
+				if (jobbRoot != bal)
+				{
+					bal.setAncestor(jobbRoot);
+					jobbRoot.Children.add(bal);
+				}
+			}
+			else
+			// if jobb.ancestor == null
+			{
+				LookVariable balRoot = bal.findRoot();
+				if (balRoot != jobb)
+				{
+					jobb.setAncestor(balRoot);
+					balRoot.Children.add(jobb);
+				}
+			}
+		}
+	}
+	
+}
