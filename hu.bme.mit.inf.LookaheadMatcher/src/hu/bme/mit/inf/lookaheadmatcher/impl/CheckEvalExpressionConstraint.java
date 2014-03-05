@@ -33,6 +33,17 @@ public class CheckEvalExpressionConstraint extends CheckableConstraint
 			return false;
 		}
 	}
+	
+	@Override
+	public boolean CanBeEvaluated(java.util.HashMap<PVariable,Object> matchingVariables)
+	{
+		for(PVariable var : innerExpressionEvalConstraint.getAffectedVariables())
+		{
+			if (matchingVariables.get(var) == null)
+				return false;
+		}
+		return true;
+	}
 
 	public ExpressionEvaluation getInnerExpressionEvalConstraint() {
 		return innerExpressionEvalConstraint;

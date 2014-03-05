@@ -22,7 +22,8 @@ public class MyValueProvider implements IValueProvider
 	{
 		for (PVariable item : matchings.keySet())
 		{
-			if (item.getName().equals(variableName))
+			// isUnique => not unified
+			if (item.isUnique() && item.getName().equals(variableName))
 				return matchings.get(item);
 		}
 		throw new IllegalArgumentException("Given variable for variable name was not found!");
