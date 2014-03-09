@@ -1,74 +1,56 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
+import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.Equality;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.Inequality;
 
 public class InEqualConstraint extends CheckableConstraint implements IConstraint
 {
 	private Inequality innerInequalityConstraint;
+
+	private List<PVariable> affectedVariables;
 	
-	private PVariable leftVariable;
-	public PVariable getLeftVariable() {
-		return leftVariable;
+	public InEqualConstraint(Inequality innerEq) 
+	{
+		this.innerInequalityConstraint = innerEq;
+		this.affectedVariables = new ArrayList<PVariable>();
+		for (PVariable inner : this.innerInequalityConstraint.getAffectedVariables())
+		{
+			this.affectedVariables.add(inner);
+		}
 	}
-
-	public void setLeftVariable(PVariable leftVariable) {
-		this.leftVariable = leftVariable;
-	}
-
-	public PVariable getRightVariable() {
-		return rightVariable;
-	}
-
-	public void setRightVariable(PVariable rightVariable) {
-		this.rightVariable = rightVariable;
-	}
-
-	private PVariable rightVariable;
 
 	@Override
 	public boolean Evaluate(HashMap<PVariable, Object> matchingVariables)
 	{
-		PVariable leftRoot = this.leftVariable.getUnifiedIntoRoot();
-		PVariable rightRoot = this.rightVariable.getUnifiedIntoRoot();
-		if (matchingVariables.get(leftRoot) == null ||matchingVariables.get(rightRoot) == null)
-			return false; // can be evaluated? forgot to call? :)
-		if (matchingVariables.get(leftRoot).equals(matchingVariables.get(rightRoot)))
-			return false; // they are equal and they cannot be
-		return true; // not equal, okay
+		if (!this.CanBeEvaluated(matchingVariables))
+			return false; // ejjnye!
+		
+		Object value = null;
+		// bubble :(
+		for (int i = 0; i < this.affectedVariables.size(); i++)
+		{
+			for (int j = i + 1; j < this.affectedVariables.size(); j++)
+			{
+				if (matchingVariables.get(this.affectedVariables.get(i)).equals(this.affectedVariables.get(j)))
+					return false; // if some of them equal, escape!
+			}
+		}
+		return true;
 	}
 
 	@Override
 	public boolean CanBeEvaluated(HashMap<PVariable, Object> matchingVariables)
 	{
-		if (matchingVariables.get(this.leftVariable) == null ||matchingVariables.get(this.rightVariable) == null)
-			return false; // can be evaluated? forgot to call? :)
-		return true; // not equal, okay
-	}
-	
-	@SuppressWarnings("unused")
-	private InEqualConstraint(){}
-	
-	public InEqualConstraint(PVariable left, PVariable right, Inequality ineq)
-	{
-		this.leftVariable = left;
-		this.rightVariable = right;
-		this.innerInequalityConstraint = ineq;
-	}
-
-	@Override
-	public String toString()
-	{
-		return this.leftVariable.toString() + "=/=" + this.rightVariable.toString();
-	}
-
-	public Inequality getInnerInequalityConstraint() {
-		return innerInequalityConstraint;
-	}
-
-	public void setInnerInequalityConstraint(Inequality innerInequalityConstraint) {
-		this.innerInequalityConstraint = innerInequalityConstraint;
+		for (PVariable affected : this.affectedVariables)
+		{
+			if (matchingVariables.get(affected) == null)
+				return false;
+		}
+		return true;
 	}
 }

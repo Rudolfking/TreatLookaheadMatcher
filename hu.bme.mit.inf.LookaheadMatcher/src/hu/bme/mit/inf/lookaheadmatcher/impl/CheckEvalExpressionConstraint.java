@@ -23,7 +23,15 @@ public class CheckEvalExpressionConstraint extends CheckableConstraint
 			// result can be null?
 			if (result instanceof Boolean)
 				return (Boolean)result;
-			System.out.println("Expression was an eval, should be handled!!!!!");
+			else if (result != null)
+			{
+				matchingVariables.put(this.innerExpressionEvalConstraint.getOutputVariable(), result);
+				return true;
+			}
+			else
+			{
+				System.err.println("Expression eval returned null!" + this.innerExpressionEvalConstraint.toString());
+			}
 			return false;
 		} 
 		catch (Exception e)

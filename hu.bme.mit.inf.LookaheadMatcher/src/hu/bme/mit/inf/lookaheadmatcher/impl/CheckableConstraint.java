@@ -14,12 +14,8 @@ public abstract class CheckableConstraint implements IConstraint
 	{
 		return true;
 	}
-	public boolean Evaluate(HashMap<PVariable, Object> matchingVariables)
-	{
-		return false;
-	}
-	public boolean CanBeEvaluated(HashMap<PVariable, Object> matchingVariables)
-	{
-		return false;
-	}
+	
+	public abstract boolean Evaluate(HashMap<PVariable, Object> matchingVariables);
+	
+	public abstract boolean CanBeEvaluated(HashMap<PVariable, Object> matchingVariables);
 }
