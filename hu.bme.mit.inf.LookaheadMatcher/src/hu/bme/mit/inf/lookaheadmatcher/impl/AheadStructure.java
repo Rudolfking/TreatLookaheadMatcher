@@ -17,7 +17,9 @@ import org.eclipse.incquery.runtime.matchers.psystem.PConstraint;
 import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
+import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.Equality;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.ExpressionEvaluation;
+import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.Inequality;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatternCall;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.ConstantValue;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.PositivePatternCall;
@@ -167,6 +169,14 @@ public class AheadStructure implements Cloneable
 				{
 					// NACconstraint
 					constraints.add(new NACConstraint((NegativePatternCall)constraint, partialCacher, engine));
+				}
+				else if (constraint instanceof Equality)
+				{
+					constraints.add(new EqualityConstraint((Equality)constraint));
+				}
+				else if (constraint instanceof Inequality)
+				{
+					constraints.add(new InEqualConstraint((Inequality)constraint));
 				}
 			}
 		}

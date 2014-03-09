@@ -30,13 +30,12 @@ public class InEqualConstraint extends CheckableConstraint implements IConstrain
 		if (!this.CanBeEvaluated(matchingVariables))
 			return false; // ejjnye!
 		
-		Object value = null;
 		// bubble :(
 		for (int i = 0; i < this.affectedVariables.size(); i++)
 		{
 			for (int j = i + 1; j < this.affectedVariables.size(); j++)
 			{
-				if (matchingVariables.get(this.affectedVariables.get(i)).equals(this.affectedVariables.get(j)))
+				if (matchingVariables.get(this.affectedVariables.get(i)).equals(matchingVariables.get(this.affectedVariables.get(j))))
 					return false; // if some of them equal, escape!
 			}
 		}
