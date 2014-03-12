@@ -21,12 +21,26 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 
 /**
  * Implementation of the IPartialPatternCacher class. Can cache partial matches, also incrementally
- * maintain the matches' consistency.(if forceMakeIndex is false and this partial match is not cached, returns 0!!)
+ * maintain the matches' consistency. (If forceMakeIndex is false and this partial match is not cached, returns 0!!)
  * @author Balazs Pal
  *
  */
-public class TreatPartialPatternCacher implements IPartialPatternCacher {
+public class TreatPartialPatternCacher implements IPartialPatternCacher
+{
 
+	public TreatPartialPatternCacher(LookaheadMatcherTreat lookTreat)
+	{ 
+		lookaheadTreat = lookTreat;
+		// should not know about LookaheadMatcher itself (not enabled to use it yet!)
+	}
+
+	private LookaheadMatcherTreat lookaheadTreat;
+
+	public LookaheadMatcherTreat getLookaheadTreat()
+	{
+		return lookaheadTreat;
+	}
+	
 	private class PatternPartialMatchingData
 	{
 		PQuery theQuery;
@@ -45,7 +59,14 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher {
 		 */
 		public void maintainIntegrity(Delta delta)
 		{
-			
+			for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entries())
+			{
+				
+			}
+			for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
+			{
+				
+			}
 		}
 
 //		public void insertOne(Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
@@ -67,59 +88,10 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher {
 	 * Might be faster to call this first!
 	 */
 	@Override
-	public int GetMatchCountFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatching, List<PVariable> variablesInOrder, boolean forceMakeIndex)
+	public int GetMatchCountFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatching, List<PVariable> variablesInOrder, boolean forceMakeIndexIfNotIndexed)
 	{
 		// buta solution:
-		return this.GetMatchingsFromPartial(resolvingQuery, partialMatching, variablesInOrder, forceMakeIndex).size();
-		
-//		if (partialMatching == null || partialMatching.size() == 0)
-//		{
-//			// case is easy: get ALL matches! should check forcemakeindex (matchThePattern() will cache...)
-//			return this.lookaheadTreat.matchThePattern(resolvingQuery).size();
-//		}
-//		else
-//		{
-//			// the case is more complex: partial matching!
-//			if (patternsPartialMatchings.containsKey(resolvingQuery) && 
-//					patternsPartialMatchings.get(resolvingQuery).indexes.containsKey(partialMatching.keySet()))
-//			{
-//				// we have an index for this, return fast with it
-//				return patternsPartialMatchings.get(resolvingQuery).indexes.get(partialMatching.keySet()).get(partialMatching.values()).size();
-//			}
-//			else
-//			{			
-//				// can we even cache this pattern? apparently: yes! (solve flattening later)
-//				
-//				// vars to hashset:
-//				HashSet<PVariable> affectedVars = new HashSet<PVariable>();
-//				affectedVars.addAll(variablesInOrder);
-//				
-//				// prepare known values for matching
-//				ArrayList<Object> sortedVals = new ArrayList<Object>();
-//				for(int i=0;i<variablesInOrder.size();i++)
-//				{
-//					// add item: if known, the known value, if not known, null
-//					sortedVals.add(partialMatching.containsKey(variablesInOrder.get(0)) ? partialMatching.get(variablesInOrder.get(i)) : null);
-//				}
-//				// match!:
-//				MultiSet<LookaheadMatching> foundFilteredMatches = this.lookaheadTreat.getMatcher().matchAll(this.lookaheadTreat.getIncQueryEngine(), this.lookaheadTreat.getTreatPartialCacher(), resolvingQuery, sortedVals);
-//				
-//				// this is only to get the length
-//				int ret = foundFilteredMatches.size();
-//				if (patternsPartialMatchings.containsKey(resolvingQuery))
-//				{
-//					// we have some index for this, add a new one
-//					patternsPartialMatchings.get(resolvingQuery).insertOne(affectedVars, foundFilteredMatches);
-//				}
-//				else	
-//				{
-//					// add a completely new pattern-indexes class instance
-//					patternsPartialMatchings.put(resolvingQuery, 
-//							new PatternPartialMatchingData(resolvingQuery, affectedVars, partialMatching.values(), foundFilteredMatches));
-//				}
-//				return ret;
-//			}
-//		}
+		return this.GetMatchingsFromPartial(resolvingQuery, partialMatching, variablesInOrder, forceMakeIndexIfNotIndexed).size();
 	}
 
 
@@ -128,7 +100,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher {
 	/**
 	 * Get the possible matchings from a partial match (if forceMakeIndex is false and this partial match is not cached, returns 0!!)
 	 */
-	public MultiSet<LookaheadMatching> GetMatchingsFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatchingWithNullsAndEverything, List<PVariable> variablesInOrder, boolean forceMakeIndex)
+	public MultiSet<LookaheadMatching> GetMatchingsFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatchingWithNullsAndEverything, List<PVariable> variablesInOrder, boolean forceMakeIndexIfNotIndexed)
 	{
 		if (partialMatchingWithNullsAndEverything == null)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
@@ -156,7 +128,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher {
 				// we have an index for this, return fast with it
 				MultiSet<LookaheadMatching> ms = new MultiSet<LookaheadMatching>();
 				Multimap<List<Object>, LookaheadMatching> valueMatchingPairs = patternsPartialMatchings.get(resolvingQuery).indexes.get(partialMatching.keySet());
-				Collection<Object> vals = partialMatching.values();
+				// Collection<Object> vals = partialMatching.values();
 				ArrayList<Object> sortedVals = new ArrayList<Object>();
 				for (PVariable pV : variablesInOrder)
 				{
@@ -195,6 +167,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher {
 				{
 					if (match.getParameterMatchValuesOnlyAsArray().length != sortedVals.size())
 					{
+						System.err.println("The cached match size is not equal to requested match size! (Typical \"cannot happen\".)");
 						// problem is big!
 						int h = 0;
 						int g = 5/h;
@@ -242,19 +215,10 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher {
 			}
 		}
 	}
-
-
-
-	public TreatPartialPatternCacher(LookaheadMatcherTreat lookTreat)
-	{ 
-		lookaheadTreat = lookTreat;
-		// should not know about LookaheadMatcher itself (not enabled to use it yet!)
-	}
-
-	private LookaheadMatcherTreat lookaheadTreat;
-
-	public LookaheadMatcherTreat getLookaheadTreat()
+	
+	public void ProcessADelta(Delta delta)
 	{
-		return lookaheadTreat;
+		if (this.patternsPartialMatchings.get(delta.getPattern()) != null) // if in indexed list!
+			this.patternsPartialMatchings.get(delta.getPattern()).maintainIntegrity(delta); // add delta to maintain
 	}
 }

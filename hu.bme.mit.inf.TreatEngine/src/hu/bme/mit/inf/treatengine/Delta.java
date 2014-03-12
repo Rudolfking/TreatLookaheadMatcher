@@ -1,13 +1,7 @@
 package hu.bme.mit.inf.treatengine;
 
-import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 
 import com.google.common.collect.HashMultimap;
@@ -19,7 +13,7 @@ public class Delta
 {
 	private PQuery pattern;
 	private Multimap<LookaheadMatching, Boolean> changeset;
-	private AheadStructure structure;
+	//private AheadStructure structure;
 	
 	public PQuery getPattern()
 	{
@@ -42,15 +36,15 @@ public class Delta
 	}
 	
 	
-	public AheadStructure getStructure()
-	{
-		return structure;
-	}
-
-	public void setStructure(AheadStructure structure)
-	{
-		this.structure = structure;
-	}
+//	public AheadStructure getStructure()
+//	{
+//		return structure;
+//	}
+//
+//	public void setStructure(AheadStructure structure)
+//	{
+//		this.structure = structure;
+//	}
 
 	public Delta(PQuery changedPattern, Multimap<LookaheadMatching, Boolean> changes)
 	{

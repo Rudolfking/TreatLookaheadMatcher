@@ -37,6 +37,7 @@ import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 public class LookaheadMatcherTreat
 {
@@ -70,8 +71,12 @@ public class LookaheadMatcherTreat
 	public LookaheadMatcherTreat(IncQueryEngine engineRe)
 	{
 		matcher = new LookaheadMatcherInterface();
+		treatPartialCacher = new TreatPartialPatternCacher(this);
 		engine = engineRe;
+		
 		DeltaProcessor.getInstance().setEngine(engineRe);
+		DeltaProcessor.getInstance().setPartialCacher(treatPartialCacher);
+		
 		try
 		{
 			navHelp = engine.getBaseIndex();
@@ -80,7 +85,6 @@ public class LookaheadMatcherTreat
 		{
 			e.printStackTrace();
 		}
-		treatPartialCacher = new TreatPartialPatternCacher(this);
 		
 		this.featureListeners = new MyFeatureListeners(this, matcher);
 	}
@@ -96,9 +100,9 @@ public class LookaheadMatcherTreat
 	public static HashMap<PQuery, ArrayList<AheadStructure>> GodSetStructures = new HashMap<PQuery, ArrayList<AheadStructure>>();
 	
 	/**
-	 *  a pattern and its processed structures
+	 *  a pattern and its calls (P -> { find(Q), negfind(R), negfind(S) } ) where find:true, negfind:false
 	 */
-	public static HashMap<PQuery, HashMap<PQuery, Boolean>> PatternCallsPatterns = new HashMap<PQuery, HashMap<PQuery, Boolean>>();
+	public static HashMap<PQuery, Multimap<PQuery, Boolean>> PatternCallsPatterns = new HashMap<PQuery, Multimap<PQuery, Boolean>>();
 	
 	/**
 	 *  a named element (class, structuralfeature) mapped to the affected patterns
@@ -222,11 +226,11 @@ public class LookaheadMatcherTreat
 	private void FillPatternCallsPatterns(PQuery actRoot)
 	{
 		// find children of this root
-		HashMap<PQuery,Boolean> findedNegfindedPatterns = matcher.getFindListForPattern(actRoot);
+		Multimap<PQuery, Boolean> findedNegfindedPatterns = matcher.getFindListForPattern(actRoot);
 		if (findedNegfindedPatterns != null && findedNegfindedPatterns.size() > 0)
 			PatternCallsPatterns.put(actRoot, findedNegfindedPatterns);
 		else return; // no more children
-		for (Entry<PQuery, Boolean> finded : findedNegfindedPatterns.entrySet())
+		for (Entry<PQuery, Boolean> finded : findedNegfindedPatterns.entries())
 		{
 			// iterate for children and find their calls, too
 			FillPatternCallsPatterns(finded.getKey());

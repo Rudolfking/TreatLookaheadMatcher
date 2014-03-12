@@ -6,6 +6,7 @@ import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.emf.common.util.EList;
@@ -33,6 +34,12 @@ public class NACConstraint extends CheckableConstraint implements IConstraint
 	private IncQueryEngine engineRef;
 	private NegativePatternCall innerNegativeCallConstraint;
 	private IPartialPatternCacher treatPartialCacher;
+
+
+	public List<PVariable> getAffectedVariables()
+	{
+		return this.affectedVariables;
+	}
 	
 	@Override
 	public boolean Evaluate(HashMap<PVariable, Object> matchingVariables)

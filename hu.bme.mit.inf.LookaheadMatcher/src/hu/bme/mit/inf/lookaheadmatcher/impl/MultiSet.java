@@ -98,6 +98,26 @@ public class MultiSet<T>
         return true;
     }
 
+    /**
+     * Removes an instalce, even it was inside the map multiple times.
+     * @param key To remove
+     * @return The number of entries removed (0 if not found)
+     */
+	public int removeAll(T key)
+	{
+		Integer inside = counts.get(key);
+		if (inside == null)
+			return 0;
+		int removal = 0;
+		while(inside != null)
+		{
+			remove(key);
+			inside = counts.get(key);
+			removal++;
+		}
+		return removal;
+	}
+
     public boolean contains(T x)
     {
         return counts.get(x) != null;

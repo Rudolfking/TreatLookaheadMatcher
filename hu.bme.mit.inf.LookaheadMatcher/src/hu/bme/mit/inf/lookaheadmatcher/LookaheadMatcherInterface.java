@@ -29,6 +29,9 @@ import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatte
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.PatternCallBasedDeferred;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.PositivePatternCall;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 //import org.eclipse.viatra2.emf.incquery.base.exception.IncQueryBaseException;
 
 public class LookaheadMatcherInterface
@@ -172,9 +175,9 @@ public class LookaheadMatcherInterface
 	/**
 	 *  returns all findX negfindX patterns, that occur in P pattern (query) (not recursively!)
 	 */
-	public HashMap<PQuery, Boolean> getFindListForPattern(PQuery P)
+	public Multimap<PQuery, Boolean> getFindListForPattern(PQuery P)
 	{
-		HashMap<PQuery, Boolean> find_negfind_patterns = new HashMap<PQuery, Boolean>();
+		Multimap<PQuery, Boolean> find_negfind_patterns = HashMultimap.create();//new HashMap<PQuery, Boolean>();
 		for (PBody body : P.getContainedBodies())
 		{
 			for (PConstraint calls : body.getConstraints())
