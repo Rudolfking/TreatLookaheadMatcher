@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
@@ -154,30 +155,53 @@ public class MyFeatureListeners
 						}
 					}
 				}
-				
-				
-				// the new matches that'll appear in matching
-				MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters);
-				
-				// a new map to store a matching and whether it is added or removed
-				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();//<LookaheadMatching, Boolean>();
-				
-				// iterate over multiset and create delta
-				for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
+								
+				isModified = false;
+				ArrayList<AheadStructure> newStructs = createNewFromOldTypeC(true, clazz, instance, LookaheadMatcherTreat.GodSetStructures.get(maybeModPattern));
+				if (isModified)
 				{
-					for (int pi = 0; pi < inners.getValue(); pi++)
-						newMatchingsAndAddition.put(inners.getKey(), false); // the count in multiset (more of tha same found: more changes), false: deleted!!
+					// the new matches that'll appear in matching
+					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters);
+					
+					// a new map to store a matching and whether it is added or removed
+					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();//<LookaheadMatching, Boolean>();
+					
+					// iterate over multiset and create delta
+					for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
+					{
+						for (int pi = 0; pi < inners.getValue(); pi++)
+							newMatchingsAndAddition.put(inners.getKey(), false); // the count in multiset (more of tha same found: more changes), false: deleted!!
+					}
+					// delta needed to propagate the changes
+					Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
+					deltas.add(d);
+					
+//					MultiSet<LookaheadMatching> toDeletes = matcher.updateAll(engine, maybeMod, newStructs);
+//					HashMap<LookaheadMatching, Boolean> newMap = new HashMap<LookaheadMatching, Boolean>();
+//					if (toDeletes.size() > 0) {
+//						MultiSet<LookaheadMatching> combinedMatching = GodSet
+//								.get(maybeMod);
+//						for (Entry<LookaheadMatching, Integer> inners : toDeletes
+//								.getInnerMap().entrySet()) {
+//							boolean removed_e = combinedMatching.remove(inners
+//									.getKey());
+//							if (removed_e == false) {
+//								System.out
+//										.println("Nagy a baj, removed de nem volt benne! Exception!");
+//							}
+//							for (int pi = 0; pi < inners.getValue(); pi++)
+//								newMap.put(inners.getKey(), false);
+//							// false: deleted matching
+//						}
+//						GodSet.put(maybeMod, combinedMatching);
+//						Delta d = new Delta(maybeMod, newMap);
+//						deltas.add(d);
+//					}
+				} 
+				else 
+				{
+					System.out.println("It is not affected!");
 				}
-				// delta needed to propagate the changes
-				Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
-				deltas.add(d);
-				
-				
-				/* ArrayList<AheadStructure> newStructs = createNewFromOldTypeC(true, clazz, instance, GodSetStructures.get(maybeMod)); if (isModified) { MultiSet<LookaheadMatching> toDeletes = matcher.updateAll(engine, maybeMod,
-				 * newStructs); HashMap<LookaheadMatching, Boolean> newMap = new HashMap<LookaheadMatching, Boolean>(); if (toDeletes.size()>0) { MultiSet<LookaheadMatching> combinedMatching = GodSet.get(maybeMod); for
-				 * (Entry<LookaheadMatching, Integer> inners : toDeletes.getInnerMap().entrySet()) { boolean removed_e = combinedMatching.remove(inners.getKey()); if (removed_e == false) {
-				 * System.out.println("Nagy a baj, removed de nem volt benne! Exception!"); } for(int pi=0;pi<inners.getValue();pi++) newMap.put(inners.getKey(), false); // false: deleted matching } GodSet.put(maybeMod, combinedMatching);
-				 * Delta d = new Delta(maybeMod, newMap); deltas.add(d); } } else { System.out.println("It is not affected!"); } */
 			}
 			
 			// apply deltas (depth apply!)
@@ -289,28 +313,42 @@ public class MyFeatureListeners
 						}
 					}
 				}
-				// the new matches that'll appear in matching
-				MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters);
 				
-				// a new map to store a matching and whether it is added or removed
-				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
-				
-				// iterate over multiset and create delta
-				for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
+				ArrayList<AheadStructure> newStructs = createNewFromOldTypeC(false, type, instance, LookaheadMatcherTreat.GodSetStructures.get(maybeModPattern));
+				if (isModified)
 				{
-					for (int pi = 0; pi < inners.getValue(); pi++)
-						newMatchingsAndRemoval.put(inners.getKey(), false); // the count in multiset (more of tha same found: more changes), false: deleted!!
+					// the new matches that'll appear in matching
+					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters);
+					
+					// a new map to store a matching and whether it is added or removed
+					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
+					
+					// iterate over multiset and create delta
+					for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
+					{
+						for (int pi = 0; pi < inners.getValue(); pi++)
+							newMatchingsAndRemoval.put(inners.getKey(), false); // the count in multiset (more of tha same found: more changes), false: deleted!!
+					}
+					// delta needed to propagate the changes
+					Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
+					deltas.add(d);
+					
+					// oldcode:
+//					MultiSet<LookaheadMatching> toDeletes = matcher.updateAll(engine, maybeMod, newStructs);
+//					if (toDeletes.size() > 0)
+//					{
+//						MultiSet<LookaheadMatching> combinedMatching = GodSet.get(maybeMod);
+//						for (LookaheadMatching lMa : toDeletes.toArrayList())
+//						{
+//							boolean removed_e = combinedMatching.remove(lMa);
+//							if (removed_e == false)
+//							{
+//								System.out.println("Nagy a baj, removed de nem volt benne! Exception!");
+//							}
+//						}
+//						GodSet.put(maybeMod, combinedMatching);
+//					}
 				}
-				// delta needed to propagate the changes
-				Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
-				deltas.add(d);
-				
-				
-				
-				
-				/* ArrayList<AheadStructure> newStructs = createNewFromOldTypeC(false, type, instance, GodSetStructures.get(maybeMod)); if (isModified) { MultiSet<LookaheadMatching> toDeletes = matcher.updateAll(engine, maybeMod,
-				 * newStructs); if (toDeletes.size()>0) { MultiSet<LookaheadMatching> combinedMatching = GodSet.get(maybeMod); for (LookaheadMatching lMa : toDeletes.toArrayList()) { boolean removed_e = combinedMatching.remove(lMa); if
-				 * (removed_e == false) { System.out.println("Nagy a baj, removed de nem volt benne! Exception!"); } } GodSet.put(maybeMod, combinedMatching); } } */
 			}
 			
 			for (Delta delta : deltas)
@@ -418,28 +456,44 @@ public class MyFeatureListeners
 						}
 					}
 				}
-				
-				
-				// the new matches that'll appear in matching
-				MultiSet<LookaheadMatching> newbies_toremove = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters);
-				
-				// a new map to store a matching and whether it is added or removed
-				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
-				
-				// iterate over multiset and create delta
-				for (Entry<LookaheadMatching, Integer> inners : newbies_toremove.getInnerMap().entrySet())
+								
+				isModified = false;
+				// manual satisfy:
+				ArrayList<AheadStructure> newStructs = createNewFromOldRelaC(host, value, feature, LookaheadMatcherTreat.GodSetStructures.get(maybeModPattern));
+				if (isModified)
 				{
-					for (int pi = 0; pi < inners.getValue(); pi++)
-						newMatchingsAndRemoval.put(inners.getKey(), false); // the count in multiset (more of tha same found: more changes)
+					// the new matches that'll appear in matching based on manually satisfied structure
+					MultiSet<LookaheadMatching> newbies_toremove = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters);
+					
+					// a new map to store a matching and whether it is added or removed
+					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
+					
+					// iterate over multiset and create delta
+					for (Entry<LookaheadMatching, Integer> inners : newbies_toremove.getInnerMap().entrySet())
+					{
+						for (int pi = 0; pi < inners.getValue(); pi++)
+							newMatchingsAndRemoval.put(inners.getKey(), false); // the count in multiset (more of tha same found: more changes)
+					}
+					// delta needed to propagate the changes
+					Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
+					deltas.add(d);
+					
+					// regen igy volt:
+//					MultiSet<LookaheadMatching> toDeletes = lookaheadMatcher.updateAll(treat.getIncQueryEngine(), maybeModPattern, newStructs);
+//					if (toDeletes.size() > 0)
+//					{
+//						MultiSet<LookaheadMatching> combinedMatching = GodSet.get(maybeModPattern);
+//						for (LookaheadMatching lMa : toDeletes.toArrayList())
+//						{
+//							boolean removed_e = combinedMatching.remove(lMa);
+//							if (removed_e == false)
+//							{
+//								System.out.println("Nagy a baj, removed de nem volt benne! Exception!");
+//							}
+//						}
+//						GodSet.put(maybeModPattern, combinedMatching);
+//					}
 				}
-				// delta needed to propagate the changes
-				Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
-				deltas.add(d);
-				
-				/* isModified = false; ArrayList<AheadStructure> newStructs = createNewFromOldRelaC(host, value, feature, GodSetStructures.get(maybeModPattern)); if (isModified) { MultiSet<LookaheadMatching> toDeletes =
-				 * matcher.updateAll(engine, maybeModPattern, newStructs); if (toDeletes.size()>0) { MultiSet<LookaheadMatching> combinedMatching = GodSet.get(maybeModPattern); for (LookaheadMatching lMa : toDeletes.toArrayList()) {
-				 * boolean
-				 * removed_e = combinedMatching.remove(lMa); if (removed_e == false) { System.out.println("Nagy a baj, removed de nem volt benne! Exception!"); } } GodSet.put(maybeModPattern, combinedMatching); } } */
 			}
 			// apply deltas
 			for (Delta delta : deltas)
@@ -451,4 +505,64 @@ public class MyFeatureListeners
 			
 		}
 	};
+	
+	
+	
+	/**
+	 * Reserved for future use (used in the past):
+	 */
+	// modifies the aheadstructures according to eclass change - matches the constraint by hand (found, not searched, matchingvariables put)
+	private ArrayList<AheadStructure> createNewFromOldTypeC(boolean isEClass, EClassifier clazzortype, Object instance, ArrayList<AheadStructure> gotStructs)
+	{
+		ArrayList<AheadStructure> newStructs = new ArrayList<AheadStructure>();
+		for (AheadStructure aSn : gotStructs)
+		{
+			AheadStructure newaSn = aSn.clone();
+			for (AxisConstraint tC : newaSn.SearchedConstraints)
+			{
+				if (tC instanceof TypeConstraint)
+				{
+					if (((TypeConstraint) tC).getType().equals(clazzortype))
+					{
+						// this aheadStructure's typeconstraint's type is affected, match it by hand!
+//						newaSn.MatchingVariables.put(((TypeConstraint) tC).getTypedVariable(), instance);
+						newaSn.FoundConstraints.add(tC);
+						newaSn.SearchedConstraints.remove(tC);
+						isModified = true;
+						break;
+					}
+				}
+			}
+			newStructs.add(newaSn);
+		}
+		return newStructs;
+	}
+	// modifies the aheadstructures according to estructuralfeature change - matches the constraint by hand (found, not searched, matchingvariables put)
+	private ArrayList<AheadStructure> createNewFromOldRelaC(EObject host, Object target, EStructuralFeature edge, ArrayList<AheadStructure> gotStructs)
+	{
+		ArrayList<AheadStructure> newStructs = new ArrayList<AheadStructure>();
+		for (AheadStructure aSn : gotStructs)
+		{
+			AheadStructure newaSn = aSn.clone();
+			for (AxisConstraint rC : newaSn.SearchedConstraints)
+			{
+				if (rC instanceof RelationConstraint)
+				{
+					if (((RelationConstraint) rC).getEdge().equals(edge))
+					{
+						// satisfy relation source and target (do not needed! made by matcher)
+//						newaSn.MatchingVariables.put(((RelationConstraint) rC).getSource(), host);
+//						newaSn.MatchingVariables.put(((RelationConstraint) rC).getTarget(), target);
+						// and make constraint "found"
+						newaSn.FoundConstraints.add(rC);
+						newaSn.SearchedConstraints.remove(rC);
+						isModified = true;
+						break;
+					}
+				}
+			}
+			newStructs.add(newaSn);
+		}
+		return newStructs;
+	}
 }

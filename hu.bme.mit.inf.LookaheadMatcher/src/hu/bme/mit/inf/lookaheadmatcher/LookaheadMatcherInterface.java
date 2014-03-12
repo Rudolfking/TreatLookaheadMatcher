@@ -185,19 +185,12 @@ public class LookaheadMatcherInterface
 				if (calls instanceof NegativePatternCall)// PatternCompositionConstraint)
 				{
 					PatternCallBasedDeferred pdd = (PatternCallBasedDeferred)calls;
-					find_negfind_patterns.put(pdd.getReferredQuery(), true);
-					// remember for the patterncompositionconstraint's call's pattern reference (thid pattern is called and is in a constraint)
-//					Pattern findthisPattern = ((PatternCompositionConstraint) calls).getCall().getPatternRef();
-//					Boolean isPositiveCall = ((PatternCompositionConstraint) calls).isNegative() == true ? Boolean.FALSE : Boolean.TRUE;
-//					// add this pattern
-//					find_negfind_patterns.put(findthisPattern, isPositiveCall);
-					// and this pattern's find/negfind patterns
-					//find_negfind_patterns.addAll(getFindHierarchyForPattern(findthisPattern));
+					find_negfind_patterns.put(pdd.getReferredQuery(), false);
 				}
 				else if (calls instanceof PositivePatternCall)
 				{
 					PositivePatternCall pdd = (PositivePatternCall)calls;
-					find_negfind_patterns.put((IQuerySpecification<?>) pdd.getReferredQuery(), false);
+					find_negfind_patterns.put((IQuerySpecification<?>) pdd.getReferredQuery(), true);
 				}
 			}
 		}
@@ -205,7 +198,15 @@ public class LookaheadMatcherInterface
 		return find_negfind_patterns;
 	}
 
+// some old code:
 	
+	// remember for the patterncompositionconstraint's call's pattern reference (thid pattern is called and is in a constraint)
+//	Pattern findthisPattern = ((PatternCompositionConstraint) calls).getCall().getPatternRef();
+//	Boolean isPositiveCall = ((PatternCompositionConstraint) calls).isNegative() == true ? Boolean.FALSE : Boolean.TRUE;
+//	// add this pattern
+//	find_negfind_patterns.put(findthisPattern, isPositiveCall);
+	// and this pattern's find/negfind patterns
+	//find_negfind_patterns.addAll(getFindHierarchyForPattern(findthisPattern));
 	
 	
 	

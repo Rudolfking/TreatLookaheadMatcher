@@ -61,7 +61,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		{
 			for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entries())
 			{
-				
+				ezt meg kéne írni nem?
 			}
 			for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
 			{
