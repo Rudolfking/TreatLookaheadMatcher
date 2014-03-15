@@ -65,47 +65,69 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		 */
 		public void maintainIntegrity(Delta delta)
 		{
-			for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entries())
+			for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entries()) // for all delta
 			{
-				if (entry.getValue() == false)
-				{
-					// if removed match: iterate through everything and remove (kills CPU?)
-					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
-					{
-						Multimap<List<Object>, LookaheadMatching> removes = HashMultimap.create();
-						for (Entry<List<Object>, LookaheadMatching> innerMatch : index.getValue().entries())
-						{
-							if (innerMatch.getValue().equals(entry.getKey()))
-							{
-								removes.put(innerMatch.getKey(), innerMatch.getValue());
-							}
-						}
-						for (Entry<List<Object>, LookaheadMatching> lm : removes.entries())
-						{
-							index.getValue().remove(lm.getKey(), lm.getValue());
-						}
-					}
-				}
-				else
-				{
-					// new matching! insert into indexes where it should be
-					LookaheadMatching newMatch = entry.getKey();
+				LookaheadMatching changMatch = entry.getKey();
 
-					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
+				for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet()) // helyi jarat
+				{
+					// construct the key
+					List<Object> currentNewKey = new ArrayList<Object>();
+					for (PVariable oneVar : this.theVariablesInOrder)
 					{
-						// construct the key
-						List<Object> currentNewKey = new ArrayList<Object>();
-						for (PVariable oneVar : this.theVariablesInOrder)
+						if (index.getKey().contains(oneVar))
 						{
-							if (index.getKey().contains(oneVar))
-							{
-								currentNewKey.add(newMatch.getMatches().get(oneVar));
-							}
+							currentNewKey.add(changMatch.getMatches().get(oneVar));
 						}
-						// if key is constructed and we have the value, "all done".
-						index.getValue().put(currentNewKey, newMatch);
 					}
+					if (entry.getValue())
+						index.getValue().put(currentNewKey, changMatch);
+					else
+						index.getValue().remove(currentNewKey, changMatch);
 				}
+				
+				// TODO should throw deltas? ne mar :(
+				
+				
+//				if (entry.getValue() == false)
+//				{
+//					// if removed match: iterate through everything and remove (kills CPU?)
+//					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
+//					{
+//						Multimap<List<Object>, LookaheadMatching> removes = HashMultimap.create();
+//						for (Entry<List<Object>, LookaheadMatching> innerMatch : index.getValue().entries())
+//						{
+//							if (innerMatch.getValue().equals(entry.getKey()))
+//							{
+//								removes.put(innerMatch.getKey(), innerMatch.getValue());
+//							}
+//						}
+//						for (Entry<List<Object>, LookaheadMatching> lm : removes.entries())
+//						{
+//							index.getValue().remove(lm.getKey(), lm.getValue());
+//						}
+//					}
+//				}
+//				else
+//				{
+//					// new matching! insert into indexes where it should be
+//					LookaheadMatching newMatch = entry.getKey();
+//
+//					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
+//					{
+//						// construct the key
+//						List<Object> currentNewKey = new ArrayList<Object>();
+//						for (PVariable oneVar : this.theVariablesInOrder)
+//						{
+//							if (index.getKey().contains(oneVar))
+//							{
+//								currentNewKey.add(newMatch.getMatches().get(oneVar));
+//							}
+//						}
+//						// if key is constructed and we have the value, "all done".
+//						index.getValue().put(currentNewKey, newMatch);
+//					}
+//				}
 			}
 		}
 

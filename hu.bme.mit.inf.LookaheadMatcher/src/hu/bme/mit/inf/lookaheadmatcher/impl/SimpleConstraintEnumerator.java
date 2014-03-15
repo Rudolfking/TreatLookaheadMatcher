@@ -396,4 +396,9 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 		}
 		return ret;
 	}
+
+	public int ejnyeGetCost()
+	{
+		return this.cost;
+	}
 }

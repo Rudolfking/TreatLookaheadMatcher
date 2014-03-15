@@ -9,6 +9,12 @@ public class RelationConstraint extends AxisConstraint // implements IConstraint
 {
 	// source, target and the relation
 	
+	private TypeBinary innerTypeBinary; 
+
+	public TypeBinary getInnerTypeBinary() {
+		return innerTypeBinary;
+	}
+	
 	private PVariable source;
 	public PVariable getSource() {
 		return source;
@@ -55,6 +61,7 @@ public class RelationConstraint extends AxisConstraint // implements IConstraint
 	
 	public RelationConstraint(TypeBinary relCons)
 	{
+		this.innerTypeBinary = relCons;
 		this.edge = (EStructuralFeature) relCons.getSupplierKey();
 		this.pointsToAttribute = this.edge instanceof EAttribute;
 		this.source = (PVariable) relCons.getVariablesTuple().get(0);

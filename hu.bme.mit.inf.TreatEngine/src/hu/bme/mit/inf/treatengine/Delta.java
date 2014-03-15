@@ -1,5 +1,6 @@
 package hu.bme.mit.inf.treatengine;
 
+import hu.bme.mit.inf.lookaheadmatcher.IDelta;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
@@ -9,7 +10,7 @@ import com.google.common.collect.Multimap;
 
 // a pattern match set changed: either added (+) or deleted(-) and it references to a pattern
 // references to a changeset (+-) and 
-public class Delta
+public class Delta implements IDelta
 {
 	private PQuery pattern;
 	private Multimap<LookaheadMatching, Boolean> changeset;
