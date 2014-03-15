@@ -120,7 +120,7 @@ public class LookaheadMatcherTreat
 	public boolean registerPatternWithMatches(PQuery chosenQuery)
 	{
 		// match!
-		MultiSet<LookaheadMatching> matches = matcher.matchAll(engine, treatPartialCacher, chosenQuery, null);
+		MultiSet<LookaheadMatching> matches = matcher.matchAll(engine, treatPartialCacher, chosenQuery, null, null);
 
 		// put pattern matches to registry
 		GodSet.put(chosenQuery, matches);

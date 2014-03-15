@@ -69,7 +69,7 @@ public class LookaheadMatcherInterface
 	 * Tries to match the pattern with the specified engine and known values.
 	 * Returns true in at least one matching is found (the matches are not searched and cached!)
 	 */
-	public boolean tryMatch(IncQueryEngine engine, IPartialPatternCacher patternCacher, PQuery pattern, ArrayList<Object> knownValues)
+	public boolean tryMatch(IncQueryEngine engine, IPartialPatternCacher patternCacher, PQuery pattern, ArrayList<Object> knownValues, IConstraintEnumerator consEnum)
 	{
 		try
 		{
@@ -88,7 +88,7 @@ public class LookaheadMatcherInterface
 		for (AheadStructure state : matchingStates)
 		{
 			AheadStructure clonedState = state.clone();
-			matches.addAll(new MatcherAlgorithm().getPatternMatches(clonedState, true, navigationHelper, knownValues));
+			matches.addAll(new MatcherAlgorithm().getPatternMatches(clonedState, true, navigationHelper, knownValues, consEnum));
 		}
 		
 		if (matches.size() > 0)
@@ -101,7 +101,8 @@ public class LookaheadMatcherInterface
 	 *  (more matchings of the same parameter values but different local values are count as two
 	 */
 	@SuppressWarnings("unchecked")
-	public MultiSet<LookaheadMatching> matchAll(IncQueryEngine engine, IPartialPatternCacher patternCacher, PQuery patternQuery, ArrayList<Object> knownValues)
+	public MultiSet<LookaheadMatching> matchAll(IncQueryEngine engine, IPartialPatternCacher patternCacher,
+			PQuery patternQuery, ArrayList<Object> knownValues, IConstraintEnumerator consEnum)
 	{
 		// get navhelper
 		try
@@ -120,31 +121,27 @@ public class LookaheadMatcherInterface
 		
 		
 		// return with matches (knownvalues when matching, known_even_locals is that we don't have in this case)
-		MultiSet<LookaheadMatching> rett = matchWithProcessed(matchingStates, knownValues, null);
+		MultiSet<LookaheadMatching> rett = matchWithProcessed(matchingStates, knownValues, null, consEnum);
+		
 		System.out.println("Match finished for pattern " + patternQuery.getFullyQualifiedName());
 		return rett;
-		/*LookaheadMatching[] ret = new LookaheadMatching[matches.size()];
-		int hol = 0;
-		for (LookaheadMatching lookaheadMatching : matches) {
-			ret[hol++] = lookaheadMatching;
-		}
-		return ret;*/
 	}
 	
 	/**
 	 * Searches all changes in matchings when model changes. It requires the pattern, the engine, the processed pattern body (cachedStructure), and the already known values
 	 */
-	public MultiSet<LookaheadMatching> searchChangesAll(IncQueryEngine engine, PQuery modPattern, AheadStructure cachedStructure, HashMap<PVariable, Object> knownValues)
+	public MultiSet<LookaheadMatching> searchChangesAll(IncQueryEngine engine, PQuery modPattern, AheadStructure cachedStructure,
+			HashMap<PVariable, Object> knownValues, IConstraintEnumerator consEnum)
 	{
 		ArrayList<AheadStructure> structOne = new ArrayList<AheadStructure>();
 		structOne.add(cachedStructure);
-		return this.searchChangesAll(engine, modPattern, structOne, knownValues);
+		return this.searchChangesAll(engine, modPattern, structOne, knownValues,consEnum);
 	}
 	
 	/**
 	 * Searches all changes in matchings when model changes. It requires the pattern, the engine, the processed pattern bodies (cachedStructure), and the already known values (for local and parameter vars)
 	 */
-	public MultiSet<LookaheadMatching> searchChangesAll(IncQueryEngine engine, PQuery modPattern, ArrayList<AheadStructure> cachedStructures, HashMap<PVariable, Object> knownValues)
+	public MultiSet<LookaheadMatching> searchChangesAll(IncQueryEngine engine, PQuery modPattern, ArrayList<AheadStructure> cachedStructures, HashMap<PVariable, Object> knownValues, IConstraintEnumerator consEnum)
 	{
 		try
 		{
@@ -165,7 +162,7 @@ public class LookaheadMatcherInterface
 		//}
 		
 		// match all with no known values but known mapped values to bind (can be local etc.)
-		matches.addAll(matchWithProcessed(cachedStructures, null, knownValues));
+		matches.addAll(matchWithProcessed(cachedStructures, null, knownValues, consEnum));
 		
 		System.out.println("[Update] Find new matches for pattern " + modPattern.getFullyQualifiedName() + " (all bodies): " + matches.size());
 		
@@ -225,7 +222,7 @@ public class LookaheadMatcherInterface
 	 * two options are available: knownParameterValues (in order of pattern definition variables) are known values of the parameter variables
 	 * the other option is knownLocalAndParameterValues (can be any variable present in this pattern) to bind those vars
 	 */
-	private MultiSet<LookaheadMatching> matchWithProcessed(ArrayList<AheadStructure> preparedStructures, ArrayList<Object> knownParameterValues, HashMap<PVariable, Object> knownLocalAndParameterValues)
+	private MultiSet<LookaheadMatching> matchWithProcessed(ArrayList<AheadStructure> preparedStructures, ArrayList<Object> knownParameterValues, HashMap<PVariable, Object> knownLocalAndParameterValues, IConstraintEnumerator consEnum)
 	{
 		// create matcher algo
 		MatcherAlgorithm readyToMatchAlgo = new MatcherAlgorithm();
@@ -262,7 +259,7 @@ public class LookaheadMatcherInterface
 			AheadStructure clonedState = state.clone();
 			// known any kind of var's values are bound, but
 			// known values are bound in getPatternMatches(,,,)!!!!!!! - if not null
-			matches.addAll(readyToMatchAlgo.getPatternMatches(clonedState, false, navigationHelper, knownParameterValues));
+			matches.addAll(readyToMatchAlgo.getPatternMatches(clonedState, false, navigationHelper, knownParameterValues, consEnum));
 		}
 		
 		// write out!

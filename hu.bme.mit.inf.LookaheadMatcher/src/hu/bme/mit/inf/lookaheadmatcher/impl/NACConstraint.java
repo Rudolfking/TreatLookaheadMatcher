@@ -63,7 +63,7 @@ public class NACConstraint extends CheckableConstraint implements IConstraint
 		
 		// use my matcher from scratch (no caching):
 		LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
-		boolean tried = lmi.tryMatch(engineRef, treatPartialCacher, innerNegativeCallConstraint.getReferredQuery(), knownValues);
+		boolean tried = lmi.tryMatch(engineRef, treatPartialCacher, innerNegativeCallConstraint.getReferredQuery(), knownValues, null);
 		System.out.println("My (Lookahead Pattern Matches) NAC call returned: "+Boolean.toString(!tried));
 		if (tried)
 			return false; // can be matched, this is bad

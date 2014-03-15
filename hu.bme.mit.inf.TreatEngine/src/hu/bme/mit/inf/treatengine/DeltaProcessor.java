@@ -183,7 +183,7 @@ public class DeltaProcessor
 						// new matches, must use lookahead, because the index for this pattern is OLD
 						// no need to update indexes now, because from the canges new delta will be created and propagated (recursively)
 						LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
-						MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, modifiableStruct.clone(), knownLocalAndParameters);
+						MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, modifiableStruct.clone(), knownLocalAndParameters, null);
 						
 						// after we have the new matches for this type, make sure that they are added
 						for (Entry<LookaheadMatching, Integer> newMatchAndType : changesNew.getInnerMap().entrySet())
@@ -227,7 +227,7 @@ public class DeltaProcessor
 							{
 								// there might be new changes! search? search!
 								LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
-								MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, modifiableStruct.clone(), knownLocalAndParameters);
+								MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, modifiableStruct.clone(), knownLocalAndParameters, null);
 								// after we have the new matches for this type, make sure that they are added
 								for (Entry<LookaheadMatching, Integer> newMatchAndType : changesNew.getInnerMap().entrySet())
 								{

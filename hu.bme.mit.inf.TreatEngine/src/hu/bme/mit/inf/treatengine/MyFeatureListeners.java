@@ -76,7 +76,7 @@ public class MyFeatureListeners
 				}
 				
 				// the new matches that'll appear in matching
-				MultiSet<LookaheadMatching> newbies = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters);
+				MultiSet<LookaheadMatching> newbies = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
 				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();
@@ -161,7 +161,7 @@ public class MyFeatureListeners
 				if (isModified)
 				{
 					// the new matches that'll appear in matching
-					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters);
+					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
 					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();//<LookaheadMatching, Boolean>();
@@ -252,7 +252,7 @@ public class MyFeatureListeners
 				
 				
 				// the new matches that'll appear in matching
-				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters);
+				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
 				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();//<LookaheadMatching, Boolean>();
@@ -318,7 +318,7 @@ public class MyFeatureListeners
 				if (isModified)
 				{
 					// the new matches that'll appear in matching
-					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters);
+					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
 					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
@@ -399,7 +399,7 @@ public class MyFeatureListeners
 				
 				
 				// the new matches that'll appear in matching
-				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters);
+				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, cachedStructures, knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
 				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create(); // <LookaheadMatching, Boolean>();
@@ -463,7 +463,7 @@ public class MyFeatureListeners
 				if (isModified)
 				{
 					// the new matches that'll appear in matching based on manually satisfied structure
-					MultiSet<LookaheadMatching> newbies_toremove = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters);
+					MultiSet<LookaheadMatching> newbies_toremove = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
 					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
