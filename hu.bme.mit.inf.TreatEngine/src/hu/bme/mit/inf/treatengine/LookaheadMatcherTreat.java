@@ -45,16 +45,18 @@ public class LookaheadMatcherTreat
 	private IncQueryEngine engine;
 	private LookaheadMatcherInterface matcher;
 	private NavigationHelper navHelp;
-	private IPartialPatternCacher treatPartialCacher;
+	
+	private static TreatPartialPatternCacher treatPartialCacher = new TreatPartialPatternCacher();
+	
 	private MyFeatureListeners featureListeners;
 	
-	public IPartialPatternCacher getTreatPartialCacher()
+	public static TreatPartialPatternCacher getTreatPartialCacher()
 	{
 		return treatPartialCacher;
 	}
-	public void setTreatPartialCacher(IPartialPatternCacher treatPartialCacher)
+	public static void setTreatPartialCacher(TreatPartialPatternCacher treatPartCach)
 	{
-		this.treatPartialCacher = treatPartialCacher;
+		treatPartialCacher = treatPartCach;
 	}
 	
 	public IncQueryEngine getIncQueryEngine() {
@@ -71,7 +73,7 @@ public class LookaheadMatcherTreat
 	public LookaheadMatcherTreat(IncQueryEngine engineRe)
 	{
 		matcher = new LookaheadMatcherInterface();
-		treatPartialCacher = new TreatPartialPatternCacher(this);
+		treatPartialCacher.setLookaheadTreat(this);
 		engine = engineRe;
 		
 		DeltaProcessor.getInstance().setEngine(engineRe);

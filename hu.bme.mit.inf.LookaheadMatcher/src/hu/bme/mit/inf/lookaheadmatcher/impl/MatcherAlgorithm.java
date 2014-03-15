@@ -64,7 +64,7 @@ public class MatcherAlgorithm
 	
 	private void matchPattern(ArrayList<AxisConstraint> SearchedConstraints, // searched ones
 			ArrayList<AxisConstraint> FoundConstraints, // found ones (to be able to restore)
-			ArrayList<CheckableConstraint> checkableConstraints, // to bec checked
+			ArrayList<CheckableConstraint> checkableConstraints, // to be checked
 			HashMap<PVariable, Object> MatchingVariables) // matched vars
 	{
 		

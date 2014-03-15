@@ -28,10 +28,10 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 public class TreatPartialPatternCacher implements IPartialPatternCacher
 {
 
-	public TreatPartialPatternCacher(LookaheadMatcherTreat lookTreat)
-	{ 
-		lookaheadTreat = lookTreat;
+	public TreatPartialPatternCacher()
+	{
 		// should not know about LookaheadMatcher itself (not enabled to use it yet!)
+		patternsPartialMatchings = new HashMap<PQuery, PatternPartialMatchingData>();
 	}
 
 	private LookaheadMatcherTreat lookaheadTreat;
@@ -40,16 +40,22 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	{
 		return lookaheadTreat;
 	}
+	public void setLookaheadTreat(LookaheadMatcherTreat lookTreat)
+	{
+		lookaheadTreat = lookTreat;
+	}
 	
 	private class PatternPartialMatchingData
 	{
 		PQuery theQuery;
+		List<PVariable> theVariablesInOrder;
 		
 		private Map<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> indexes = new HashMap<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>>();
 
-		public PatternPartialMatchingData(PQuery resolvingQuery)//, Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
+		public PatternPartialMatchingData(PQuery resolvingQuery, List<PVariable> variablesInOrder)//, Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
 		{
 			theQuery = resolvingQuery;
+			theVariablesInOrder = variablesInOrder;
 			//insertOne(filterKeys, filteringValues, foundFilteredMatches);
 		}
 		
@@ -61,11 +67,45 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		{
 			for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entries())
 			{
-				ezt meg kéne írni nem?
-			}
-			for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
-			{
-				
+				if (entry.getValue() == false)
+				{
+					// if removed match: iterate through everything and remove (kills CPU?)
+					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
+					{
+						Multimap<List<Object>, LookaheadMatching> removes = HashMultimap.create();
+						for (Entry<List<Object>, LookaheadMatching> innerMatch : index.getValue().entries())
+						{
+							if (innerMatch.getValue().equals(entry.getKey()))
+							{
+								removes.put(innerMatch.getKey(), innerMatch.getValue());
+							}
+						}
+						for (Entry<List<Object>, LookaheadMatching> lm : removes.entries())
+						{
+							index.getValue().remove(lm.getKey(), lm.getValue());
+						}
+					}
+				}
+				else
+				{
+					// new matching! insert into indexes where it should be
+					LookaheadMatching newMatch = entry.getKey();
+
+					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
+					{
+						// construct the key
+						List<Object> currentNewKey = new ArrayList<Object>();
+						for (PVariable oneVar : this.theVariablesInOrder)
+						{
+							if (index.getKey().contains(oneVar))
+							{
+								currentNewKey.add(newMatch.getMatches().get(oneVar));
+							}
+						}
+						// if key is constructed and we have the value, "all done".
+						index.getValue().put(currentNewKey, newMatch);
+					}
+				}
 			}
 		}
 
@@ -82,7 +122,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		}
 	}
 	
-	private HashMap<PQuery, PatternPartialMatchingData> patternsPartialMatchings = new HashMap<PQuery, PatternPartialMatchingData>();
+	private HashMap<PQuery, PatternPartialMatchingData> patternsPartialMatchings;
 	
 	/**
 	 * Might be faster to call this first!
@@ -198,7 +238,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				else	
 				{
 					// add a completely new pattern-indexes class instance
-					patternsPartialMatchings.put(resolvingQuery, new PatternPartialMatchingData(resolvingQuery));//, partialMatching.keySet(), partialMatching.values(), foundFilteredMatches)); // like insertOne (constructor calls anyway)
+					patternsPartialMatchings.put(resolvingQuery, new PatternPartialMatchingData(resolvingQuery, variablesInOrder));//, partialMatching.keySet(), partialMatching.values(), foundFilteredMatches)); // like insertOne (constructor calls anyway)
 					patternsPartialMatchings.get(resolvingQuery).insertOne(partialMatching.keySet(), foundFilteredMatchMap);
 				}
 				MultiSet<LookaheadMatching> ret = new MultiSet<LookaheadMatching>();

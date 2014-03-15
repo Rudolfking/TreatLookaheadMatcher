@@ -20,7 +20,7 @@ public class TreatRegistrarImpl
 			if (TreatIQEngineDrot != null)
 				return;
 			TreatIQEngineDrot = new HashMap<IncQueryEngine, LookaheadMatcherTreat>();
-			TreatIQEngineDrot.put(engine,lomatreRef);
+			TreatIQEngineDrot.put(engine, lomatreRef);
 		}
 		
 		public static LookaheadMatcherTreat GetLookaheadMatcherTreat(IncQueryEngine engine)

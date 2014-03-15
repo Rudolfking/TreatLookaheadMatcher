@@ -6,6 +6,7 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.CheckableConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.FindConstraint;
+import hu.bme.mit.inf.lookaheadmatcher.impl.IConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.NACConstraint;
@@ -100,15 +101,17 @@ public class DeltaProcessor
 			
 			//patternToUpdate BODY:
 			ArrayList<AheadStructure> findedPatternsStructures = LookaheadMatcherTreat.GodSetStructures.get(patternToUpdate);
-			for (AheadStructure struct : findedPatternsStructures)
+			for (AheadStructure struct_donottouch : findedPatternsStructures)
 			{
+				AheadStructure modifiableStruct = struct_donottouch.clone();
 				// check whether the specific find is in this structure (in this body)
 				// it means that this pattern calls the delta's pattern, but which body?
 				List<PVariable> affectedFindVars = new ArrayList<PVariable>();
 				boolean okay = false;
 				if (patternToUpdateEntry.getValue() == true)
 				{
-					for (AxisConstraint constr : struct.SearchedConstraints)
+					AxisConstraint toRemove = null;
+					for (AxisConstraint constr : modifiableStruct.SearchedConstraints)
 					{
 						if ((constr instanceof FindConstraint))
 						{
@@ -117,14 +120,22 @@ public class DeltaProcessor
 								// here
 								okay = true;
 								affectedFindVars = ((FindConstraint) constr).getAffectedVariables();
+								toRemove = constr;
 								break;
 							}
 						}
 					}
+					if (okay)
+					{
+						// satisfied
+						modifiableStruct.SearchedConstraints.remove(toRemove);
+						modifiableStruct.FoundConstraints.add(toRemove);
+					}
 				}
 				else
 				{
-					for (CheckableConstraint constr : struct.CheckConstraints)
+					CheckableConstraint toRemove = null;
+					for (CheckableConstraint constr : modifiableStruct.CheckConstraints)
 					{
 						if ((constr instanceof NACConstraint))
 						{
@@ -133,9 +144,15 @@ public class DeltaProcessor
 								// here
 								okay = true;
 								affectedFindVars = ((NACConstraint) constr).getAffectedVariables();
+								toRemove = constr;
 								break;
 							}
 						}
+					}
+					if (okay)
+					{
+						// checked
+						modifiableStruct.CheckConstraints.remove(toRemove);
 					}
 				}
 				// not in here
@@ -166,7 +183,7 @@ public class DeltaProcessor
 						// new matches, must use lookahead, because the index for this pattern is OLD
 						// no need to update indexes now, because from the canges new delta will be created and propagated (recursively)
 						LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
-						MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, struct.clone(), knownLocalAndParameters);
+						MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, modifiableStruct.clone(), knownLocalAndParameters);
 						
 						// after we have the new matches for this type, make sure that they are added
 						for (Entry<LookaheadMatching, Integer> newMatchAndType : changesNew.getInnerMap().entrySet())
@@ -210,7 +227,7 @@ public class DeltaProcessor
 							{
 								// there might be new changes! search? search!
 								LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
-								MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, struct.clone(), knownLocalAndParameters);
+								MultiSet<LookaheadMatching> changesNew = matcher.searchChangesAll(engine, patternToUpdate, modifiableStruct.clone(), knownLocalAndParameters);
 								// after we have the new matches for this type, make sure that they are added
 								for (Entry<LookaheadMatching, Integer> newMatchAndType : changesNew.getInnerMap().entrySet())
 								{
