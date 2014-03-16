@@ -117,8 +117,9 @@ public class MyFeatureListeners
 			// apply deltas (depth apply!)
 			for (Delta delta : deltas)
 			{
-				DeltaProcessor.getInstance().ProcessDelta(delta);
+				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
+			AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 			// match based on the new structs!
 			System.out.println("[ECLASS] Update matchings finished! Time:" + Long.toString(System.currentTimeMillis() - start));
 		}
@@ -207,8 +208,9 @@ public class MyFeatureListeners
 			// apply deltas (depth apply!)
 			for (Delta delta : deltas)
 			{
-				DeltaProcessor.getInstance().ProcessDelta(delta);
+				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
+			AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 			
 			System.out.println("[ECLASS] Delete affected patterns' matchings ended! Time:" + Long.toString(System.currentTimeMillis() - start));
 		}
@@ -275,8 +277,9 @@ public class MyFeatureListeners
 			
 			for (Delta delta : deltas)
 			{
-				DeltaProcessor.getInstance().ProcessDelta(delta);
+				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
+			AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 			
 			// match based on the new structs!
 			System.out.println("[EDATATYPE] Update matchings finished! Time:" + Long.toString(System.currentTimeMillis() - start));
@@ -353,8 +356,9 @@ public class MyFeatureListeners
 			
 			for (Delta delta : deltas)
 			{
-				DeltaProcessor.getInstance().ProcessDelta(delta);
+				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
+			AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 			
 			System.out.println("[EDATATYPE] Delete affected patterns' matchings ended! Time:" + Long.toString(System.currentTimeMillis() - start));
 		}
@@ -417,8 +421,9 @@ public class MyFeatureListeners
 			// apply deltas
 			for (Delta delta : deltas)
 			{
-				DeltaProcessor.getInstance().ProcessDelta(delta);
+				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
+			AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 			
 			System.out.println("[ESTRUCTURALFEATURE] Update matchings finished! Time:" + Long.toString(System.currentTimeMillis() - start));
 		}
@@ -498,8 +503,9 @@ public class MyFeatureListeners
 			// apply deltas
 			for (Delta delta : deltas)
 			{
-				DeltaProcessor.getInstance().ProcessDelta(delta);
+				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
+			AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 			
 			System.out.println("[ESTRUCTURALFEATURE] Delete affected patterns' matchings ended! Time:" + Long.toString(System.currentTimeMillis() - start));
 			
@@ -507,10 +513,6 @@ public class MyFeatureListeners
 	};
 	
 	
-	
-	/**
-	 * Reserved for future use (used in the past):
-	 */
 	// modifies the aheadstructures according to eclass change - matches the constraint by hand (found, not searched, matchingvariables put)
 	private ArrayList<AheadStructure> createNewFromOldTypeC(boolean isEClass, EClassifier clazzortype, Object instance, ArrayList<AheadStructure> gotStructs)
 	{

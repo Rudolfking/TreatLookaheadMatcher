@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
-public abstract class CheckableConstraint implements IConstraint
+public abstract class CheckableConstraint extends AConstraint
 {
 	public boolean isAxis()
 	{

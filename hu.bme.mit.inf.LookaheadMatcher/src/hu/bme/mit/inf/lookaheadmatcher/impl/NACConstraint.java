@@ -4,29 +4,15 @@ import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
 import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.emf.common.util.EList;
-import org.eclipse.incquery.patternlanguage.patternLanguage.IntValue;
-import org.eclipse.incquery.patternlanguage.patternLanguage.LiteralValueReference;
-import org.eclipse.incquery.patternlanguage.patternLanguage.ParameterRef;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;
-import org.eclipse.incquery.patternlanguage.patternLanguage.PatternCall;
-import org.eclipse.incquery.patternlanguage.patternLanguage.StringValue;
-import org.eclipse.incquery.patternlanguage.patternLanguage.ValueReference;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Variable;
-import org.eclipse.incquery.patternlanguage.patternLanguage.VariableValue;
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
-import org.eclipse.incquery.runtime.matchers.planning.SubPlan;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
-//import org.eclipse.viatra2.emf.incquery.runtime.extensibility.MatcherFactoryRegistry;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatternCall;
-import org.eclipse.incquery.runtime.matchers.tuple.FlatTuple;
 import org.eclipse.incquery.runtime.matchers.tuple.Tuple;
+//import org.eclipse.viatra2.emf.incquery.runtime.extensibility.MatcherFactoryRegistry;
 
 public class NACConstraint extends CheckableConstraint implements IConstraint
 {
@@ -35,7 +21,7 @@ public class NACConstraint extends CheckableConstraint implements IConstraint
 	private NegativePatternCall innerNegativeCallConstraint;
 	private IPartialPatternCacher treatPartialCacher;
 
-
+	
 	public List<PVariable> getAffectedVariables()
 	{
 		return this.affectedVariables;

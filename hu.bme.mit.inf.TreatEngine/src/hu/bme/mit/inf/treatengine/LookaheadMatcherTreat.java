@@ -76,8 +76,8 @@ public class LookaheadMatcherTreat
 		treatPartialCacher.setLookaheadTreat(this);
 		engine = engineRe;
 		
-		DeltaProcessor.getInstance().setEngine(engineRe);
-		DeltaProcessor.getInstance().setPartialCacher(treatPartialCacher);
+		AdvancedDeltaProcessor.getInstance().setEngine(engineRe);
+		AdvancedDeltaProcessor.getInstance().setPartialCacher(treatPartialCacher);
 		
 		try
 		{
