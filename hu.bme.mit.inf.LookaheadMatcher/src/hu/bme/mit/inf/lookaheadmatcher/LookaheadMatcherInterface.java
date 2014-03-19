@@ -87,7 +87,7 @@ public class LookaheadMatcherInterface
 		
 		for (AheadStructure state : matchingStates)
 		{
-			AheadStructure clonedState = state.clone();
+			AheadStructure clonedState = state.clone();// 1st step
 			matches.addAll(new MatcherAlgorithm().getPatternMatches(clonedState, true, navigationHelper, knownValues, consEnum));
 		}
 		
@@ -231,8 +231,9 @@ public class LookaheadMatcherInterface
 		MultiSet<LookaheadMatching> matches = new MultiSet<LookaheadMatching>();
 		
 		// iterate all structure and match them! (collect matches)
-		for (AheadStructure state : preparedStructures)
+		for (AheadStructure stateNoClone : preparedStructures)
 		{
+			AheadStructure state = stateNoClone.clone(); // 1st step!
 			// cache constraints (empty then add)
 			this.typeConstraints.clear();
 			this.relationConstraints.clear();
@@ -256,10 +257,9 @@ public class LookaheadMatcherInterface
 					readyToMatchAlgo.bindToVariable(knownOne.getKey(), knownOne.getValue(), state.MatchingVariables);
 				}
 			}
-			AheadStructure clonedState = state.clone();
 			// known any kind of var's values are bound, but
 			// known values are bound in getPatternMatches(,,,)!!!!!!! - if not null
-			matches.addAll(readyToMatchAlgo.getPatternMatches(clonedState, false, navigationHelper, knownParameterValues, consEnum));
+			matches.addAll(readyToMatchAlgo.getPatternMatches(state, false, navigationHelper, knownParameterValues, consEnum));
 		}
 		
 		// write out!
