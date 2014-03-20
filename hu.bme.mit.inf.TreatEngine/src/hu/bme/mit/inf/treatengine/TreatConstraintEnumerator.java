@@ -14,7 +14,6 @@ import hu.bme.mit.inf.lookaheadmatcher.IDelta;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.FindConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
-import hu.bme.mit.inf.lookaheadmatcher.impl.NACConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.SimpleConstraintEnumerator;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
@@ -32,35 +31,47 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 	@Override
 	public int getCost(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
 	{
-		return simpleInner.getCost(constraint, matchingVariables);
+		// should use deltas!! TODO big TODO
+		if (!(constraint instanceof FindConstraint))
+			return simpleInner.getCost(constraint, matchingVariables);
+		else
+		{
+			// get and return
+			
+		}
+		return 0; // something went bad
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public List<Object> enumerateConstraint(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
+	public List<Object[]> enumerateConstraint(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
 	{
 		// tricking view ("rollback delta" for one time) view!!
 		
-		
-		ArrayList<Object> ret = simpleInner.enumerateConstraint(constraint, matchingVariables);
+		List<Object[]> candidates = simpleInner.enumerateConstraint(constraint, matchingVariables);
+
+		List<Object[]> ret = null;
 		
 		// filter ret...
 		if (constraint.hasMailboxContent())
 		{
-			int cost = simpleInner.ejnyeGetCost(); // only when already enumerated
-			ArrayList<Object>[] candidates = (ArrayList<Object>[]) new ArrayList[cost];
-			int itemSize = ret.size() / cost;
-			for (int i=0;i<candidates.length;i++)
-			{
-				candidates[i] = new ArrayList<Object>();
-				for (int j=0;j<itemSize;j++)
-					candidates[i].add(ret.get(i * itemSize + j));
-			}
+//			int itemSize;
+//			if (candidates.size() > 0)
+//				itemSize = candidates.get(0).length;
+//			else
+//				itemSize = ((Delta)constraint.getMailboxContent().get(0)).getPattern().getParameters().size(); // fallback...
+//			for (int i=0;i<candidates.length;i++)
+//			{
+//				candidates[i] = new ArrayList<Object>();
+//				for (int j=0;j<itemSize;j++)
+//					candidates[i].add(ret.get(i * itemSize + j));
+//			}
 			
 			// filter by deltas
 			List<IDelta> deltas = constraint.getMailboxContent();
+			// modifications:
 			List<Integer> deleteIndexes = new ArrayList<Integer>();
 			ArrayList<Object> additions = new ArrayList<Object>();
+			// check all delta:
 			for (IDelta deltai : deltas)
 			{
 				Delta delta = (Delta)deltai;
@@ -68,14 +79,14 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 				{
 					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entries())
 					{
-						for (int cd = 0; cd < candidates.length; cd++)
+						for (int cd = 0; cd < candidates.size(); cd++)
 						{
 							boolean equal = true;
 							
 							// add or remove from changeset!
 							for (int vizs = 0; vizs < change.getKey().getParameterMatchValuesOnlyAsArray().length; vizs++)
 							{
-								if (change.getKey().getParameterMatchValuesOnlyAsArray()[vizs].equals(candidates[cd].get(vizs)) == false)
+								if (change.getKey().getParameterMatchValuesOnlyAsArray()[vizs].equals(candidates.get(cd)[vizs]) == false)
 									equal = false;
 							}
 							
@@ -98,21 +109,25 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 				{
 					throw new AssertionError("Not implemented!");
 				}
+				else
+				{
+					throw new AssertionError("Unknown constraint, which should be filtered!");
+				}
 			}
+			ret = new ArrayList<Object[]>();
 			// then delete the indexes, (candidate), so full
-			ret = new ArrayList<Object>();
-			for (int i=0;i<candidates.length;i++)
+			for (int i=0;i<candidates.size();i++)
 			{
 				if (deleteIndexes.contains(Integer.valueOf(i)))
 					continue; // leave out deleteds
-				candidates[i] = new ArrayList<Object>();
-				for (int j=0;j<itemSize;j++)
-					ret.add(candidates[i].get(j));
+				ret.add(candidates.get(i));
 			}
 		}
 		
 		// if had delta, ret changed but okay
-		return ret;
+		if (ret == null)
+			return candidates; // no mailbox
+		return ret; // mailbox, processed
 	}
 
 }

@@ -55,6 +55,19 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 		return null;
 	}
 	
+	@SuppressWarnings("unused")
+	public int GetMatchCountFromPartial(HashMap<PVariable, Object> MatchingVariables)
+	{
+		if (true || innerFindCall.getReferredQuery().getAllAnnotations().contains(new PAnnotation("incremental")))
+		{
+			int result = treatPatternCacher.GetMatchCountFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, true);
+			// result must be parsed to List<Object[]>
+			return result;
+		}
+		// will throw exception!?:
+		return -1;
+	}
+	
 	public boolean IsAllAffectedVariablesMatched(HashMap<PVariable, Object> matchingVariables)
 	{
 		// mhm, can be evaluated when not all variables bound? no

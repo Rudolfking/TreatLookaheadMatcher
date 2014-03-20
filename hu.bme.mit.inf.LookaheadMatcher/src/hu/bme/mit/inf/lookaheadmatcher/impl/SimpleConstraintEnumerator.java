@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EAttribute;
@@ -25,35 +26,268 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 
 	int cost = -1;
 	
-	ArrayList<Object> possibleRetVal = null;
+	ArrayList<Object[]> possibleRetVal = null;
 	
+	/**
+	 * Should return the cost for the given constraint and partial matching. This might be faster than enumerating it.
+	 * Hardly relies on 'enumerateConstraint(..)', almost code duplicate (without that much memory footprint)
+	 */
 	@Override
 	public int getCost(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
 	{
-		possibleRetVal = null;
-		// lama!!! bena java!!!! se out parameter, se ugya mugy parameter... gagyii
-		possibleRetVal = enumerateConstraint(constraint, matchingVariables);
-		return cost;
+		if (constraint instanceof EasyConstraint)
+		{
+			return 1;
+		}
+		else if (constraint instanceof FindConstraint)
+		{
+			FindConstraint findCons = (FindConstraint) constraint;
+			int founds = findCons.GetMatchCountFromPartial(matchingVariables);
+			if (founds == -1)
+			{
+				System.err.println("Critical error in match find.");
+				throw new AssertionError("Error in find constraint!");
+			}
+			
+			// ki kell tolteni a costs-ot
+			return founds; // this much
+		}
+		else if (constraint instanceof TypeConstraint)
+		{
+			TypeConstraint typeCons = (TypeConstraint) constraint;
+			boolean isFoundAndBad = false;
+			// if it is already bound, select 1 or 0, it (the only one) can be WRONG (if it is wrong, it will be 0)
+			// the way it can be a wrong bind: we bound it as a source/target of a relation, and it fails on the '.isInstanceOf(..)' test
+			for (Map.Entry<PVariable, Object> mVar : matchingVariables.entrySet())
+			{
+				// if it is already bound
+				if (mVar.getValue() != null)
+				{
+					// if this variable equals to the TypeConstraint's variable, which is already bound
+					if (mVar.getKey().getName().equals(typeCons.getTypedVariable().getName()))
+					{
+						if (typeCons.isDatatype())
+						{
+							// this is some stupid object (Integer, Boolean etc.)
+							if (mVar.getValue().getClass().equals(typeCons.getType().getClass()))
+							{
+								return 1;
+							}
+							else
+							{
+								// it is not the searched type but already bound: costs[i] MUST be zero
+								// why? because the restriction is satisfied, the currently investigated variable (mVar.key) is bound, and their value doesn't pass on type test
+								// so they're of a different type and the binding is from wrong type, we have to cut this recursion tree part (vagy mi)
+								isFoundAndBad = true;
+							}
+						}
+						else
+						{
+							if (((EObject) mVar.getValue()).eClass().equals(typeCons.getType()))
+							{
+								// so the (already) matched EObj's metamodel class is equal to type: good
+								return 1;
+							}
+							else isFoundAndBad = true;
+						}
+					}
+				}
+			}
+			
+			//if found and bad
+			if (isFoundAndBad)
+			{
+				return 0;
+			}
+			else if (cost != 1) // if the COSTS[melyikszaml] not equals to 1 (see above)
+			{
+				//else if not 0/1 found in an other way (1)
+				return getAllInstances(typeCons.getType()).size();
+			}
+		}
+		else if (constraint instanceof RelationConstraint)
+		{
+			// if rest is connection type, find the relations only touching bound variables (if not, collect all)
+			RelationConstraint conCons = (RelationConstraint) constraint;
+			EObject boundSorcO = (EObject) matchingVariables.get(conCons.getSource());
+			Object boundTargO = matchingVariables.get(conCons.getTarget());
+			if (boundSorcO == null && boundTargO == null)
+			{
+				// no source-target bound
+				return getAllSourceTargetPairs(conCons.getEdge()).size() / 2;
+			}
+			else if (boundSorcO != null && boundTargO == null)
+			{
+				EObject boundSorc = (EObject) boundSorcO;
+				// source bound: get all outgoind structuralfeature size
+				//costs[i] = boundSorc.getAllRelationFromByType((IRelation) conrest.GetType()).size();
+				EList<EStructuralFeature> tempL = boundSorc.eClass().getEAllStructuralFeatures();
+				
+				int mtch = 0;
+				for (EStructuralFeature esf : tempL)
+				{
+					if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EObject)
+					{
+						// if an outgoing relation type has one other end, remember the "other end"
+						mtch++;
+					}
+					else if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EList<?>)
+					{
+						// if an outgoing relation type has other ends, remember the "other ends"
+						@SuppressWarnings("unchecked")
+						EList<EObject> listaOf = (EList<EObject>) boundSorc.eGet(esf);
+						mtch += listaOf.size();
+					}
+					else
+					{
+						if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof Object)
+						{
+							// if an outgoing relation ends in some special wtf
+							mtch++;
+						}
+					}
+				}
+				return mtch;
+			}
+			else if (boundSorcO == null && boundTargO != null && boundTargO instanceof EObject)
+			{
+				// if target is bound, try to navigate backwards
+				Collection<EObject> sources = new ArrayList<EObject>();
+				if (conCons.PointsToAttribute() == false)
+				{
+					// eclass-eclass connection
+					sources = this.navigationHelper.getInverseReferences((EObject) boundTargO, (EReference) conCons.getEdge());
+				}
+				else
+				{
+					// eclass-object connection
+					sources = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
+				}
+				int mtch = 0;
+				for (EObject sorc : sources)
+				{
+					if (sorc instanceof EObject)
+					{
+						//it should be instance of EObject
+						mtch++;
+					}
+					else
+					{
+						throw new AssertionError("Breee, noooooo, some target's inverse navigation source is not EObject - then wtf what?");
+					}
+				}
+				return mtch; // items that match from this source
+			}
+			else if (boundSorcO == null && boundTargO != null) // && ! ( boundTargO instanceof EObject)
+			{
+				// source unknown and target is NOT EObject, rather some strange bullshit
+				Collection<EObject> attrOwners = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
+
+				return attrOwners.size() / 2;
+			}
+			else if (boundSorcO != null && boundTargO != null)
+			{
+				if (conCons.PointsToAttribute() == false)
+				{
+					// source & target bound
+					EObject boundSorc = (EObject) boundSorcO;
+					EObject boundTarg = (EObject) boundTargO;
+					if (!conCons.getEdge().isMany())
+					{
+						if (boundSorc.eGet(conCons.getEdge()) instanceof EObject)
+						{
+							// is there eobj at the end?
+							EObject targetOfSource = (EObject) boundSorc.eGet(conCons.getEdge());
+							if (targetOfSource.equals(boundTarg))
+							{
+								return 1;
+							}
+							else
+							{
+								// the bound source did not lead to the bound target, wrong relation!
+								throw new AssertionError("Cost might be 0, 'erdekes'");
+								//return 0;
+							}
+						}
+						else
+						{
+							// the bound source did not lead to the bound target, wrong relation!
+							// this is because not even EObject type is there
+							// ooooor feature is deleted!!! TODO?
+							return 0;
+						}
+					}
+					else
+					{
+						// list of target objects along this edge
+						@SuppressWarnings("unchecked")
+						List<Object> targetObjects = (List<Object>) boundSorc.eGet(conCons.getEdge());
+						if (targetObjects.contains(boundTarg))
+						{
+							return 1; // the edge is okay, this is a match with cost 1
+						}
+						else
+						{
+							return 0; // no edges
+						}
+					}
+				}
+				else
+				// conCons points to attribute
+				{
+					EObject boundSorc = (EObject) boundSorcO;
+					// boundTarg is boundTargO
+					Collection<EObject> attrOwners = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
+					if (!attrOwners.contains(boundSorc))
+					{
+						// no source that contains this target
+						return 0;
+					}
+					else
+					{
+						return 1;
+					}
+				}
+			}
+			else
+			{
+				// will it ever pass to here?
+				// no source-target bound
+				return getAllSourceTargetPairs(conCons.getEdge()).size() / 2;
+			}
+		}
+		return 0;
+		
+		
+		
+		
+		
+//		// buta megoldas:
+//		
+//		possibleRetVal = null;
+//		// lama!!! bena java!!!! se out parameter, se ugya mugy parameter... gagyii
+//		possibleRetVal = enumerateConstraint(constraint, matchingVariables);
+//		return cost;
 	}
 
 	@Override
-	public ArrayList<Object> enumerateConstraint(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
+	public List<Object[]> enumerateConstraint(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
 	{
 		if (possibleRetVal != null)
 		{
 			@SuppressWarnings("unchecked")
-			ArrayList<Object> ret = (ArrayList<Object>)possibleRetVal.clone();
+			List<Object[]> ret = (List<Object[]>)possibleRetVal.clone();
 			possibleRetVal = null;
 			return ret; // bena cacheeles
 		}
 		
-		ArrayList<Object> returnList = new ArrayList<Object>();
+		List<Object[]> returnList = new ArrayList<Object[]>();
 
 		if (constraint instanceof EasyConstraint)
 		{
 			cost = 1;
-			ArrayList<Object> temp = new ArrayList<Object>();
-			temp.add(((EasyConstraint) constraint).getKnownValue());
+			ArrayList<Object[]> temp = new ArrayList<Object[]>();
+			temp.add(new Object[]{((EasyConstraint) constraint).getKnownValue()});
 			returnList = temp;
 		}
 		else if (constraint instanceof FindConstraint)
@@ -69,21 +303,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			// ki kell tolteni a costs-ot
 			cost = founds.size(); // this much
 			// es ki kell tolteni a listofsatisfieds-et
-			
-			ArrayList<Object> temp = new ArrayList<Object>(); // possible endings
-			for (int fi = 0; fi < founds.size(); fi++)
-			{
-				// indexeles:  [ fi*findedLen ... (fi+1)*findedLen -1 ]
-				
-				// algo: minden nem megkotottet megkotjuk, ennyi
-				int findedLen = findCons.getAffectedVariables().size();
-				for (int j = 0; j < findedLen; j++)
-				{
-					temp.add(founds.get(fi)[j]);
-				}
-			}
-			// minden belepakolva finded*affectedVar.len 2D, de 1D-be teritve
-			returnList = temp;
+			returnList = founds;
 		}
 		else if (constraint instanceof TypeConstraint)
 		{
@@ -105,8 +325,8 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 							if (mVar.getValue().getClass().equals(typeCons.getType().getClass()))
 							{
 								cost = 1;
-								ArrayList<Object> temp = new ArrayList<Object>();
-								temp.add(mVar.getValue());
+								ArrayList<Object[]> temp = new ArrayList<Object[]>();
+								temp.add(new Object[]{mVar.getValue()});
 								returnList = temp;
 							}
 							else
@@ -123,8 +343,8 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 							{
 								// so the (already) matched EObj's metamodel class is equal to type: good
 								cost = 1;
-								ArrayList<Object> temp = new ArrayList<Object>();
-								temp.add(mVar.getValue());
+								ArrayList<Object[]> temp = new ArrayList<Object[]>();
+								temp.add(new Object[]{mVar.getValue()});
 								returnList = temp;
 							}
 							else isFoundAndBad = true;
@@ -137,7 +357,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			if (isFoundAndBad)
 			{
 				cost = 0;
-				returnList = new ArrayList<Object>();
+				returnList = new ArrayList<Object[]>();
 				// it almost equals to a recursive 'return;'
 			}
 			else if (cost != 1) // if the COSTS[melyikszaml] not equals to 1 (see above)
@@ -157,7 +377,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			{
 				// no source-target bound
 				returnList = getAllSourceTargetPairs(conCons.getEdge());
-				cost = returnList.size() / 2;
+				cost = returnList.size();
 			}
 			else if (boundSorcO != null && boundTargO == null)
 			{
@@ -167,15 +387,17 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 				EList<EStructuralFeature> tempL = boundSorc.eClass().getEAllStructuralFeatures();
 				
 				int mtch = 0;
-				ArrayList<Object> temp = new ArrayList<Object>(); // possible endings
+				ArrayList<Object[]> temp = new ArrayList<Object[]>(); // possible endings
 				for (EStructuralFeature esf : tempL)
 				{
 					if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EObject)
 					{
 						// if an outgoing relation type has one other end, remember the "other end"
 						mtch++;
-						temp.add(boundSorc);
-						temp.add((EObject) boundSorc.eGet(esf));
+						Object[] inTmp = new Object[2];
+						inTmp[0]=boundSorc;
+						inTmp[1]=(EObject) boundSorc.eGet(esf);
+						temp.add(inTmp);
 					}
 					else if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EList<?>)
 					{
@@ -186,8 +408,10 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 						{
 							// there is edge between boundSorc and lot, because EStructuralFeature was multiple-instance: we need all!
 							mtch++;
-							temp.add(boundSorc);
-							temp.add(lot);
+							Object[] inTmp = new Object[2];
+							inTmp[0]=boundSorc;
+							inTmp[1]=lot;
+							temp.add(inTmp);
 						}
 					}
 					else
@@ -196,8 +420,10 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 						{
 							// if an outgoing relation ends in some special wtf
 							mtch++;
-							temp.add(boundSorc);
-							temp.add(boundSorc.eGet(esf));
+							Object[] inTmp = new Object[2];
+							inTmp[0]=boundSorc;
+							inTmp[1]=boundSorc.eGet(esf);
+							temp.add(inTmp);
 						}
 					}
 				}
@@ -208,7 +434,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			{
 				// if target is bound, try to navigate backwards
 				Collection<EObject> sources = new ArrayList<EObject>();
-				ArrayList<Object> temp = new ArrayList<Object>(); // possible endings
+				ArrayList<Object[]> temp = new ArrayList<Object[]>(); // possible endings
 				if (conCons.PointsToAttribute() == false)
 				{
 					// eclass-eclass connection
@@ -226,8 +452,10 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					{
 						//it should be instance of EObject
 						mtch++;
-						temp.add((EObject) sorc);
-						temp.add(boundTargO);
+						Object[] inTmp = new Object[2];
+						inTmp[0]=(EObject) sorc;
+						inTmp[1]=boundTargO;
+						temp.add(inTmp);
 					}
 					else
 					{
@@ -241,15 +469,16 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			{
 				// source unknown and target is NOT EObject, rather some strange bullshit
 				Collection<EObject> attrOwners = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
-				
-				ArrayList<Object> temp = new ArrayList<Object>();
+
+				ArrayList<Object[]> temp = new ArrayList<Object[]>();
 				for (EObject attrSource : attrOwners)
 				{
-					temp.add(attrSource);
-					temp.add(boundTargO);
+					Object[] inTmp = new Object[2];
+					inTmp[0]=attrSource;
+					inTmp[1]=boundTargO;
 				}
 				returnList = temp;
-				cost = returnList.size() / 2;
+				cost = returnList.size();
 			}
 			else if (boundSorcO != null && boundTargO != null)
 			{
@@ -267,16 +496,17 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 							if (targetOfSource.equals(boundTarg))
 							{
 								cost = 1;
-								ArrayList<Object> temp = new ArrayList<Object>();
-								temp.add(boundSorc);
-								temp.add(boundTarg);
+								ArrayList<Object[]> temp = new ArrayList<Object[]>();
+								temp.add(new Object[2]);
+								temp.get(0)[0]=boundSorc;
+								temp.get(0)[1]=boundTarg;
 								returnList = temp;
 							}
 							else
 							{
 								// the bound source did not lead to the bound target, wrong relation!
 								cost = 0;
-								returnList = new ArrayList<Object>();
+								returnList = new ArrayList<Object[]>();
 								System.out.println("Erdekes1");
 							}
 						}
@@ -286,7 +516,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 							// this is because not even EObject type is there
 							// ooooor feature is deleted!!! TODO
 							cost = 0;
-							returnList = new ArrayList<Object>();
+							returnList = new ArrayList<Object[]>();
 							System.out.println("Erdekes2");
 						}
 					}
@@ -297,16 +527,17 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 						List<Object> targetObjects = (List<Object>) boundSorc.eGet(conCons.getEdge());
 						if (targetObjects.contains(boundTarg))
 						{
-							ArrayList<Object> temp = new ArrayList<Object>();
-							temp.add(boundSorc);
-							temp.add(boundTarg);
+							ArrayList<Object[]> temp = new ArrayList<Object[]>();
+							temp.add(new Object[2]);
+							temp.get(0)[0]=boundSorc;
+							temp.get(0)[1]=boundTarg;
 							cost = 1; // the edge is okay, this is a match with cost 1
 							returnList = temp;
 						}
 						else
 						{
 							cost = 0; // no edges
-							returnList = new ArrayList<Object>();
+							returnList = new ArrayList<Object[]>();
 						}
 					}
 				}
@@ -320,13 +551,14 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					{
 						// no source that contains this target
 						cost = 0;
-						returnList = new ArrayList<Object>();
+						returnList = new ArrayList<Object[]>();
 					}
 					else
 					{
-						ArrayList<Object> temp = new ArrayList<Object>();
-						temp.add(boundSorc);
-						temp.add(boundTargO);
+						ArrayList<Object[]> temp = new ArrayList<Object[]>();
+						temp.add(new Object[2]);
+						temp.get(0)[0]=boundSorc;
+						temp.get(0)[1]=boundTargO;
 						cost = 1;
 						returnList = temp;
 					}
@@ -337,7 +569,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 				// will it ever pass to here?
 				// no source-target bound
 				returnList = getAllSourceTargetPairs(conCons.getEdge());
-				cost = returnList.size() / 2;
+				cost = returnList.size();
 			}
 		}
 		return returnList;
@@ -350,27 +582,35 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 	
 
 	// gets all instances of an eclass / edatatype
-	private ArrayList<Object> getAllInstances(ENamedElement type)
+	private List<Object[]> getAllInstances(ENamedElement type)
 	{
-		ArrayList<Object> ret = new ArrayList<Object>();
+		List<Object[]> ret = new ArrayList<Object[]>();
 		
 		if (type instanceof EClass)
 		{
 			// ret will be filled with EClasses
-			ret.addAll(this.navigationHelper.getAllInstances((EClass) type));
+			Set<EObject> allIn = this.navigationHelper.getAllInstances((EClass) type);
+			for (Object ins : allIn)
+			{
+				ret.add(new Object[]{ins});
+			}
 		}
 		else if (type instanceof EDataType)
 		{
-			ret.addAll(this.navigationHelper.getDataTypeInstances((EDataType) type));
+			Set<Object> allIn = this.navigationHelper.getDataTypeInstances((EDataType) type);
+			for (Object ins : allIn)
+			{
+				ret.add(new Object[]{ins});
+			}
 		}
 		
 		return ret;
 	}
 	
 	// gets all source-target pairs based on an ereference OR eattribute
-	private ArrayList<Object> getAllSourceTargetPairs(EStructuralFeature fet)
+	private List<Object[]> getAllSourceTargetPairs(EStructuralFeature fet)
 	{
-		ArrayList<Object> ret = new ArrayList<Object>();
+		List<Object[]> ret = new ArrayList<Object[]>();
 		
 		Collection<EObject> sources = this.navigationHelper.getHoldersOfFeature(fet);
 		for (EObject obj : sources)
@@ -384,14 +624,18 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 				EList<EObject> targets = (EList<EObject>) target;
 				for (EObject actTarget : targets)
 				{
-					ret.add(source);
-					ret.add(actTarget);
+					Object[] objR = new Object[2];
+					objR[0] = source;
+					objR[1] = actTarget;
+					ret.add(objR);
 				}
 			}
 			else
 			{
-				ret.add(source);
-				ret.add(target);
+				Object[] objR = new Object[2];
+				objR[0] = source;
+				objR[1] = target;
+				ret.add(objR);
 			}
 		}
 		return ret;

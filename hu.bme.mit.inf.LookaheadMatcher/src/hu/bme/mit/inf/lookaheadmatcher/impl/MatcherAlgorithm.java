@@ -165,14 +165,14 @@ public class MatcherAlgorithm
 		// the objects we can satisfy next
 		// a fix (searchedconstraints) size array of lists (each list is the corresponding constraint's matchable variables)
 		@SuppressWarnings("unchecked")
-		List<Object>[] listOfSatisfieds = (ArrayList<Object>[]) new ArrayList[SearchedConstraints.size()];// CollectConstraintMatchings(SearchedConstraints, MatchingVariables, costs);
+		//List<List<Object>> listOfSatisfieds[] = new (List<List<Object>>) new ArrayList[SearchedConstraints.size()];// CollectConstraintMatchings(SearchedConstraints, MatchingVariables, costs);
 		
 		int posSat = 0;
 		for (AxisConstraint constraint : SearchedConstraints)
 		{
 			// for now costs AND enumerable are collected (should be only costs!) TODO optimization
 			costs[posSat] = constraintEnumerator.getCost(constraint, MatchingVariables);
-			listOfSatisfieds[posSat++] = constraintEnumerator.enumerateConstraint(constraint, MatchingVariables);
+			//listOfSatisfieds[posSat++] = constraintEnumerator.enumerateConstraint(constraint, MatchingVariables);
 		}
 		
 		
@@ -231,11 +231,13 @@ public class MatcherAlgorithm
 		SearchedConstraints.remove(foundIndex);
 		FoundConstraints.add(winner);
 		
+		List<Object[]> winnerList = constraintEnumerator.enumerateConstraint(winner, MatchingVariables);
+		
 		// loop through winner instances
 		if (winner instanceof FindConstraint)
 		{
-			int findedLen = ((FindConstraint) winner).getAffectedVariables().size();
-			int minmin = listOfSatisfieds[foundIndex].size() / findedLen;
+			int findedLen = ((FindConstraint) winner).getAffectedVariables().size(); // the item 'length'
+			int minmin = winnerList.size(); // the items found
 			for (int i = 0; i < minmin; i++)
 			{
 				// indexeles:  [ i*findedLen ... (i+1)*findedLen -1 ]
@@ -246,7 +248,7 @@ public class MatcherAlgorithm
 				for (PVariable affVar : ((FindConstraint) winner).getAffectedVariables())
 				{
 					boolean mvaddedE = true;
-					if (!bindToVariable(affVar, listOfSatisfieds[foundIndex].get(i * findedLen + affectedSize), MatchingVariables))
+					if (!bindToVariable(affVar, winnerList.get(i)[affectedSize], MatchingVariables))
 					{
 						// bind unsuccessful
 						mvaddedE = false;
@@ -273,8 +275,14 @@ public class MatcherAlgorithm
 		}
 		else if (winner instanceof TypeConstraint)
 		{
-			for (Object winnerElement : listOfSatisfieds[foundIndex])
+			for (Object[] winnerElementList : winnerList)
 			{
+				Object winnerElement = winnerElementList[0];
+				if (winnerElementList.length > 1)
+				{
+					System.err.println("Baj van!");
+					throw new AssertionError("Winner list item length should be 1!");
+				}
 				boolean mvadded = true;
 				if (!bindToVariable(((TypeConstraint) winner).getTypedVariable(), winnerElement, MatchingVariables))
 				{
@@ -295,8 +303,14 @@ public class MatcherAlgorithm
 		}
 		else if (winner instanceof EasyConstraint)
 		{
-			for (Object winnerElement : listOfSatisfieds[foundIndex])
+			for (Object[] winnerElementList : winnerList)
 			{
+				Object winnerElement = winnerElementList[0];
+				if (winnerElementList.length > 1)
+				{
+					System.err.println("Baj van!");
+					throw new AssertionError("Winner list item length should be 1!");
+				}
 				boolean mvadded;
 				mvadded = true;
 				if (!bindToVariable(((EasyConstraint) winner).getOnlyVariable(), winnerElement, MatchingVariables))
@@ -318,15 +332,22 @@ public class MatcherAlgorithm
 		}
 		else if (winner instanceof RelationConstraint)
 		{
-			for (int i = 0; i < listOfSatisfieds[foundIndex].size(); i += 2)
+			for (int i = 0; i < winnerList.size(); i++)
 			{
+				Object first = winnerList.get(i)[0];
+				Object second = winnerList.get(i)[1];
+				if (winnerList.get(i).length != 2)
+				{
+					System.err.println("Baj van!");
+					throw new AssertionError("Winner list item length should be 2!");
+				}
 				boolean mvSadded, mvTadded;
 				mvSadded = mvTadded = true;
-				if (!bindToVariable(((RelationConstraint) winner).getSource(), listOfSatisfieds[foundIndex].get(i), MatchingVariables))
+				if (!bindToVariable(((RelationConstraint) winner).getSource(), first, MatchingVariables))
 				{
 					mvSadded = false; // sorry, already bound...
 				}
-				if (!bindToVariable(((RelationConstraint) winner).getTarget(), listOfSatisfieds[foundIndex].get(i + 1), MatchingVariables))
+				if (!bindToVariable(((RelationConstraint) winner).getTarget(), second, MatchingVariables))
 				{
 					mvTadded = false; // same
 				}

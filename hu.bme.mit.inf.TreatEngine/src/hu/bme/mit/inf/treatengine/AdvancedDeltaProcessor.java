@@ -227,7 +227,8 @@ public class AdvancedDeltaProcessor
 
 				AheadStructure clonedBody = body.clone();
 				clonedBody.CheckConstraints.remove(cc); // already checked (he-he)
-				List<IDelta> mailbox = cc.getMailboxContent(); // "copy"
+				@SuppressWarnings("unchecked")
+				List<IDelta> mailbox = (List<IDelta>) (((ArrayList<IDelta>) cc.getMailboxContent()).clone()); // "copy"
 				for (IDelta d : mailbox)
 				{
 					cc.removeFromMailbox(d); // remove a delta

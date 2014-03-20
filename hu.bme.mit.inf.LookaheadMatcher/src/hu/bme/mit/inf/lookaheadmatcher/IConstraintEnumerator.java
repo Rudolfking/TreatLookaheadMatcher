@@ -11,5 +11,5 @@ public interface IConstraintEnumerator
 {
 	int getCost(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables);
 	
-	List<Object> enumerateConstraint(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables);
+	List<Object[]> enumerateConstraint(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables);
 }

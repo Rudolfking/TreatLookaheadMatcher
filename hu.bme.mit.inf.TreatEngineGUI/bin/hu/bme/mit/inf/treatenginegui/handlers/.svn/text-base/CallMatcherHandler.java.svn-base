@@ -1,11 +1,13 @@
-
 package hu.bme.mit.inf.treatenginegui.handlers;
 
+import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.treatengine.LookaheadMatcherTreat;
 import hu.bme.mit.inf.treatengine.TreatRegistrarImpl;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -16,12 +18,11 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.incquery.tooling.ui.queryexplorer.QueryExplorer;
-import org.eclipse.incquery.tooling.ui.queryexplorer.content.matcher.ObservablePatternMatcherRoot;
-import org.eclipse.incquery.tooling.ui.queryexplorer.util.QueryExplorerPatternRegistry;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;
-import org.eclipse.incquery.runtime.api.*;
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
+import org.eclipse.viatra2.emf.incquery.queryexplorer.QueryExplorer;
+import org.eclipse.viatra2.emf.incquery.queryexplorer.content.matcher.ObservablePatternMatcherRoot;
+import org.eclipse.viatra2.emf.incquery.queryexplorer.util.PatternRegistry;
+import org.eclipse.viatra2.patternlanguage.core.patternLanguage.Pattern;
+import org.eclipse.viatra2.emf.incquery.runtime.api.*;
 
 
 /**
@@ -52,7 +53,7 @@ public class CallMatcherHandler extends AbstractHandler
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		
 		// get patterns
-		List<IQuerySpecification<?>> patterns = QueryExplorerPatternRegistry.getInstance().getActivePatterns();
+		List<Pattern> patterns = PatternRegistry.getInstance().getActivePatterns();
 		System.out.println("Registered pattern list, num of patterns: " + patterns.size());
 		
 		offeredPattern = QueryExplorer.getInstance().getPatternsViewer().getSelection().toString();
@@ -85,30 +86,21 @@ public class CallMatcherHandler extends AbstractHandler
 			
 			
 			// you can MATCH: IncQueryEngine engine (benne a notifier->model), List<Pattern> patterns, String offeredPattern (selected)
-			IQuerySpecification<?> chosenSpecification = null;
+			Pattern chosenPattern = null;
 			for (int i = 0; i < patterns.size(); i++)
 			{
-				IQuerySpecification<?> temPat = patterns.get(i);				
-			}
-			for (IQuerySpecification<?> specification : QueryExplorerPatternRegistry.getInstance().getActivePatterns()) 
-			{
-				if (specification.getFullyQualifiedName().endsWith(offeredPattern))
+				if (patterns.get(i).getName().equals(offeredPattern))
 				{
-					chosenSpecification = specification;
+					chosenPattern = patterns.get(i);
 				}
 			}
 			long begin = System.currentTimeMillis();
-			MultiSet<LookaheadMatching> matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(chosenSpecification);
-			if (matches.size() == 0)
-				System.out.println("No matches!");
-			else
+			MultiSet<LookaheadMatching> matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(chosenPattern);
+			for (Entry<LookaheadMatching, Integer> mg : matches.getInnerMap().entrySet())
 			{
-				for (Entry<LookaheadMatching, Integer> mg : matches.getInnerMap().entrySet())
-				{
-					if (mg.getValue() < 2)
-						System.out.println(mg.toString());
-					else System.out.println(mg.getValue().toString() + " matches of: " + mg.toString());
-				}
+				if (mg.getValue() < 2)
+					System.out.println(mg.toString());
+				else System.out.println(mg.getValue().toString() + " matches of: " + mg.toString());
 			}
 			System.out.println("Time spent to match: " + Long.toString(System.currentTimeMillis() - begin));
 			if (matches == null)
