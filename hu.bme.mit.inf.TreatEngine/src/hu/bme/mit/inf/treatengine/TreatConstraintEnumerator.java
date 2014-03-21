@@ -32,14 +32,19 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 	public int getCost(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
 	{
 		// should use deltas!! TODO big TODO
-		if (!(constraint instanceof FindConstraint))
+		if (!constraint.hasMailboxContent())
 			return simpleInner.getCost(constraint, matchingVariables);
 		else
 		{
-			// get and return
-			
+			if (!(constraint instanceof FindConstraint))
+				throw new AssertionError("Not findconstraint mailbox content is not supported!");
+			else
+			{
+				// get and return: this will filter by content
+				return enumerateConstraint(constraint, matchingVariables).size();
+			}
 		}
-		return 0; // something went bad
+		// return 0; // something went bad
 	}
 
 	@Override
@@ -51,21 +56,9 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 
 		List<Object[]> ret = null;
 		
-		// filter ret...
+		// filter ret... (this can be really resource consuming!)
 		if (constraint.hasMailboxContent())
-		{
-//			int itemSize;
-//			if (candidates.size() > 0)
-//				itemSize = candidates.get(0).length;
-//			else
-//				itemSize = ((Delta)constraint.getMailboxContent().get(0)).getPattern().getParameters().size(); // fallback...
-//			for (int i=0;i<candidates.length;i++)
-//			{
-//				candidates[i] = new ArrayList<Object>();
-//				for (int j=0;j<itemSize;j++)
-//					candidates[i].add(ret.get(i * itemSize + j));
-//			}
-			
+		{			
 			// filter by deltas
 			List<IDelta> deltas = constraint.getMailboxContent();
 			// modifications:
