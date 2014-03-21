@@ -205,8 +205,8 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 							else
 							{
 								// the bound source did not lead to the bound target, wrong relation!
-								throw new AssertionError("Cost might be 0, 'erdekes'");
-								//return 0;
+								// throw new AssertionError("Cost might be 0, 'erdekes'");
+								return 0;
 							}
 						}
 						else

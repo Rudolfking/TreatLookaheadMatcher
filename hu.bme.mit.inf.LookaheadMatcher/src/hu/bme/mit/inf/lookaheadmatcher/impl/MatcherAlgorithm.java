@@ -32,7 +32,7 @@ public class MatcherAlgorithm
 	private int matchCounter = 0;
 	
 	// write out every small detail?
-	private boolean verbose = true;
+	private boolean verbose = false;
 	
 	// match one or all?
 	private boolean matchOne = false;

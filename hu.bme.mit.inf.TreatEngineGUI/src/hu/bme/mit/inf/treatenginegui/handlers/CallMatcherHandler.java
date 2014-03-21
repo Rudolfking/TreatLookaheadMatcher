@@ -97,7 +97,29 @@ public class CallMatcherHandler extends AbstractHandler
 					chosenSpecification = specification;
 				}
 			}
+			System.out.println("Started matching everything!");
 			long begin = System.currentTimeMillis();
+			for (IQuerySpecification<?> specification : QueryExplorerPatternRegistry.getInstance().getActivePatterns()) 
+			{
+				MultiSet<LookaheadMatching> matches = null;
+				try
+				{
+					matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(specification);
+				}
+				catch (Exception e)
+				{
+					System.out.println("Failed to match " + specification.getFullyQualifiedName() + " because of: " + e.getMessage());
+					continue;
+				}
+				catch (AssertionError er)
+				{
+					System.out.println("Failed to match " + specification.getFullyQualifiedName() + " because of an [ASSERT]: " + er.getMessage());
+					continue;
+				}
+				if (matches != null) // might represent "no-matching"?
+					System.out.println("Matched " + specification.getFullyQualifiedName() + " count: " + matches.size());
+			}
+			System.out.println("Finished matching everything!");
 			MultiSet<LookaheadMatching> matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(chosenSpecification);
 			if (matches.size() == 0)
 				System.out.println("No matches!");

@@ -18,6 +18,7 @@ import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.Equality;
+import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.ExportedParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.ExpressionEvaluation;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.Inequality;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatternCall;
@@ -157,6 +158,8 @@ public class AheadStructure implements Cloneable
 					// easyconstraint
 					constraints.add(new EasyConstraint((ConstantValue)constraint));
 				}
+				else if (!(constraint instanceof ExportedParameter))
+					throw new AssertionError("Unknown constraint! " + constraint.toString());
 			}
 			else if (constraint instanceof DeferredPConstraint)
 			{
@@ -178,6 +181,8 @@ public class AheadStructure implements Cloneable
 				{
 					constraints.add(new InEqualConstraint((Inequality)constraint));
 				}
+				else if (!(constraint instanceof ExportedParameter))
+					throw new AssertionError("Unknown constraint! " + constraint.toString());
 			}
 		}
 		for (IConstraint cons : constraints)

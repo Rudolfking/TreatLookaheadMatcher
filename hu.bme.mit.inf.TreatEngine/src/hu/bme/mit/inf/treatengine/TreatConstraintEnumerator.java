@@ -37,7 +37,7 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 		else
 		{
 			if (!(constraint instanceof FindConstraint))
-				throw new AssertionError("Not findconstraint mailbox content is not supported!");
+				throw new AssertionError("Not findconstraint mailbox content is not supported!"); // but should return fallback? no, should not
 			else
 			{
 				// get and return: this will filter by content
