@@ -104,7 +104,7 @@ public class CallMatcherHandler extends AbstractHandler
 				MultiSet<LookaheadMatching> matches = null;
 				try
 				{
-					// matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(specification);
+					matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(specification);
 				}
 				catch (Exception e)
 				{

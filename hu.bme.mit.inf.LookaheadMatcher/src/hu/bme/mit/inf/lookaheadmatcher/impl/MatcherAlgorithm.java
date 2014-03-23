@@ -3,20 +3,9 @@ package hu.bme.mit.inf.lookaheadmatcher.impl;
 import hu.bme.mit.inf.lookaheadmatcher.IConstraintEnumerator;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.ecore.EAttribute;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EDataType;
-import org.eclipse.emf.ecore.ENamedElement;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.ecore.EStructuralFeature.Setting;
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
@@ -32,7 +21,7 @@ public class MatcherAlgorithm
 	private int matchCounter = 0;
 	
 	// write out every small detail?
-	private boolean verbose = true;
+	private boolean verbose = false;
 	
 	// match one or all?
 	private boolean matchOne = false;
