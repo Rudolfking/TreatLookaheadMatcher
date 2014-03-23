@@ -114,7 +114,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			if (boundSorcO == null && boundTargO == null)
 			{
 				// no source-target bound
-				return getAllSourceTargetPairs(conCons.getEdge()).size() / 2;
+				return getAllSourceTargetPairs(conCons.getEdge()).size();
 			}
 			else if (boundSorcO != null && boundTargO == null)
 			{
@@ -183,7 +183,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 				// source unknown and target is NOT EObject, rather some strange bullshit
 				Collection<EObject> attrOwners = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
 
-				return attrOwners.size() / 2;
+				return attrOwners.size();
 			}
 			else if (boundSorcO != null && boundTargO != null)
 			{
@@ -253,7 +253,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			{
 				// will it ever pass to here?
 				// no source-target bound
-				return getAllSourceTargetPairs(conCons.getEdge()).size() / 2;
+				return getAllSourceTargetPairs(conCons.getEdge()).size();
 			}
 		}
 		return 0;
@@ -476,6 +476,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					Object[] inTmp = new Object[2];
 					inTmp[0]=attrSource;
 					inTmp[1]=boundTargO;
+					temp.add(inTmp);
 				}
 				returnList = temp;
 				cost = returnList.size();

@@ -32,7 +32,7 @@ public class MatcherAlgorithm
 	private int matchCounter = 0;
 	
 	// write out every small detail?
-	private boolean verbose = false;
+	private boolean verbose = true;
 	
 	// match one or all?
 	private boolean matchOne = false;
@@ -171,7 +171,7 @@ public class MatcherAlgorithm
 		for (AxisConstraint constraint : SearchedConstraints)
 		{
 			// for now costs AND enumerable are collected (should be only costs!) TODO optimization
-			costs[posSat] = constraintEnumerator.getCost(constraint, MatchingVariables);
+			costs[posSat++] = constraintEnumerator.getCost(constraint, MatchingVariables);
 			//listOfSatisfieds[posSat++] = constraintEnumerator.enumerateConstraint(constraint, MatchingVariables);
 		}
 		
