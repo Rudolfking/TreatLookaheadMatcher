@@ -166,6 +166,8 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	{
 		if (partialMatchingWithNullsAndEverything == null)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
+
+		List<PVariable> calledPatternsVariablesInOrder = resolvingQuery.getContainedBodies().iterator().next().getSymbolicParameters();
 		
 		HashMap<PVariable, Object> partialMatching = new HashMap<PVariable, Object>();
 		// create a "partial matching" where nulls are removed (to use as key, and use counts etc.)
@@ -182,14 +184,22 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		}
 		else
 		{
-			
 			// the case is more complex: partial matching!
+			
+			// create the key for indexing (index key)
+			HashSet<PVariable> calledPatternsIndexKeySet = new HashSet<PVariable>();
+			for (int i=0;i<variablesInOrder.size();i++)
+			{
+				if (partialMatching.get(variablesInOrder.get(i)) != null)
+					calledPatternsIndexKeySet.add(calledPatternsVariablesInOrder.get(i));
+			}
+			
 			if (patternsPartialMatchings.containsKey(resolvingQuery) && 
-					patternsPartialMatchings.get(resolvingQuery).indexes.containsKey(partialMatching.keySet()))
+					patternsPartialMatchings.get(resolvingQuery).indexes.containsKey(calledPatternsIndexKeySet))
 			{
 				// we have an index for this, return fast with it
 				MultiSet<LookaheadMatching> ms = new MultiSet<LookaheadMatching>();
-				Multimap<List<Object>, LookaheadMatching> valueMatchingPairs = patternsPartialMatchings.get(resolvingQuery).indexes.get(partialMatching.keySet());
+				Multimap<List<Object>, LookaheadMatching> valueMatchingPairs = patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexKeySet);
 				// Collection<Object> vals = partialMatching.values();
 				ArrayList<Object> sortedVals = new ArrayList<Object>();
 				for (PVariable pV : variablesInOrder)
@@ -206,8 +216,8 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				// can we even cache this pattern? apparently: yes! (solve flattening later)
 				
 				// vars to hashset:
-				HashSet<PVariable> affectedVars = new HashSet<PVariable>();
-				affectedVars.addAll(variablesInOrder);
+//				HashSet<PVariable> affectedVars = new HashSet<PVariable>();
+//				affectedVars.addAll(variablesInOrder);
 				
 				
 				// match! (if needed, else get from cache):
@@ -215,7 +225,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				// type changes from the model (so we can maintain this partial matching). So: for a partial matching we ALWAYS have to know all matchings
 				// for that specific pattern (~query). If not, we cannot even maintain the matchings (via deltas).
 				MultiSet<LookaheadMatching> foundUnfilteredMatches = this.lookaheadTreat.matchThePattern(resolvingQuery);
-				
+								
 				// get in-order values from the partial matching overlayed on the pattern call
 				ArrayList<Object> sortedVals = new ArrayList<Object>();
 				for(int i=0;i<variablesInOrder.size();i++)
@@ -225,15 +235,15 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				}
 				// filter the matchings
 				Multimap<List<Object>, LookaheadMatching> foundFilteredMatchMap = HashMultimap.create();//<Collection<Object>, LookaheadMatching>();
+				
+				
 				for (LookaheadMatching match : foundUnfilteredMatches.toArrayList(true))
 				{
 					if (match.getParameterMatchValuesOnlyAsArray().length != sortedVals.size())
 					{
 						System.err.println("The cached match size is not equal to requested match size! (Typical \"cannot happen\".)");
 						// problem is big!
-						int h = 0;
-						int g = 5/h;
-						continue;
+						throw new AssertionError("The cached match size is not equal to requested match size!");
 					}
 					// check equality:
 					boolean okay = true;
@@ -255,13 +265,13 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				if (patternsPartialMatchings.containsKey(resolvingQuery))
 				{
 					// we have some index for this, add a new one
-					patternsPartialMatchings.get(resolvingQuery).insertOne(partialMatching.keySet(), foundFilteredMatchMap);
+					patternsPartialMatchings.get(resolvingQuery).insertOne(calledPatternsIndexKeySet, foundFilteredMatchMap);
 				}
 				else	
 				{
 					// add a completely new pattern-indexes class instance
-					patternsPartialMatchings.put(resolvingQuery, new PatternPartialMatchingData(resolvingQuery, variablesInOrder));//, partialMatching.keySet(), partialMatching.values(), foundFilteredMatches)); // like insertOne (constructor calls anyway)
-					patternsPartialMatchings.get(resolvingQuery).insertOne(partialMatching.keySet(), foundFilteredMatchMap);
+					patternsPartialMatchings.put(resolvingQuery, new PatternPartialMatchingData(resolvingQuery, calledPatternsVariablesInOrder));//, partialMatching.keySet(), partialMatching.values(), foundFilteredMatches)); // like insertOne (constructor calls anyway)
+					patternsPartialMatchings.get(resolvingQuery).insertOne(calledPatternsIndexKeySet, foundFilteredMatchMap);
 				}
 				MultiSet<LookaheadMatching> ret = new MultiSet<LookaheadMatching>();
 				for (int i = 0; i < sortedVals.size();i++)
@@ -272,7 +282,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 						i--;
 					}
 				}
-				ret.addAll(patternsPartialMatchings.get(resolvingQuery).indexes.get(partialMatching.keySet()).get(sortedVals));
+				ret.addAll(patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexKeySet).get(sortedVals));
 				return ret;
 			}
 		}
