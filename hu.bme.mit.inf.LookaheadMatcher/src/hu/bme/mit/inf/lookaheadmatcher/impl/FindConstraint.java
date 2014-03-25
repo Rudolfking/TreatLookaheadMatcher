@@ -45,7 +45,8 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 			MultiSet<LookaheadMatching> result = treatPatternCacher.GetMatchingsFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, true);
 			// result must be parsed to List<Object[]>
 			List<Object[]> ret = new ArrayList<Object[]>();
-			for(LookaheadMatching match : result.toArrayList(/*false*/))
+			// toarraylist false because only REAL matches count as a match, no need to count local-duplicated matches multiple mode
+			for(LookaheadMatching match : result.toArrayList(false))
 			{
 				// add all matchings as a "line" multi-matches only once
 				ret.add(match.getParameterMatchValuesOnlyAsArray());

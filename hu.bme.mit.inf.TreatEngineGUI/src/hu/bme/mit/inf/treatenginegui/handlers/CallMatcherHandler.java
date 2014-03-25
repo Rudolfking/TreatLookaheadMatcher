@@ -104,7 +104,7 @@ public class CallMatcherHandler extends AbstractHandler
 				MultiSet<LookaheadMatching> matches = null;
 				try
 				{
-					matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(specification);
+					// matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(specification);
 				}
 				catch (Exception e)
 				{
@@ -117,7 +117,7 @@ public class CallMatcherHandler extends AbstractHandler
 					continue;
 				}
 				if (matches != null) // might represent "no-matching"?
-					System.out.println("Matched " + specification.getFullyQualifiedName() + " count: " + matches.size());
+					System.out.println("Matched " + specification.getFullyQualifiedName() + " count: " + matches.uniqueSize() + "(" +  matches.size() + ")");
 			}
 			System.out.println("Finished matching everything!");
 			MultiSet<LookaheadMatching> matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(chosenSpecification);

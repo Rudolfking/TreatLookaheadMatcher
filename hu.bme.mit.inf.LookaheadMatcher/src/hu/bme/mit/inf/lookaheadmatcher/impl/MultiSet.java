@@ -124,7 +124,7 @@ public class MultiSet<T>
     }
     
     // multipleItemsExpanded = false ("default value")
-    public ArrayList<T> toArrayList()
+    public ArrayList<T> toArrayListDeprecated()
     {
     	ArrayList<T> retArray = new ArrayList<T>();
     	for (T t : counts.keySet()) {
@@ -136,7 +136,7 @@ public class MultiSet<T>
     public ArrayList<T> toArrayList(boolean multipleItemsExpanded)
     {
     	if (multipleItemsExpanded == false)
-    		return toArrayList();
+    		return toArrayListDeprecated();
     	else
     	{
         	ArrayList<T> retArray = new ArrayList<T>();
@@ -151,7 +151,7 @@ public class MultiSet<T>
 
 	public void addAll(MultiSet<T> collection)
 	{
-		for (T elem : collection.toArrayList())
+		for (T elem : collection.toArrayList(true))
 		{
 			this.add(elem);
 		}

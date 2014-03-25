@@ -21,7 +21,7 @@ public class MatcherAlgorithm
 	private int matchCounter = 0;
 	
 	// write out every small detail?
-	private boolean verbose = false;
+	private boolean verbose = true;
 	
 	// match one or all?
 	private boolean matchOne = false;
@@ -119,7 +119,7 @@ public class MatcherAlgorithm
 				LookaheadMatching newMatch = new LookaheadMatching(actualPatternDefinition.FixSymbolicVariables, MatchingVariables);
 				if (newMatch.getMatches().containsValue(null))
 				{
-					System.out.println("Critical error, one variable in found match is not bound!");
+					System.err.println("Critical error, one variable in found match is not bound!");
 				}
 				/*if (!foundMatches.add(newMatch))
 				{

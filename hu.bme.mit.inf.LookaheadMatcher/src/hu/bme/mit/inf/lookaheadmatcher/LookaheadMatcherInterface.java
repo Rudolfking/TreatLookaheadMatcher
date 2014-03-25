@@ -264,7 +264,7 @@ public class LookaheadMatcherInterface
 		
 		// write out!
 		int laza = 0;
-		for (LookaheadMatching oneMatch : matches.toArrayList())
+		for (LookaheadMatching oneMatch : matches.toArrayListDeprecated())
 		{
 			System.out.println("Match " + Integer.toString(laza) + ":" + oneMatch.toString());
 			laza++;

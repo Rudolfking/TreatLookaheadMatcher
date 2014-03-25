@@ -61,10 +61,10 @@ public class AdvancedDeltaProcessor
 	{
 		// receives a delta
 		
-		// collect deltas
-		if (receivedDeltas == null)
-			receivedDeltas = new ArrayList<Delta>();
-		receivedDeltas.add(d);
+		// collect deltas TODO currently I cannot see any reason to collect these (deltas are inside mailboxes and needed from there when processing)
+//		if (receivedDeltas == null)
+//			receivedDeltas = new ArrayList<Delta>();
+//		receivedDeltas.add(d);
 		
 		// collect affected patterns (quite important)
 		if (affectedPatterns == null)
@@ -156,7 +156,7 @@ public class AdvancedDeltaProcessor
 			// remove or add (based on change type)
 			if (changedMatch.getValue() == true)
 				oldMatches.add(changedMatch.getKey()); // new match appeared
-			else oldMatches.removeAll(changedMatch.getKey()); // old match disappeared
+			else oldMatches.remove(changedMatch.getKey()); // old match disappeared (only one! why all? I don't think so)
 		}
 		// apply the delta on indexes (if needed)
 		((TreatPartialPatternCacher) treatpartialCacher).ProcessADelta(d);
