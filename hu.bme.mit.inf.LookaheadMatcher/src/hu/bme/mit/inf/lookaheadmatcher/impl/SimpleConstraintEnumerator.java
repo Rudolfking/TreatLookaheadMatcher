@@ -37,6 +37,12 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 	{
 		if (constraint instanceof EasyConstraint)
 		{
+			// if that "easy one" is not the desired, it is a bad matching, cost should be 0
+			if (matchingVariables.get(((EasyConstraint) constraint).getOnlyVariable()) == null)
+				return 1; // not bound, easy can offer 1
+			if (matchingVariables.get(((EasyConstraint) constraint).getOnlyVariable()).equals(((EasyConstraint) constraint).getKnownValue()) == false)
+				return 0; // bound and BAD
+			// else correct bind
 			return 1;
 		}
 		else if (constraint instanceof FindConstraint)
@@ -213,7 +219,6 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 						{
 							// the bound source did not lead to the bound target, wrong relation!
 							// this is because not even EObject type is there
-							// ooooor feature is deleted!!! TODO?
 							return 0;
 						}
 					}
@@ -285,6 +290,15 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 
 		if (constraint instanceof EasyConstraint)
 		{
+			// if that "easy one" is not the desired, it is a bad matching, cost should be 0
+			if (matchingVariables.get(((EasyConstraint) constraint).getOnlyVariable()) != null &&
+				matchingVariables.get(((EasyConstraint) constraint).getOnlyVariable()).equals(((EasyConstraint) constraint).getKnownValue()) == false)
+			{
+				ArrayList<Object[]> temp = new ArrayList<Object[]>();
+				cost = 0;
+				return temp;
+			}
+			// null or bound and okay:
 			cost = 1;
 			ArrayList<Object[]> temp = new ArrayList<Object[]>();
 			temp.add(new Object[]{((EasyConstraint) constraint).getKnownValue()});
@@ -460,6 +474,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					else
 					{
 						System.out.println("Breee, noooooo, some target's inverse navigation source is not EObject - then wtf what?");
+						throw new AssertionError("Inverse navigate does not target an instance of EObject. What?");
 					}
 				}
 				cost = mtch; // items that match from this source
@@ -515,7 +530,6 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 						{
 							// the bound source did not lead to the bound target, wrong relation!
 							// this is because not even EObject type is there
-							// ooooor feature is deleted!!! TODO
 							cost = 0;
 							returnList = new ArrayList<Object[]>();
 							System.out.println("Erdekes2");

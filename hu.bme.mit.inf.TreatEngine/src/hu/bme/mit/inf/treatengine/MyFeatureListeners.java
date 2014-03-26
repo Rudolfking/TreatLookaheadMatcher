@@ -96,29 +96,6 @@ public class MyFeatureListeners
 					Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
 					deltas.add(d);
 				}
-				
-				// ret
-				
-				/*
-				isModified = false;
-				ArrayList<AheadStructure> newStructs = createNewFromOldTypeC(true, clazz, instance, GodSetStructures.get(maybeMod));
-				if (isModified)
-				{
-					MultiSet<LookaheadMatching> newbies = matcher.updateAll(engine, maybeMod, newStructs);
-					HashMap<LookaheadMatching, Boolean> newMap = new HashMap<LookaheadMatching, Boolean>();
-					if (newbies.size() > 0)
-					{
-						MultiSet<LookaheadMatching> combinedMatching = GodSet.get(maybeMod);
-						for (Entry<LookaheadMatching, Integer> inners : newbies.getInnerMap().entrySet())
-						{
-							combinedMatching.add(inners.getKey());
-							for (int pi = 0; pi < inners.getValue(); pi++)
-								newMap.put(inners.getKey(), true); // the count in multiset (more of tha same found: more changes)
-						}
-						GodSet.put(maybeMod, combinedMatching);
-					}
-				}
-				*/
 			}
 			// apply deltas (depth apply!)
 			for (Delta delta : deltas)
@@ -257,10 +234,6 @@ public class MyFeatureListeners
 					Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
 					deltas.add(d);
 				}
-				
-				/* ArrayList<AheadStructure> newStructs = createNewFromOldTypeC(false, type, instance, GodSetStructures.get(maybeModPattern)); if (isModified) { MultiSet<LookaheadMatching> newbies = matcher.updateAll(engine,
-				 * maybeModPattern, newStructs); if (newbies.size()>0) { MultiSet<LookaheadMatching> combinedMatching = GodSet.get(maybeModPattern); for (LookaheadMatching lMa : newbies.toArrayList()) { combinedMatching.add(lMa); }
-				 * GodSet.put(maybeModPattern, combinedMatching); } } */
 			}
 			
 			for (Delta delta : deltas)
