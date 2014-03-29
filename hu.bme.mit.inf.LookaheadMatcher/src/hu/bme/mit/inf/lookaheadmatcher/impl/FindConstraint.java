@@ -74,7 +74,7 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 		// mhm, can be evaluated when not all variables bound? no
 		for (PVariable one : this.affectedVariables)
 		{
-			if (one.isVirtual() == false && matchingVariables.get(one) == null)
+			if (one.isVirtual() == false && Utils.isRunning(one) == false && matchingVariables.get(one) == null)
 				return false;
 		}
 		return true;

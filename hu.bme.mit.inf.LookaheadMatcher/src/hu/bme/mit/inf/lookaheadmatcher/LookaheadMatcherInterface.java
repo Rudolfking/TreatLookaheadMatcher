@@ -8,6 +8,7 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.PatternProcessor;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
+import hu.bme.mit.inf.lookaheadmatcher.impl.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,12 +16,7 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Constraint;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;
-import org.eclipse.incquery.patternlanguage.patternLanguage.PatternBody;
-import org.eclipse.incquery.patternlanguage.patternLanguage.PatternCompositionConstraint;
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.incquery.runtime.matchers.psystem.PBody;
@@ -31,9 +27,6 @@ import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatte
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.PatternCallBasedDeferred;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.PositivePatternCall;
 import org.eclipse.incquery.runtime.matchers.tuple.Tuple;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 //import org.eclipse.viatra2.emf.incquery.base.exception.IncQueryBaseException;
 
@@ -185,7 +178,7 @@ public class LookaheadMatcherInterface
 				if (calls instanceof NegativePatternCall)// PatternCompositionConstraint)
 				{
 					PatternCallBasedDeferred pdd = (PatternCallBasedDeferred)calls;
-					// TODO this is obviously fuckedup:
+					
 					Set<PVariable> affected = pdd.getAffectedVariables();
 					Set<PVariable> filterKey = new HashSet<PVariable>();
 					Tuple actuals = pdd.getActualParametersTuple();
@@ -193,7 +186,7 @@ public class LookaheadMatcherInterface
 					{
 						if (a instanceof PVariable)
 						{
-							if (((PVariable) a).isVirtual() == false)
+							if (((PVariable) a).isVirtual() == false && Utils.isRunning((PVariable)a) == false)
 								affected.add((PVariable)a);
 						}
 					}
