@@ -50,11 +50,11 @@ public class PatternCallModes
 		return calledFinds.add(callee);
 	}
 	
-	public boolean AddNegativeCall(PQuery negCallee, Set<PVariable> indexCallingOn, boolean isFullIndex)
+	public boolean AddNegativeCall(PQuery negCallee, Set<PVariable> indexCallingOn, boolean isNotFullIndex)
 	{
-		if (!isFullIndex)
+		if (isNotFullIndex)
 			return calledNegFinds.put(negCallee, indexCallingOn);
-		else
+		else // store full index as NULL (redundancy removal)
 			return calledNegFinds.put(negCallee, null);
 	}
 
