@@ -179,19 +179,21 @@ public class LookaheadMatcherInterface
 				{
 					PatternCallBasedDeferred pdd = (PatternCallBasedDeferred)calls;
 					
-					Set<PVariable> affected = pdd.getAffectedVariables();
-					Set<PVariable> filterKey = new HashSet<PVariable>();
+					Set<PVariable> filterKey = pdd.getAffectedVariables();
 					Tuple actuals = pdd.getActualParametersTuple();
+					boolean isNotFull = false;
 					for (Object a: actuals.getElements())
 					{
 						if (a instanceof PVariable)
 						{
 							if (((PVariable) a).isVirtual() == false && Utils.isRunning((PVariable)a) == false)
-								affected.add((PVariable)a);
+								filterKey.add((PVariable)a);
+							else
+								isNotFull = true; // virtual (notfull) var
 						}
 					}
-					mode.AddNegativeCall(pdd.getReferredQuery(), filterKey);
-					//find_negfind_patterns.put(pdd.getReferredQuery(), false);
+					// put as negative call, but check if notok
+					mode.AddNegativeCall(pdd.getReferredQuery(), filterKey, isNotFull);
 				}
 				else if (calls instanceof PositivePatternCall)
 				{

@@ -50,9 +50,12 @@ public class PatternCallModes
 		return calledFinds.add(callee);
 	}
 	
-	public boolean AddNegativeCall(PQuery negCallee, Set<PVariable> indexCallingOn)
+	public boolean AddNegativeCall(PQuery negCallee, Set<PVariable> indexCallingOn, boolean isFullIndex)
 	{
-		return calledNegFinds.put(negCallee, indexCallingOn);
+		if (!isFullIndex)
+			return calledNegFinds.put(negCallee, indexCallingOn);
+		else
+			return calledNegFinds.put(negCallee, null);
 	}
 
 	public int allSize() 
@@ -76,5 +79,10 @@ public class PatternCallModes
 	public boolean containsPattern(PQuery q)
 	{
 		return this.calledFinds.contains(q) || this.calledNegFinds.keySet().contains(q);
+	}
+
+	public Set<PQuery> getNegativeCalls()
+	{
+		return this.calledNegFinds.keySet();
 	}
 }

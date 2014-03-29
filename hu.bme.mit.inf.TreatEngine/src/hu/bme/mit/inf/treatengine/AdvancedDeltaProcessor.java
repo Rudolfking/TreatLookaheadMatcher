@@ -73,10 +73,18 @@ public class AdvancedDeltaProcessor
 		//affectedPatterns.add(d.getPattern()); I am processing this pattern now! so dont add to affecteds
 		
 		// update THIS patterns matchings
-		updatePatternsMatchingsAndIndexesFromDelta(d);
+		Collection<IndexDelta> negFindDeltas = updatePatternsMatchingsAndIndexesFromDelta(d);
 		
 		// mailbox: deliver deltas and get call hierarchy to extend affected pattern list
 		Multimap<PQuery, Boolean> affPats = deliverDelta(d);
+		if (negFindDeltas != null)
+		{
+			for (IndexDelta id : negFindDeltas)
+			{
+				Multimap<PQuery, Boolean> moreAffPats = deliverDelta(id);
+				affectedPatterns.addAll(moreAffPats.keySet());
+			}
+		}
 		affectedPatterns.addAll(affPats.keySet());
 	}
 
@@ -94,12 +102,12 @@ public class AdvancedDeltaProcessor
 		// evaluate topological okay patterns:
 		for (PQuery topOK : topologicalFirstPatterns)
 		{
-			Delta newDelta = updatePatternsMatchingsAndIndexes(topOK);
-			if (newDelta != null)
+			Delta theChangeForThisPattern = processAllDeltaInMailboxesForPattern(topOK);
+			if (theChangeForThisPattern != null)
 			{
 				// collect again AND apply delta to TREAT cache & indexes
 				// might put pattern into affectedPatterns
-				ReceiveDelta(newDelta);
+				ReceiveDelta(theChangeForThisPattern);
 			}
 		}
 		
@@ -147,7 +155,7 @@ public class AdvancedDeltaProcessor
 	 * If we have only a delta, we can apply it to the affected pattern
 	 * @param d The delta to apply into matches
 	 */
-	private void updatePatternsMatchingsAndIndexesFromDelta(Delta d)
+	private Collection<IndexDelta> updatePatternsMatchingsAndIndexesFromDelta(Delta d)
 	{
 		// updates index and matching for a delta coming from
 
@@ -165,9 +173,8 @@ public class AdvancedDeltaProcessor
 		
 		// indexDeltas can occur neg finded pattern calls!
 		if (indexDelta != null && indexDelta.size() > 0)
-		{
-			
-		}
+			return indexDelta;
+		return null;
 	}
 
 	/**
@@ -177,7 +184,7 @@ public class AdvancedDeltaProcessor
 	 * are not updated yet (so topologically earlier patterns must be up to date and no deltas on its constraints).
 	 * @param pattern This pattern has deltas in its bodies on its constraints
 	 */
-	private Delta updatePatternsMatchingsAndIndexes(PQuery pattern)
+	private Delta processAllDeltaInMailboxesForPattern(PQuery pattern)
 	{
 		HashMap<LookaheadMatching, Boolean> changesToUpdatingPattern = new HashMap<LookaheadMatching, Boolean>();
 		// updates pattern, which has deltas in his bodies (use mirrored views...)
@@ -244,7 +251,10 @@ public class AdvancedDeltaProcessor
 				for (IDelta d : mailbox)
 				{
 					cc.removeFromMailbox(d); // remove a delta
-					Delta delta = (Delta)d;
+					if (!(d instanceof IndexDelta))
+						throw new AssertionError("This neg find got a not IndexDelta type delta! It cannot process other delta types!");
+					IndexDelta delta = (IndexDelta)d;
+					delta.getIndexVariables();
 					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						// match with lookahead, search for changes based on delta change
@@ -300,32 +310,56 @@ public class AdvancedDeltaProcessor
 		// who calls this delta's query?
 		for (Entry<PQuery, PatternCallModes> patEntr : LookaheadMatcherTreat.PatternCallsPatterns.entrySet())
 		{
-			// check if call:
-			if (patEntr.getValue().getCallingPatternsSimply().contains(delta.getPattern()))
+			if (delta instanceof IndexDelta)
 			{
-				// the patEntr.getKey is who calls the delta's pattern!!
-				PQuery caller = patEntr.getKey();
-				// put to mailboxes
-				boolean calling = false;
-				for (AheadStructure struct : LookaheadMatcherTreat.GodSetStructures.get(caller))
+				// check if call:
+				if (patEntr.getValue().getNegativeCalls().contains(delta.getPattern()))
 				{
-					for (AxisConstraint ac : struct.SearchedConstraints)
+					// the patEntr.getKey is who calls the delta's pattern!!
+					PQuery caller = patEntr.getKey();
+					// put to mailboxes
+					for (AheadStructure struct : LookaheadMatcherTreat.GodSetStructures.get(caller))
 					{
-						if (ac instanceof FindConstraint)
+						// indexdelta: only to NAC
+						for (CheckableConstraint cc : struct.CheckConstraints)
 						{
-							((FindConstraint)ac).putToMailbox(delta);
-							ret.put(caller, true);
-							calling = true;
+							if (cc instanceof NACConstraint)
+							{
+								((NACConstraint)cc).putToMailbox(delta);
+								ret.put(caller, false);
+							}
 						}
 					}
-					for (CheckableConstraint cc : struct.CheckConstraints)
+				}
+			}
+			else if (delta instanceof Delta && !(delta instanceof IndexDelta))
+			{
+				// check if call:
+				if (patEntr.getValue().getPositiveCalls().contains(delta.getPattern()))
+				{
+					// the patEntr.getKey is who calls the delta's pattern!!
+					PQuery caller = patEntr.getKey();
+					// put to mailboxes
+					for (AheadStructure struct : LookaheadMatcherTreat.GodSetStructures.get(caller))
 					{
-						if (cc instanceof NACConstraint)
+						// put simple delta only in find calls
+						for (AxisConstraint ac : struct.SearchedConstraints)
 						{
-							((NACConstraint)cc).putToMailbox(delta);
-							ret.put(caller, false);
-							calling = true;
+							if (ac instanceof FindConstraint)
+							{
+								((FindConstraint)ac).putToMailbox(delta);
+								ret.put(caller, true);
+							}
 						}
+						// neg finds get indexdeltas, so do not put simple deltas into neg find mailboxes
+//						for (CheckableConstraint cc : struct.CheckConstraints)
+//						{
+//							if (cc instanceof NACConstraint)
+//							{
+//								((NACConstraint)cc).putToMailbox(delta);
+//								ret.put(caller, false);
+//							}
+//						}
 					}
 				}
 			}
