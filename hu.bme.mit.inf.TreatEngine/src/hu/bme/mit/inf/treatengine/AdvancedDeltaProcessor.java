@@ -11,6 +11,7 @@ import java.util.Set;
 import hu.bme.mit.inf.lookaheadmatcher.IDelta;
 import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
 import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
+import hu.bme.mit.inf.lookaheadmatcher.PatternCallModes;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.CheckableConstraint;
@@ -50,7 +51,7 @@ public class AdvancedDeltaProcessor
 		this.treatpartialCacher = treatPartial;
 	}
 
-	private List<Delta> receivedDeltas;
+	// private List<Delta> receivedDeltas;
 	private Set<PQuery> affectedPatterns;
 	
 	/**
@@ -79,6 +80,7 @@ public class AdvancedDeltaProcessor
 		affectedPatterns.addAll(affPats.keySet());
 	}
 
+	@SuppressWarnings("rawtypes")
 	public void ProcessReceivedDeltaSet()
 	{
 		if (affectedPatterns == null || affectedPatterns.size() == 0)
@@ -130,12 +132,12 @@ public class AdvancedDeltaProcessor
 	{
 		for(PQuery s : patternSet)
 		{
-			Multimap<PQuery, Boolean> callings = LookaheadMatcherTreat.PatternCallsPatterns.get(s);
-			if (callings == null || callings.size() == 0)
+			PatternCallModes callings = LookaheadMatcherTreat.PatternCallsPatterns.get(s);
+			if (callings == null || callings.allSize() == 0)
 				continue;
-			else if (LookaheadMatcherTreat.PatternCallsPatterns.get(s).containsKey(q))
+			else if (LookaheadMatcherTreat.PatternCallsPatterns.get(s).containsPattern(q))
 				return false;
-			return checkRecursively(q, LookaheadMatcherTreat.PatternCallsPatterns.get(s).keySet());
+			return checkRecursively(q, LookaheadMatcherTreat.PatternCallsPatterns.get(s).getCallingPatternsSimply());
 		}
 		// if no return val were false: return true
 		return true;
@@ -151,7 +153,7 @@ public class AdvancedDeltaProcessor
 
 		// copied code, needs review
 		MultiSet<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
-		for (Entry<LookaheadMatching, Boolean> changedMatch : d.getChangeset().entries())
+		for (Entry<LookaheadMatching, Boolean> changedMatch : d.getChangeset().entrySet())
 		{
 			// remove or add (based on change type)
 			if (changedMatch.getValue() == true)
@@ -159,7 +161,13 @@ public class AdvancedDeltaProcessor
 			else oldMatches.remove(changedMatch.getKey()); // old match disappeared (only one! why all? I don't think so)
 		}
 		// apply the delta on indexes (if needed)
-		((TreatPartialPatternCacher) treatpartialCacher).ProcessADelta(d);
+		Collection<IndexDelta> indexDelta = ((TreatPartialPatternCacher) treatpartialCacher).ProcessADelta(d);
+		
+		// indexDeltas can occur neg finded pattern calls!
+		if (indexDelta != null && indexDelta.size() > 0)
+		{
+			
+		}
 	}
 
 	/**
@@ -171,7 +179,7 @@ public class AdvancedDeltaProcessor
 	 */
 	private Delta updatePatternsMatchingsAndIndexes(PQuery pattern)
 	{
-		Multimap<LookaheadMatching, Boolean> changesToUpdatingPattern = HashMultimap.create();
+		HashMap<LookaheadMatching, Boolean> changesToUpdatingPattern = new HashMap<LookaheadMatching, Boolean>();
 		// updates pattern, which has deltas in his bodies (use mirrored views...)
 		for (AheadStructure body : LookaheadMatcherTreat.GodSetStructures.get(pattern))
 		{
@@ -193,7 +201,7 @@ public class AdvancedDeltaProcessor
 				{
 					ac.removeFromMailbox(d); // remove a delta
 					Delta delta = (Delta)d;
-					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entries())
+					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						// match with lookahead, search for changes based on delta change
 						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
@@ -214,7 +222,11 @@ public class AdvancedDeltaProcessor
 							continue; // failed to get change res or base index etc.
 						for(LookaheadMatching changed : changeResult.toArrayList(true))
 						{
-							changesToUpdatingPattern.put(changed, change.getValue());
+							boolean additionOrRemoval = change.getValue();
+							if (changesToUpdatingPattern.containsKey(changed) && changesToUpdatingPattern.get(changed) != additionOrRemoval)
+								changesToUpdatingPattern.remove(changed); // remove!!! because opposite was inside
+							else
+								changesToUpdatingPattern.put(changed, additionOrRemoval); // put the new
 						}
 					}
 				}
@@ -233,7 +245,7 @@ public class AdvancedDeltaProcessor
 				{
 					cc.removeFromMailbox(d); // remove a delta
 					Delta delta = (Delta)d;
-					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entries())
+					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						// match with lookahead, search for changes based on delta change
 						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
@@ -254,7 +266,11 @@ public class AdvancedDeltaProcessor
 							continue; // failed to get change res or base index etc.
 						for(LookaheadMatching changed : changeResult.toArrayList(true))
 						{
-							changesToUpdatingPattern.put(changed, change.getValue() == false); // invert value!! (NAC!)
+							boolean additionOrRemoval = change.getValue() == false; // invert value!! (NAC!)
+							if (changesToUpdatingPattern.containsKey(changed) && changesToUpdatingPattern.get(changed) != additionOrRemoval)
+								changesToUpdatingPattern.remove(changed); // remove!!! because opposite was inside
+							else
+								changesToUpdatingPattern.put(changed, additionOrRemoval); // put the new
 						}
 					}
 				}
@@ -272,40 +288,66 @@ public class AdvancedDeltaProcessor
 	}
 
 	/**
-	 * Inspects the delta, and delivers it to the patterns calling this delta. Also puts the delta into the
+	 * Inspects the delta, and delivers it to the patterns calling this delta's pattern. Also puts the delta into the
 	 * appropriate constraints' mailboxes.
-	 * @param d The delta to inspect
+	 * @param d The delta to inspect (can be IndexDelta)
 	 * @return Affected queries (must be processed!) with a boolean (or 2 so multimap): call find or call neg find?
 	 */
 	private Multimap<PQuery,Boolean> deliverDelta(Delta delta)
 	{
-		Multimap<PQuery, Boolean> localAffectedPatterns = HashMultimap.create();
-		for (Entry<PQuery, Multimap<PQuery, Boolean>> patEntr : LookaheadMatcherTreat.PatternCallsPatterns.entrySet())
+		Multimap<PQuery, Boolean> ret = HashMultimap.create();
+		
+		// who calls this delta's query?
+		for (Entry<PQuery, PatternCallModes> patEntr : LookaheadMatcherTreat.PatternCallsPatterns.entrySet())
 		{
-			if (patEntr.getValue().containsKey(delta.getPattern()))
+			// check if call:
+			if (patEntr.getValue().getCallingPatternsSimply().contains(delta.getPattern()))
 			{
-				for (Boolean isPos : patEntr.getValue().get(delta.getPattern()))
+				// the patEntr.getKey is who calls the delta's pattern!!
+				PQuery caller = patEntr.getKey();
+				// put to mailboxes
+				boolean calling = false;
+				for (AheadStructure struct : LookaheadMatcherTreat.GodSetStructures.get(caller))
 				{
-					// add to affecteds
-					localAffectedPatterns.put(patEntr.getKey(), isPos);
-					// put to mailboxes
-					for (AheadStructure struct : LookaheadMatcherTreat.GodSetStructures.get(patEntr.getKey()))
+					for (AxisConstraint ac : struct.SearchedConstraints)
 					{
-						for (AxisConstraint ac : struct.SearchedConstraints)
+						if (ac instanceof FindConstraint)
 						{
-							if (ac instanceof FindConstraint)
-								((FindConstraint)ac).putToMailbox(delta);
+							((FindConstraint)ac).putToMailbox(delta);
+							ret.put(caller, true);
+							calling = true;
 						}
-						for (CheckableConstraint cc : struct.CheckConstraints)
+					}
+					for (CheckableConstraint cc : struct.CheckConstraints)
+					{
+						if (cc instanceof NACConstraint)
 						{
-							if (cc instanceof NACConstraint)
-								((NACConstraint)cc).putToMailbox(delta);
+							((NACConstraint)cc).putToMailbox(delta);
+							ret.put(caller, false);
+							calling = true;
 						}
 					}
 				}
 			}
 		}
-		// return pattern-callmode map (callmode: true if FIND false if NEGFIND
-		return localAffectedPatterns;
+		// return pattern-callmode map (callmode: true if FIND false if NEGFIND)
+		return ret;
+//
+//		// caller is who calls the delta's pattern, but caller calls other patterns also, so if caller changes,
+//		// these patterns will be affected also (one depth is enough, because this is only one receiveDelta,
+//		// when processing all affected patterns, other receiveDeltas will occur on the next, appropriate levels)
+		// I think this is not needed!!!!!:
+//		for (Entry<PQuery, PatternCallModes> patEntr : LookaheadMatcherTreat.PatternCallsPatterns.entrySet())
+//		{
+//			// add to affecteds
+//			for (PQuery also : ret.keySet())
+//			{
+//				if (patEntr.getValue().getCallingPatternsSimply().contains(also) && // if someone calls this
+//						delta.getPattern().equals(also) == false) // but not the delta itself (might make no sense? (circle?))
+//				{
+//					ret.put(patEntr.getKey(), patEntr.getValue().getPositiveCalls().contains(also)); // true if positive call
+//				}
+//			}
+//		}
 	}
 }

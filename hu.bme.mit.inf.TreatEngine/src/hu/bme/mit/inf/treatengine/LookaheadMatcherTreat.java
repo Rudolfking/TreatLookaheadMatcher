@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
 import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
+import hu.bme.mit.inf.lookaheadmatcher.PatternCallModes;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.FindConstraint;
@@ -103,8 +104,9 @@ public class LookaheadMatcherTreat
 	
 	/**
 	 *  a pattern and its calls (P -> { find(Q), negfind(R), negfind(S) } ) where find:true, negfind:false
+	 *  Might happen multi-mapping: (P -> { find(Q), negfind(Q) } )
 	 */
-	public static HashMap<PQuery, Multimap<PQuery, Boolean>> PatternCallsPatterns = new HashMap<PQuery, Multimap<PQuery, Boolean>>();
+	public static HashMap<PQuery, PatternCallModes> PatternCallsPatterns = new HashMap<PQuery, PatternCallModes>();
 	
 	/**
 	 *  a named element (class, structuralfeature) mapped to the affected patterns
@@ -228,14 +230,14 @@ public class LookaheadMatcherTreat
 	private void FillPatternCallsPatterns(PQuery actRoot)
 	{
 		// find children of this root
-		Multimap<PQuery, Boolean> findedNegfindedPatterns = matcher.getFindListForPattern(actRoot);
-		if (findedNegfindedPatterns != null && findedNegfindedPatterns.size() > 0)
+		PatternCallModes findedNegfindedPatterns = matcher.getFindListForPattern(actRoot);
+		if (findedNegfindedPatterns != null && findedNegfindedPatterns.allSize() > 0)
 			PatternCallsPatterns.put(actRoot, findedNegfindedPatterns);
 		else return; // no more children
-		for (Entry<PQuery, Boolean> finded : findedNegfindedPatterns.entries())
+		for (PQuery finded : findedNegfindedPatterns.getCallingPatternsSimply())
 		{
 			// iterate for children and find their calls, too
-			FillPatternCallsPatterns(finded.getKey());
+			FillPatternCallsPatterns(finded);
 		}
 	}
 

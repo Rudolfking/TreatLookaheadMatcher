@@ -11,7 +11,9 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
@@ -28,6 +30,7 @@ import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatternCall;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.PatternCallBasedDeferred;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.PositivePatternCall;
+import org.eclipse.incquery.runtime.matchers.tuple.Tuple;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -172,9 +175,9 @@ public class LookaheadMatcherInterface
 	/**
 	 *  returns all findX negfindX patterns, that occur in P pattern (query) (not recursively!)
 	 */
-	public Multimap<PQuery, Boolean> getFindListForPattern(PQuery P)
+	public PatternCallModes getFindListForPattern(PQuery P)
 	{
-		Multimap<PQuery, Boolean> find_negfind_patterns = HashMultimap.create();//new HashMap<PQuery, Boolean>();
+		PatternCallModes mode = new PatternCallModes(P);
 		for (PBody body : P.getContainedBodies())
 		{
 			for (PConstraint calls : body.getConstraints())
@@ -182,29 +185,31 @@ public class LookaheadMatcherInterface
 				if (calls instanceof NegativePatternCall)// PatternCompositionConstraint)
 				{
 					PatternCallBasedDeferred pdd = (PatternCallBasedDeferred)calls;
-					find_negfind_patterns.put(pdd.getReferredQuery(), false);
+					// TODO this is obviously fuckedup:
+					Set<PVariable> affected = pdd.getAffectedVariables();
+					Set<PVariable> filterKey = new HashSet<PVariable>();
+					Tuple actuals = pdd.getActualParametersTuple();
+					for (Object a: actuals.getElements())
+					{
+						if (a instanceof PVariable)
+						{
+							if (((PVariable) a).isVirtual() == false)
+								affected.add((PVariable)a);
+						}
+					}
+					mode.AddNegativeCall(pdd.getReferredQuery(), filterKey);
+					//find_negfind_patterns.put(pdd.getReferredQuery(), false);
 				}
 				else if (calls instanceof PositivePatternCall)
 				{
 					PositivePatternCall pdd = (PositivePatternCall)calls;
-					find_negfind_patterns.put((IQuerySpecification<?>) pdd.getReferredQuery(), true);
+					mode.AddPositiveCall(pdd.getReferredQuery());
 				}
 			}
 		}
 		
-		return find_negfind_patterns;
+		return mode;
 	}
-
-// some old code:
-	
-	// remember for the patterncompositionconstraint's call's pattern reference (thid pattern is called and is in a constraint)
-//	Pattern findthisPattern = ((PatternCompositionConstraint) calls).getCall().getPatternRef();
-//	Boolean isPositiveCall = ((PatternCompositionConstraint) calls).isNegative() == true ? Boolean.FALSE : Boolean.TRUE;
-//	// add this pattern
-//	find_negfind_patterns.put(findthisPattern, isPositiveCall);
-	// and this pattern's find/negfind patterns
-	//find_negfind_patterns.addAll(getFindHierarchyForPattern(findthisPattern));
-	
 	
 	
 	/*

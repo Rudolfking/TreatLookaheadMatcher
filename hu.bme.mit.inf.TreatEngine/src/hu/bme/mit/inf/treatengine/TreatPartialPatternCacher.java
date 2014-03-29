@@ -63,14 +63,17 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		 * Must resolve delta and update inner changes
 		 * @param delta
 		 */
-		public void maintainIntegrity(Delta delta)
+		public Collection<IndexDelta> maintainIntegrity(Delta delta)
 		{
-			for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entries()) // for all delta
+			Set<IndexDelta> deltaSet = new HashSet<IndexDelta>();
+			for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet()) // helyi jarat
 			{
-				LookaheadMatching changMatch = entry.getKey();
-
-				for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet()) // helyi jarat
+				// the changeMap for THIS index
+				HashMap<LookaheadMatching, Boolean> changeMap = new HashMap<LookaheadMatching, Boolean>();
+				
+				for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entrySet()) // for all delta
 				{
+					LookaheadMatching changMatch = entry.getKey();
 					// construct the key
 					List<Object> currentNewKey = new ArrayList<Object>();
 					for (PVariable oneVar : this.theVariablesInOrder)
@@ -81,62 +84,35 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 						}
 					}
 					if (entry.getValue())
+					{
+						if (index.getValue().get(currentNewKey).size() == 0)
+						{
+							// first+ yeah
+							changeMap.put(changMatch, true);
+						}
+						
 						index.getValue().put(currentNewKey, changMatch);
+					}
 					else
+					{
 						index.getValue().remove(currentNewKey, changMatch);
+						
+						if (index.getValue().get(currentNewKey).size() == 0)
+						{
+							// it was the last!!!!!
+							changeMap.put(changMatch, false);
+						}
+					}
 				}
-				
-				// TODO should throw deltas? ne mar :(
-				
-				
-//				if (entry.getValue() == false)
-//				{
-//					// if removed match: iterate through everything and remove (kills CPU?)
-//					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
-//					{
-//						Multimap<List<Object>, LookaheadMatching> removes = HashMultimap.create();
-//						for (Entry<List<Object>, LookaheadMatching> innerMatch : index.getValue().entries())
-//						{
-//							if (innerMatch.getValue().equals(entry.getKey()))
-//							{
-//								removes.put(innerMatch.getKey(), innerMatch.getValue());
-//							}
-//						}
-//						for (Entry<List<Object>, LookaheadMatching> lm : removes.entries())
-//						{
-//							index.getValue().remove(lm.getKey(), lm.getValue());
-//						}
-//					}
-//				}
-//				else
-//				{
-//					// new matching! insert into indexes where it should be
-//					LookaheadMatching newMatch = entry.getKey();
-//
-//					for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet())
-//					{
-//						// construct the key
-//						List<Object> currentNewKey = new ArrayList<Object>();
-//						for (PVariable oneVar : this.theVariablesInOrder)
-//						{
-//							if (index.getKey().contains(oneVar))
-//							{
-//								currentNewKey.add(newMatch.getMatches().get(oneVar));
-//							}
-//						}
-//						// if key is constructed and we have the value, "all done".
-//						index.getValue().put(currentNewKey, newMatch);
-//					}
-//				}
-			}
-		}
 
-//		public void insertOne(Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
-//		{
-//			Multimap<Collection<Object>, LookaheadMatching> szarTemp = HashMultimap.create();//<Collection<Object>, LookaheadMatching>();
-//			szarTemp.putAll(filteringValues, foundFilteredMatches.toArrayList(true));
-//			indexes.put(filterKeys, szarTemp);
-//		}
+				if (changeMap.size() > 0)
+					deltaSet.add(new IndexDelta(this.theQuery, changeMap, index.getKey()));
+			}
+			// the delta for THIS index
+			if (deltaSet.size() != 0)
+				return deltaSet;
+			return null;
+		}
 		
 		public void insertOne(Set<PVariable> filterKeys, Multimap<List<Object>, LookaheadMatching> foundFilteredMatchMap)
 		{
@@ -288,9 +264,10 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		}
 	}
 	
-	public void ProcessADelta(Delta delta)
+	public Collection<IndexDelta> ProcessADelta(Delta delta)
 	{
 		if (this.patternsPartialMatchings.get(delta.getPattern()) != null) // if in indexed list!
-			this.patternsPartialMatchings.get(delta.getPattern()).maintainIntegrity(delta); // add delta to maintain
+			return this.patternsPartialMatchings.get(delta.getPattern()).maintainIntegrity(delta); // add delta to maintain
+		return null; // no delta can occur
 	}
 }

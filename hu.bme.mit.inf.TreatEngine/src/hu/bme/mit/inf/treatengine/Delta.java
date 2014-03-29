@@ -1,5 +1,7 @@
 package hu.bme.mit.inf.treatengine;
 
+import java.util.HashMap;
+
 import hu.bme.mit.inf.lookaheadmatcher.IDelta;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 
@@ -13,7 +15,7 @@ import com.google.common.collect.Multimap;
 public class Delta implements IDelta
 {
 	private PQuery pattern;
-	private Multimap<LookaheadMatching, Boolean> changeset;
+	private HashMap<LookaheadMatching, Boolean> changeset;
 	//private AheadStructure structure;
 	
 	public PQuery getPattern()
@@ -26,12 +28,12 @@ public class Delta implements IDelta
 		this.pattern = pattern;
 	}
 	
-	public Multimap<LookaheadMatching, Boolean> getChangeset()
+	public HashMap<LookaheadMatching, Boolean> getChangeset()
 	{
 		return changeset;
 	}
 	
-	public void setChangeset(Multimap<LookaheadMatching, Boolean> changeset)
+	public void setChangeset(HashMap<LookaheadMatching, Boolean> changeset)
 	{
 		this.changeset = changeset;
 	}
@@ -47,15 +49,14 @@ public class Delta implements IDelta
 //		this.structure = structure;
 //	}
 
-	public Delta(PQuery changedPattern, Multimap<LookaheadMatching, Boolean> changes)
+	public Delta(PQuery changedPattern, HashMap<LookaheadMatching, Boolean> changes)
 	{
 		this.pattern = changedPattern;
-		this.changeset = HashMultimap.create();//<LookaheadMatching,Boolean>();
-		// copy
-		/*for (Entry<LookaheadMatching, Boolean> mac : changes.entrySet())
-		{
-			changeset.put(mac.getKey(), mac.getValue());
-		}*/
+		this.changeset = new HashMap<LookaheadMatching,Boolean>();
+		
+		// check if changes have same keys with different values:
+		
+		
 		this.changeset = changes;
 	}
 }

@@ -70,7 +70,7 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 				Delta delta = (Delta)deltai;
 				if (constraint instanceof FindConstraint)
 				{
-					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entries())
+					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						for (int cd = 0; cd < candidates.size(); cd++)
 						{

@@ -82,7 +82,7 @@ public class MyFeatureListeners
 				MultiSet<LookaheadMatching> newbies = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, (ArrayList<AheadStructure>)newStructs.clone(), knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
-				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();
+				HashMap<LookaheadMatching, Boolean> newMatchingsAndAddition = new HashMap<LookaheadMatching, Boolean>();
 				
 				// iterate over multiset and create delta
 				for (Entry<LookaheadMatching, Integer> inners : newbies.getInnerMap().entrySet())
@@ -148,7 +148,7 @@ public class MyFeatureListeners
 					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
-					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create();//<LookaheadMatching, Boolean>();
+					HashMap<LookaheadMatching, Boolean> newMatchingsAndRemoval = new HashMap<LookaheadMatching, Boolean>();
 					
 					// iterate over multiset and create delta
 					for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
@@ -220,7 +220,7 @@ public class MyFeatureListeners
 				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, (ArrayList<AheadStructure>)newStructs.clone(), knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
-				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();//<LookaheadMatching, Boolean>();
+				HashMap<LookaheadMatching, Boolean> newMatchingsAndAddition = new HashMap<LookaheadMatching, Boolean>();
 				
 				// iterate over multiset and create delta
 				for (Entry<LookaheadMatching, Integer> inners : newbies_toadd.getInnerMap().entrySet())
@@ -285,7 +285,7 @@ public class MyFeatureListeners
 					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
-					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
+					HashMap<LookaheadMatching, Boolean> newMatchingsAndRemoval = new HashMap<LookaheadMatching, Boolean>();
 					
 					// iterate over multiset and create delta
 					for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
@@ -358,7 +358,7 @@ public class MyFeatureListeners
 				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
-				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create(); // <LookaheadMatching, Boolean>();
+				HashMap<LookaheadMatching, Boolean> newMatchingsAndAddition = new HashMap<LookaheadMatching, Boolean>();
 				
 				// iterate over multiset and create delta
 				for (Entry<LookaheadMatching, Integer> inners : newbies_toadd.getInnerMap().entrySet())
@@ -369,8 +369,8 @@ public class MyFeatureListeners
 				// delta needed to propagate the changes
 				if (newMatchingsAndAddition.size()>0)
 				{
-				Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
-				deltas.add(d);
+					Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
+					deltas.add(d);
 				}
 			}
 			// apply deltas
@@ -426,7 +426,7 @@ public class MyFeatureListeners
 					MultiSet<LookaheadMatching> newbies_toremove = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
-					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create(); // <LookaheadMatching, Boolean>();
+					HashMap<LookaheadMatching, Boolean> newMatchingsAndRemoval = new HashMap<LookaheadMatching, Boolean>();
 					
 					// iterate over multiset and create delta
 					for (Entry<LookaheadMatching, Integer> inners : newbies_toremove.getInnerMap().entrySet())
@@ -437,8 +437,8 @@ public class MyFeatureListeners
 					// delta needed to propagate the changes
 					if (newMatchingsAndRemoval.size()>0)
 					{
-					Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
-					deltas.add(d);
+						Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
+						deltas.add(d);
 					}
 				}
 			}
