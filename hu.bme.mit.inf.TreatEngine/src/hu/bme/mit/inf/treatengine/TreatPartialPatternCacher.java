@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
@@ -48,15 +49,14 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	private class PatternPartialMatchingData
 	{
 		PQuery theQuery;
-		List<PVariable> theVariablesInOrder;
+		List<PParameter> theVariablesInOrder;
 		
-		private Map<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> indexes = new HashMap<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>>();
+		private Map<Set<PParameter>, Multimap<List<Object>, LookaheadMatching>> indexes = new HashMap<Set<PParameter>, Multimap<List<Object>, LookaheadMatching>>();
 
-		public PatternPartialMatchingData(PQuery resolvingQuery, List<PVariable> variablesInOrder)//, Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
+		public PatternPartialMatchingData(PQuery resolvingQuery, List<PParameter> variablesInOrder)//, Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
 		{
 			theQuery = resolvingQuery;
 			theVariablesInOrder = variablesInOrder;
-			//insertOne(filterKeys, filteringValues, foundFilteredMatches);
 		}
 		
 		/**
@@ -66,7 +66,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		public Collection<IndexDelta> maintainIntegrity(Delta delta)
 		{
 			Set<IndexDelta> deltaSet = new HashSet<IndexDelta>();
-			for (Entry<Set<PVariable>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet()) // helyi jarat
+			for (Entry<Set<PParameter>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet()) // helyi jarat
 			{
 				// the changeMap for THIS index
 				HashMap<LookaheadMatching, Boolean> changeMap = new HashMap<LookaheadMatching, Boolean>();
@@ -76,7 +76,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 					LookaheadMatching changMatch = entry.getKey();
 					// construct the key
 					List<Object> currentNewKey = new ArrayList<Object>();
-					for (PVariable oneVar : this.theVariablesInOrder)
+					for (PParameter oneVar : this.theVariablesInOrder)
 					{
 						if (index.getKey().contains(oneVar))
 						{
@@ -114,7 +114,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			return null;
 		}
 		
-		public void insertOne(Set<PVariable> filterKeys, Multimap<List<Object>, LookaheadMatching> foundFilteredMatchMap)
+		public void insertOne(Set<PParameter> filterKeys, Multimap<List<Object>, LookaheadMatching> foundFilteredMatchMap)
 		{
 			indexes.put(filterKeys, foundFilteredMatchMap);
 		}
@@ -143,7 +143,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		if (partialMatchingWithNullsAndEverything == null)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
 
-		List<PVariable> calledPatternsVariablesInOrder = resolvingQuery.getContainedBodies().iterator().next().getSymbolicParameters();
+		List<PParameter> calledPatternsVariablesInOrder = resolvingQuery.getParameters();
 		
 		HashMap<PVariable, Object> partialMatching = new HashMap<PVariable, Object>();
 		// create a "partial matching" where nulls are removed (to use as key, and use counts etc.)
@@ -163,7 +163,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			// the case is more complex: partial matching!
 			
 			// create the key for indexing (index key)
-			HashSet<PVariable> calledPatternsIndexKeySet = new HashSet<PVariable>();
+			HashSet<PParameter> calledPatternsIndexKeySet = new HashSet<PParameter>();
 			for (int i=0;i<variablesInOrder.size();i++)
 			{
 				if (partialMatching.get(variablesInOrder.get(i)) != null)
