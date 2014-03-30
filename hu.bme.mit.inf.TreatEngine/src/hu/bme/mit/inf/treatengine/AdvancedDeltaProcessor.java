@@ -324,8 +324,12 @@ public class AdvancedDeltaProcessor
 						{
 							if (cc instanceof NACConstraint)
 							{
-								((NACConstraint)cc).putToMailbox(delta);
-								ret.put(caller, false);
+								NACConstraint nacC = (NACConstraint)cc;
+								if (Utils.isProperIndex(nacC, (IndexDelta)delta))
+								{
+									nacC.putToMailbox(delta);
+									ret.put(caller, false);
+								}
 							}
 						}
 					}
