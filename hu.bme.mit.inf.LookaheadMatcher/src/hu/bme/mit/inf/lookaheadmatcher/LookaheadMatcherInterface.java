@@ -13,6 +13,7 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.Utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -21,6 +22,7 @@ import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.incquery.runtime.matchers.psystem.PBody;
 import org.eclipse.incquery.runtime.matchers.psystem.PConstraint;
+import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatternCall;
@@ -179,15 +181,18 @@ public class LookaheadMatcherInterface
 				{
 					PatternCallBasedDeferred pdd = (PatternCallBasedDeferred)calls;
 					
-					Set<PVariable> filterKey = pdd.getAffectedVariables();
+					Set<PParameter> filterKey = new HashSet<PParameter>();
 					Tuple actuals = pdd.getActualParametersTuple();
 					boolean isNotFull = false;
-					for (Object a: actuals.getElements())
+					//for (Object a: actuals.getElements())
+					List<PParameter> patternPars = pdd.getReferredQuery().getParameters();
+					for (int i=0;i<actuals.getSize();i++)
 					{
-						if (a instanceof PVariable)
+						PVariable callA = (PVariable) actuals.get(i);
+						if (callA instanceof PVariable)
 						{
-							if (((PVariable) a).isVirtual() == false && Utils.isRunning((PVariable)a) == false)
-								filterKey.add((PVariable)a);
+							if ((callA).isVirtual() == false && Utils.isRunning(callA) == false)
+								filterKey.add(patternPars.get(i));
 							else
 								isNotFull = true; // virtual (notfull) var
 						}

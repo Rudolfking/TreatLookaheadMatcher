@@ -7,13 +7,17 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
+import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 import hu.bme.mit.inf.lookaheadmatcher.IConstraintEnumerator;
 import hu.bme.mit.inf.lookaheadmatcher.IDelta;
+import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
+import hu.bme.mit.inf.lookaheadmatcher.impl.CheckableConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.FindConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
+import hu.bme.mit.inf.lookaheadmatcher.impl.NACConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.SimpleConstraintEnumerator;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
@@ -41,7 +45,30 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 			else
 			{
 				// get and return: this will filter by content
-				return enumerateConstraint(constraint, matchingVariables).size();
+				try
+				{
+					// should get delta of caller!
+					List<IDelta> d = constraint.getMailboxContent();
+					int newMatchCount = LookaheadMatcherTreat.GodSet.get(((FindConstraint)constraint).getInnerFindCall().getReferredQuery()).size();
+					for (IDelta del : d)
+					{
+						Delta delta = (Delta)del;
+						for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
+						{
+							// "rollback" this change
+							if (change.getValue())
+								newMatchCount--;
+							else
+								newMatchCount++;
+						}
+					}
+					return newMatchCount;
+				}
+				catch (Exception e)
+				{
+					// fallback:
+					return enumerateConstraint(constraint, matchingVariables).size();
+				}
 			}
 		}
 		// return 0; // something went bad

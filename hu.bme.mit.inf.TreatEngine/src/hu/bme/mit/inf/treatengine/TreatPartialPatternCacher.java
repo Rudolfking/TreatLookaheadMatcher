@@ -126,7 +126,8 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	 * Might be faster to call this first!
 	 */
 	@Override
-	public int GetMatchCountFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatching, List<PVariable> variablesInOrder, boolean forceMakeIndexIfNotIndexed)
+	public int GetMatchCountFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatching,
+			List<PVariable> variablesInOrder, boolean forceMakeIndexIfNotIndexed)
 	{
 		// buta solution:
 		return this.GetMatchingsFromPartial(resolvingQuery, partialMatching, variablesInOrder, forceMakeIndexIfNotIndexed).size();
@@ -138,7 +139,8 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	/**
 	 * Get the possible matchings from a partial match (if forceMakeIndex is false and this partial match is not cached, returns 0!!)
 	 */
-	public MultiSet<LookaheadMatching> GetMatchingsFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatchingWithNullsAndEverything, List<PVariable> variablesInOrder, boolean forceMakeIndexIfNotIndexed)
+	public MultiSet<LookaheadMatching> GetMatchingsFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatchingWithNullsAndEverything,
+			List<PVariable> variablesInOrder, boolean forceMakeIndexIfNotIndexed)
 	{
 		if (partialMatchingWithNullsAndEverything == null)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
@@ -153,7 +155,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				partialMatching.put(entry.getKey(), entry.getValue()); // add to watch set if (1) its value is not null (2) key is in affected variables of query ( parameter )
 		}
 		
-		if (partialMatching.size() == 0)
+		if (partialMatching.size() == 0 || partialMatching.size() == variablesInOrder.size())
 		{
 			// case is easy: get ALL matches! should check forcemakeindex (matchThePattern() will cache...)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
@@ -163,19 +165,19 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			// the case is more complex: partial matching!
 			
 			// create the key for indexing (index key)
-			HashSet<PParameter> calledPatternsIndexKeySet = new HashSet<PParameter>();
+			HashSet<PParameter> calledPatternsIndexParamsKeySet = new HashSet<PParameter>();
 			for (int i=0;i<variablesInOrder.size();i++)
 			{
 				if (partialMatching.get(variablesInOrder.get(i)) != null)
-					calledPatternsIndexKeySet.add(calledPatternsVariablesInOrder.get(i));
+					calledPatternsIndexParamsKeySet.add(calledPatternsVariablesInOrder.get(i));
 			}
 			
 			if (patternsPartialMatchings.containsKey(resolvingQuery) && 
-					patternsPartialMatchings.get(resolvingQuery).indexes.containsKey(calledPatternsIndexKeySet))
+					patternsPartialMatchings.get(resolvingQuery).indexes.containsKey(calledPatternsIndexParamsKeySet))
 			{
 				// we have an index for this, return fast with it
 				MultiSet<LookaheadMatching> ms = new MultiSet<LookaheadMatching>();
-				Multimap<List<Object>, LookaheadMatching> valueMatchingPairs = patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexKeySet);
+				Multimap<List<Object>, LookaheadMatching> valueMatchingPairs = patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexParamsKeySet);
 				// Collection<Object> vals = partialMatching.values();
 				ArrayList<Object> sortedVals = new ArrayList<Object>();
 				for (PVariable pV : variablesInOrder)
@@ -190,12 +192,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			else
 			{			
 				// can we even cache this pattern? apparently: yes! (solve flattening later)
-				
-				// vars to hashset:
-//				HashSet<PVariable> affectedVars = new HashSet<PVariable>();
-//				affectedVars.addAll(variablesInOrder);
-				
-				
+					
 				// match! (if needed, else get from cache):
 				// it is a MUST to call lookaheadTreat.matchThePattern() because if the pattern is new, only this will subscribe the patterns inner
 				// type changes from the model (so we can maintain this partial matching). So: for a partial matching we ALWAYS have to know all matchings
@@ -212,7 +209,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				// filter the matchings
 				Multimap<List<Object>, LookaheadMatching> foundFilteredMatchMap = HashMultimap.create();//<Collection<Object>, LookaheadMatching>();
 				
-				
+				// check all matches and filter it according to the condition: create the index set!
 				for (LookaheadMatching match : foundUnfilteredMatches.toArrayList(true))
 				{
 					if (match.getParameterMatchValuesOnlyAsArray().length != sortedVals.size())
@@ -241,13 +238,13 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				if (patternsPartialMatchings.containsKey(resolvingQuery))
 				{
 					// we have some index for this, add a new one
-					patternsPartialMatchings.get(resolvingQuery).insertOne(calledPatternsIndexKeySet, foundFilteredMatchMap);
+					patternsPartialMatchings.get(resolvingQuery).insertOne(calledPatternsIndexParamsKeySet, foundFilteredMatchMap);
 				}
 				else	
 				{
 					// add a completely new pattern-indexes class instance
 					patternsPartialMatchings.put(resolvingQuery, new PatternPartialMatchingData(resolvingQuery, calledPatternsVariablesInOrder));//, partialMatching.keySet(), partialMatching.values(), foundFilteredMatches)); // like insertOne (constructor calls anyway)
-					patternsPartialMatchings.get(resolvingQuery).insertOne(calledPatternsIndexKeySet, foundFilteredMatchMap);
+					patternsPartialMatchings.get(resolvingQuery).insertOne(calledPatternsIndexParamsKeySet, foundFilteredMatchMap);
 				}
 				MultiSet<LookaheadMatching> ret = new MultiSet<LookaheadMatching>();
 				for (int i = 0; i < sortedVals.size();i++)
@@ -258,7 +255,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 						i--;
 					}
 				}
-				ret.addAll(patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexKeySet).get(sortedVals));
+				ret.addAll(patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexParamsKeySet).get(sortedVals));
 				return ret;
 			}
 		}
