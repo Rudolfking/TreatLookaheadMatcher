@@ -42,6 +42,7 @@ public class MyFeatureListeners
 	// captures an "instance" (eclass) change (insertion, deletion) then copies and modifies the aheadstructures to match insertion/deletion, then runs a patternmatcher, then updates the cached matchings
 	public InstanceListener classListener = new InstanceListener()
 	{
+		@SuppressWarnings("unchecked")
 		@Override
 		public void instanceInserted(EClass clazz, EObject instance)
 		{
@@ -49,7 +50,7 @@ public class MyFeatureListeners
 			System.out.println("[ECLASS] Update affected patterns' matchings started!");
 			long start = System.currentTimeMillis();
 			// changes:
-			ArrayList<Delta> deltas = new ArrayList<Delta>();
+			ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
 			
 			// check all patterns affected!
 			for (PQuery maybeModPattern : LookaheadMatcherTreat.RelativeSet.get(clazz))
@@ -82,7 +83,7 @@ public class MyFeatureListeners
 				MultiSet<LookaheadMatching> newbies = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, (ArrayList<AheadStructure>)newStructs.clone(), knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
-				HashMap<LookaheadMatching, Boolean> newMatchingsAndAddition = new HashMap<LookaheadMatching, Boolean>();
+				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();
 				
 				// iterate over multiset and create delta
 				for (Entry<LookaheadMatching, Integer> inners : newbies.getInnerMap().entrySet())
@@ -93,12 +94,12 @@ public class MyFeatureListeners
 				// delta needed to propagate the changes
 				if (newMatchingsAndAddition.size()>0)
 				{
-					Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
+					ModelDelta d = new ModelDelta(maybeModPattern, newMatchingsAndAddition);
 					deltas.add(d);
 				}
 			}
 			// apply deltas (depth apply!)
-			for (Delta delta : deltas)
+			for (ModelDelta delta : deltas)
 			{
 				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
@@ -115,7 +116,7 @@ public class MyFeatureListeners
 			long start = System.currentTimeMillis();
 			
 			// changes:
-			ArrayList<Delta> deltas = new ArrayList<Delta>();
+			ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
 			
 			for (PQuery maybeModPattern : LookaheadMatcherTreat.RelativeSet.get(clazz))
 			{
@@ -148,7 +149,7 @@ public class MyFeatureListeners
 					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
-					HashMap<LookaheadMatching, Boolean> newMatchingsAndRemoval = new HashMap<LookaheadMatching, Boolean>();
+					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create();
 					
 					// iterate over multiset and create delta
 					for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
@@ -159,14 +160,14 @@ public class MyFeatureListeners
 					// delta needed to propagate the changes
 					if (newMatchingsAndRemoval.size()>0)
 					{
-						Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
+						ModelDelta d = new ModelDelta(maybeModPattern, newMatchingsAndRemoval);
 						deltas.add(d);
 					}
 				}
 			}
 			
 			// apply deltas (depth apply!)
-			for (Delta delta : deltas)
+			for (ModelDelta delta : deltas)
 			{
 				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
@@ -179,6 +180,7 @@ public class MyFeatureListeners
 	// listens to datatype changes, works as the instancelistener, but uses relation structure update (matches relations by hand before matching)
 	public DataTypeListener dataTypeListener = new DataTypeListener()
 	{
+		@SuppressWarnings("unchecked")
 		@Override
 		public void dataTypeInstanceInserted(EDataType type, Object instance, boolean firstOccurrence)
 		{
@@ -187,7 +189,7 @@ public class MyFeatureListeners
 			long start = System.currentTimeMillis();
 			
 			// changes:
-			ArrayList<Delta> deltas = new ArrayList<Delta>();
+			ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
 			
 			for (PQuery maybeModPattern : LookaheadMatcherTreat.RelativeSet.get(type))
 			{
@@ -220,7 +222,7 @@ public class MyFeatureListeners
 				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, (ArrayList<AheadStructure>)newStructs.clone(), knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
-				HashMap<LookaheadMatching, Boolean> newMatchingsAndAddition = new HashMap<LookaheadMatching, Boolean>();
+				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();
 				
 				// iterate over multiset and create delta
 				for (Entry<LookaheadMatching, Integer> inners : newbies_toadd.getInnerMap().entrySet())
@@ -231,12 +233,12 @@ public class MyFeatureListeners
 				// delta needed to propagate the changes
 				if (newMatchingsAndAddition.size()>0)
 				{
-					Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
+					ModelDelta d = new ModelDelta(maybeModPattern, newMatchingsAndAddition);
 					deltas.add(d);
 				}
 			}
 			
-			for (Delta delta : deltas)
+			for (ModelDelta delta : deltas)
 			{
 				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
@@ -250,7 +252,7 @@ public class MyFeatureListeners
 		public void dataTypeInstanceDeleted(EDataType type, Object instance, boolean firstOccurrence)
 		{
 			// changes:
-			ArrayList<Delta> deltas = new ArrayList<Delta>();
+			ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
 			
 			// DatatypeDelta dataDelete = new DatatypeDelta(type, instance, false);
 			System.out.println("[EDATATYPE] Delete affected patterns' matchings if class instance used in them started!");
@@ -285,7 +287,7 @@ public class MyFeatureListeners
 					MultiSet<LookaheadMatching> newbies_todelete = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
-					HashMap<LookaheadMatching, Boolean> newMatchingsAndRemoval = new HashMap<LookaheadMatching, Boolean>();
+					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create();
 					
 					// iterate over multiset and create delta
 					for (Entry<LookaheadMatching, Integer> inners : newbies_todelete.getInnerMap().entrySet())
@@ -296,13 +298,13 @@ public class MyFeatureListeners
 					// delta needed to propagate the changes
 					if (newMatchingsAndRemoval.size()>0)
 					{
-						Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
+						ModelDelta d = new ModelDelta(maybeModPattern, newMatchingsAndRemoval);
 						deltas.add(d);
 					}
 				}
 			}
 			
-			for (Delta delta : deltas)
+			for (ModelDelta delta : deltas)
 			{
 				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
@@ -323,7 +325,7 @@ public class MyFeatureListeners
 			System.out.println("[ESTRUCTURALFEATURE] Update affected patterns' matchings started!");
 			long start = System.currentTimeMillis();
 			// changes:
-			ArrayList<Delta> deltas = new ArrayList<Delta>();
+			ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
 			
 			for (PQuery maybeModPattern : LookaheadMatcherTreat.RelativeSet.get(feature))
 			{
@@ -358,7 +360,7 @@ public class MyFeatureListeners
 				MultiSet<LookaheadMatching> newbies_toadd = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 				
 				// a new map to store a matching and whether it is added or removed
-				HashMap<LookaheadMatching, Boolean> newMatchingsAndAddition = new HashMap<LookaheadMatching, Boolean>();
+				HashMultimap<LookaheadMatching, Boolean> newMatchingsAndAddition = HashMultimap.create();
 				
 				// iterate over multiset and create delta
 				for (Entry<LookaheadMatching, Integer> inners : newbies_toadd.getInnerMap().entrySet())
@@ -369,12 +371,12 @@ public class MyFeatureListeners
 				// delta needed to propagate the changes
 				if (newMatchingsAndAddition.size()>0)
 				{
-					Delta d = new Delta(maybeModPattern, newMatchingsAndAddition);
+					ModelDelta d = new ModelDelta(maybeModPattern, newMatchingsAndAddition);
 					deltas.add(d);
 				}
 			}
 			// apply deltas
-			for (Delta delta : deltas)
+			for (ModelDelta delta : deltas)
 			{
 				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}
@@ -391,7 +393,7 @@ public class MyFeatureListeners
 			long start = System.currentTimeMillis();
 			
 			// changes:
-			ArrayList<Delta> deltas = new ArrayList<Delta>();
+			ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
 			
 			for (PQuery maybeModPattern : LookaheadMatcherTreat.RelativeSet.get(feature))
 			{
@@ -426,24 +428,24 @@ public class MyFeatureListeners
 					MultiSet<LookaheadMatching> newbies_toremove = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
 					
 					// a new map to store a matching and whether it is added or removed
-					HashMap<LookaheadMatching, Boolean> newMatchingsAndRemoval = new HashMap<LookaheadMatching, Boolean>();
+					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndRemoval = HashMultimap.create();
 					
 					// iterate over multiset and create delta
 					for (Entry<LookaheadMatching, Integer> inners : newbies_toremove.getInnerMap().entrySet())
 					{
 						for (int pi = 0; pi < inners.getValue(); pi++)
-							newMatchingsAndRemoval.put(inners.getKey(), false); // the count in multiset (more of tha same found: more changes)
+							newMatchingsAndRemoval.put(inners.getKey(), false); // the count in multiset (more of the same found: more changes)
 					}
 					// delta needed to propagate the changes
 					if (newMatchingsAndRemoval.size()>0)
 					{
-						Delta d = new Delta(maybeModPattern, newMatchingsAndRemoval);
+						ModelDelta d = new ModelDelta(maybeModPattern, newMatchingsAndRemoval);
 						deltas.add(d);
 					}
 				}
 			}
 			// apply deltas
-			for (Delta delta : deltas)
+			for (ModelDelta delta : deltas)
 			{
 				AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 			}

@@ -57,25 +57,21 @@ public class AdvancedDeltaProcessor
 	 * Receives a delta from the changes, collects into a list
 	 * @param d the delta
 	 */
-	public void ReceiveDelta(Delta d)
+	public void ReceiveDelta(IDelta d)
 	{
 		// receives a delta
-		
-		// collect deltas TODO currently I cannot see any reason to collect these (deltas are inside mailboxes and needed from there when processing)
-//		if (receivedDeltas == null)
-//			receivedDeltas = new ArrayList<Delta>();
-//		receivedDeltas.add(d);
 		
 		// collect affected patterns (quite important)
 		if (affectedPatterns == null)
 			affectedPatterns = new HashSet<PQuery>();
-		//affectedPatterns.add(d.getPattern()); I am processing this pattern now! so dont add to affecteds
 		
-		// update THIS patterns matchings
-		Collection<IndexDelta> negFindDeltas = updatePatternsMatchingsAndIndexesFromDelta(d);
+		// update THIS patterns matchings, and if modelDelta, make Delta of it
+		Delta properPropagatableDelta = updatePatternsMatchingsFromDelta(d);
+		// update indexes!
+		Collection<IndexDelta> negFindDeltas = updateIndexesFromDelta(properPropagatableDelta);
 		
 		// mailbox: deliver deltas and get call hierarchy to extend affected pattern list
-		Multimap<PQuery, Boolean> affPats = deliverDelta(d);
+		Multimap<PQuery, Boolean> affPats = deliverDelta(properPropagatableDelta);
 		if (negFindDeltas != null)
 		{
 			for (IndexDelta id : negFindDeltas)
@@ -154,21 +150,76 @@ public class AdvancedDeltaProcessor
 	 * If we have only a delta, we can apply it to the affected pattern
 	 * @param d The delta to apply into matches
 	 */
-	private Collection<IndexDelta> updatePatternsMatchingsAndIndexesFromDelta(Delta d)
+	private Delta updatePatternsMatchingsFromDelta(IDelta delta)
 	{
 		// updates index and matching for a delta coming from
 
-		// copied code, needs review
-		MultiSet<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
-		for (Entry<LookaheadMatching, Boolean> changedMatch : d.getChangeset().entrySet())
+		if (delta instanceof ModelDelta)
 		{
-			// remove or add (based on change type)
-			if (changedMatch.getValue() == true)
-				oldMatches.add(changedMatch.getKey()); // new match appeared
-			else oldMatches.remove(changedMatch.getKey()); // old match disappeared (only one! why all? I don't think so)
+			// this is a model delta, multiples allowed!
+			HashMap<LookaheadMatching, Boolean> changes = new HashMap<LookaheadMatching, Boolean>();
+			ModelDelta d = (ModelDelta) delta;
+			MultiSet<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
+			for (Entry<LookaheadMatching, Boolean> changedMatch : d.getChangeset().entries())
+			{
+				// remove or add (based on change type)
+				if (changedMatch.getValue() == true)
+				{
+					if (!oldMatches.contains(changedMatch.getKey()))
+						changes.put(changedMatch.getKey(), true); // first match, add!!
+					
+					oldMatches.add(changedMatch.getKey()); // new match appeared, increase by one (or add as first)
+				}
+				else
+				{
+					if (!oldMatches.contains(changedMatch.getKey()))
+					{
+						throw new AssertionError("This match is not even in this set!");
+					}
+					oldMatches.remove(changedMatch.getKey()); // model delta means that this is decremented
+					if (!oldMatches.contains(changedMatch.getKey()))
+						changes.put(changedMatch.getKey(), false); // last match, remove!!
+				}
+			}
+			return new Delta(((ModelDelta) delta).getPattern(), changes); // new form needed (now a delta change is single and means fatal change)
 		}
+		if (delta instanceof Delta)
+		{
+			// this is a hard delta, increases or removes all
+			Delta d = (Delta) delta;
+			MultiSet<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
+			for (Entry<LookaheadMatching, Boolean> changedMatch : d.getChangeset().entrySet())
+			{
+				// remove or add (based on change type)
+				if (changedMatch.getValue() == true)
+				{
+					if (oldMatches.contains(changedMatch.getKey()))
+					{
+						System.err.println("Already contained match, what is the new about it? Is it a bug? Or is it noone's fault?");
+					}
+					oldMatches.add(changedMatch.getKey()); // new match appeared
+				}
+				else
+				{
+					if (!oldMatches.contains(changedMatch.getKey()))
+					{
+						System.err.println("Not contained match, what to delete? Is it a bug? Or is it noone's fault?");
+					}
+					oldMatches.removeAll(changedMatch.getKey()); // delta means that this is absolutely KOd
+				}
+			}
+			return (Delta) delta; // no new form needed
+		}
+		else
+		{
+			throw new AssertionError("This delta process does not support this delta type! Only model deltas and classic deltas allowed!");
+		}
+	}
+	
+	private Collection<IndexDelta> updateIndexesFromDelta(Delta delta)
+	{
 		// apply the delta on indexes (if needed)
-		Collection<IndexDelta> indexDelta = ((TreatPartialPatternCacher) treatpartialCacher).ProcessADelta(d);
+		Collection<IndexDelta> indexDelta = ((TreatPartialPatternCacher) treatpartialCacher).ProcessADelta(delta);
 		
 		// indexDeltas can occur neg finded pattern calls!
 		if (indexDelta != null && indexDelta.size() > 0)
@@ -302,17 +353,22 @@ public class AdvancedDeltaProcessor
 	 * @param d The delta to inspect (can be IndexDelta)
 	 * @return Affected queries (must be processed!) with a boolean (or 2 so multimap): call find or call neg find?
 	 */
-	private Multimap<PQuery,Boolean> deliverDelta(Delta delta)
+	private Multimap<PQuery,Boolean> deliverDelta(IDelta delta)
 	{
 		Multimap<PQuery, Boolean> ret = HashMultimap.create();
 		
 		// who calls this delta's query?
 		for (Entry<PQuery, PatternCallModes> patEntr : LookaheadMatcherTreat.PatternCallsPatterns.entrySet())
 		{
+			if (delta instanceof ModelDelta)
+			{
+				// this is a model change, not a classic one
+				
+			}
 			if (delta instanceof IndexDelta)
 			{
 				// check if call:
-				if (patEntr.getValue().getNegativeCalls().contains(delta.getPattern()))
+				if (patEntr.getValue().getNegativeCalls().contains(((IndexDelta)delta).getPattern()))
 				{
 					// the patEntr.getKey is who calls the delta's pattern!!
 					PQuery caller = patEntr.getKey();
@@ -338,7 +394,7 @@ public class AdvancedDeltaProcessor
 			else if (delta instanceof Delta && !(delta instanceof IndexDelta))
 			{
 				// check if call:
-				if (patEntr.getValue().getPositiveCalls().contains(delta.getPattern()))
+				if (patEntr.getValue().getPositiveCalls().contains(((Delta)delta).getPattern()))
 				{
 					// the patEntr.getKey is who calls the delta's pattern!!
 					PQuery caller = patEntr.getKey();
@@ -354,15 +410,6 @@ public class AdvancedDeltaProcessor
 								ret.put(caller, true);
 							}
 						}
-						// neg finds get indexdeltas, so do not put simple deltas into neg find mailboxes
-//						for (CheckableConstraint cc : struct.CheckConstraints)
-//						{
-//							if (cc instanceof NACConstraint)
-//							{
-//								((NACConstraint)cc).putToMailbox(delta);
-//								ret.put(caller, false);
-//							}
-//						}
 					}
 				}
 			}

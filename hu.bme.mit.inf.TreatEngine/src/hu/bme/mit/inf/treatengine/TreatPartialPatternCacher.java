@@ -1,5 +1,9 @@
 package hu.bme.mit.inf.treatengine;
 
+import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
+import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
+import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,10 +18,6 @@ import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-
-import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
-import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
-import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 
 /**
  * Implementation of the IPartialPatternCacher class. Can cache partial matches, also incrementally
@@ -306,8 +306,9 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	
 	public Collection<IndexDelta> ProcessADelta(Delta delta)
 	{
-		if (this.patternsPartialMatchings.get(delta.getPattern()) != null) // if in indexed list!
-			return this.patternsPartialMatchings.get(delta.getPattern()).maintainIntegrity(delta); // add delta to maintain
+		Delta ddelta = (Delta) delta;
+		if (this.patternsPartialMatchings.get(ddelta.getPattern()) != null) // if in indexed list!
+			return this.patternsPartialMatchings.get(ddelta.getPattern()).maintainIntegrity(ddelta); // add delta to maintain
 		return null; // no delta can occur
 	}
 }

@@ -11,12 +11,11 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 // a pattern match set changed: either added (+) or deleted(-) and it references to a pattern
-// references to a changeset (+-) and 
+// references to a changeset (+-) and the pattern affected
 public class Delta implements IDelta
 {
 	private PQuery pattern;
 	private HashMap<LookaheadMatching, Boolean> changeset;
-	//private AheadStructure structure;
 	
 	public PQuery getPattern()
 	{
@@ -37,26 +36,10 @@ public class Delta implements IDelta
 	{
 		this.changeset = changeset;
 	}
-	
-	
-//	public AheadStructure getStructure()
-//	{
-//		return structure;
-//	}
-//
-//	public void setStructure(AheadStructure structure)
-//	{
-//		this.structure = structure;
-//	}
 
 	public Delta(PQuery changedPattern, HashMap<LookaheadMatching, Boolean> changes)
 	{
 		this.pattern = changedPattern;
-		this.changeset = new HashMap<LookaheadMatching,Boolean>();
-		
-		// check if changes have same keys with different values:
-		
-		
 		this.changeset = changes;
 	}
 }
