@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
@@ -49,11 +48,11 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	private class PatternPartialMatchingData
 	{
 		PQuery theQuery;
-		List<PParameter> theVariablesInOrder;
+		List<String> theVariablesInOrder;
 		
-		private Map<Set<PParameter>, Multimap<List<Object>, LookaheadMatching>> indexes = new HashMap<Set<PParameter>, Multimap<List<Object>, LookaheadMatching>>();
+		private Map<Set<String>, Multimap<List<Object>, LookaheadMatching>> indexes = new HashMap<Set<String>, Multimap<List<Object>, LookaheadMatching>>();
 
-		public PatternPartialMatchingData(PQuery resolvingQuery, List<PParameter> variablesInOrder)//, Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
+		public PatternPartialMatchingData(PQuery resolvingQuery, List<String> variablesInOrder)//, Set<PVariable> filterKeys, Collection<Object> filteringValues, MultiSet<LookaheadMatching> foundFilteredMatches)
 		{
 			theQuery = resolvingQuery;
 			theVariablesInOrder = variablesInOrder;
@@ -66,21 +65,21 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		public Collection<IndexDelta> maintainIntegrity(Delta delta)
 		{
 			Set<IndexDelta> deltaSet = new HashSet<IndexDelta>();
-			for (Entry<Set<PParameter>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet()) // helyi jarat
+			for (Entry<Set<String>, Multimap<List<Object>, LookaheadMatching>> index : indexes.entrySet()) // helyi jarat
 			{
 				// the changeMap for THIS index
 				HashMap<LookaheadMatching, Boolean> changeMap = new HashMap<LookaheadMatching, Boolean>();
 				
-				for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entrySet()) // for all delta
+				for (Entry<LookaheadMatching, Boolean> entry : delta.getChangeset().entrySet()) // for all change in delta
 				{
 					LookaheadMatching changMatch = entry.getKey();
 					// construct the key
 					List<Object> currentNewKey = new ArrayList<Object>();
-					for (PParameter oneVar : this.theVariablesInOrder)
+					for (String oneVar : this.theVariablesInOrder)
 					{
 						if (index.getKey().contains(oneVar))
 						{
-							currentNewKey.add(changMatch.getMatches().get(oneVar));
+							currentNewKey.add(changMatch.getMatches().get(Utils.getVariableFromParamString(changMatch.getMatches().keySet(), oneVar)));
 						}
 					}
 					if (entry.getValue())
@@ -114,7 +113,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			return null;
 		}
 		
-		public void insertOne(Set<PParameter> filterKeys, Multimap<List<Object>, LookaheadMatching> foundFilteredMatchMap)
+		public void insertOne(Set<String> filterKeys, Multimap<List<Object>, LookaheadMatching> foundFilteredMatchMap)
 		{
 			indexes.put(filterKeys, foundFilteredMatchMap);
 		}
@@ -134,10 +133,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			return this.lookaheadTreat.matchThePattern(resolvingQuery).size();
 
 		// the called patterns variables in order (only known)
-		List<PParameter> calledPatternsVariablesInOrder_dirty = resolvingQuery.getParameters();
-		List<PParameter> calledPatternsVariablesInOrder = new ArrayList<PParameter>();
-		for (PParameter param : calledPatternsVariablesInOrder_dirty)
-			calledPatternsVariablesInOrder.add(param);
+		List<String> calledPatternsVariablesInOrder = resolvingQuery.getParameterNames();
 		
 		HashMap<PVariable, Object> partialMatching = new HashMap<PVariable, Object>();
 		// create a "partial matching" where nulls are removed (to use as key, and use counts etc.)
@@ -153,7 +149,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		}
 		
 		// determine key:
-		HashSet<PParameter> calledPatternsIndexParamsKeySet = new HashSet<PParameter>();
+		HashSet<String> calledPatternsIndexParamsKeySet = new HashSet<String>();
 		for (int i=0;i<variablesInOrder.size();i++)
 		{
 			if (partialMatching.get(variablesInOrder.get(i)) != null)
@@ -164,8 +160,14 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		if (patternsPartialMatchings.containsKey(resolvingQuery) && 
 				patternsPartialMatchings.get(resolvingQuery).indexes.containsKey(calledPatternsIndexParamsKeySet))
 		{
+			ArrayList<Object> sortedVals = new ArrayList<Object>();
+			for (PVariable pV : variablesInOrder)
+			{
+				if (partialMatching.get(pV) != null)
+					sortedVals.add(partialMatching.get(pV));
+			}
 			// we have an index for this! yeah, return fast with size
-			return patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexParamsKeySet).size();
+			return patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexParamsKeySet).get(sortedVals).size();
 		}
 		else
 		{
@@ -186,10 +188,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		if (partialMatchingWithNullsAndEverything == null)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
 
-		List<PParameter> calledPatternsVariablesInOrder_dirty = resolvingQuery.getParameters();
-		List<PParameter> calledPatternsVariablesInOrder = new ArrayList<PParameter>();
-		for (PParameter param : calledPatternsVariablesInOrder_dirty)
-			calledPatternsVariablesInOrder.add(param);
+		List<String> calledPatternsVariablesInOrder = resolvingQuery.getParameterNames();
 		
 		HashMap<PVariable, Object> partialMatching = new HashMap<PVariable, Object>();
 		// create a "partial matching" where nulls are removed (to use as key, and use counts etc.)
@@ -209,7 +208,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			// the case is more complex: partial matching!
 			
 			// create the key for indexing (index key)
-			HashSet<PParameter> calledPatternsIndexParamsKeySet = new HashSet<PParameter>();
+			HashSet<String> calledPatternsIndexParamsKeySet = new HashSet<String>();
 			for (int i=0;i<variablesInOrder.size();i++)
 			{
 				if (partialMatching.get(variablesInOrder.get(i)) != null)

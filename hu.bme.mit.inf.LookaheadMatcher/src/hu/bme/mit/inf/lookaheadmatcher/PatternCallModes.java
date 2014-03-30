@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 
 import com.google.common.collect.HashMultimap;
@@ -21,7 +20,7 @@ public class PatternCallModes
 	 */
 	private PQuery thePattern;
 	
-	private List<PParameter> paramVars;
+	private List<String> paramVars;
 	
 	/**
 	 * The finds called by the current pattern
@@ -31,16 +30,16 @@ public class PatternCallModes
 	/**
 	 * The neg finds called by the current pattern (may call only on a set of index
 	 */
-	private Multimap<PQuery, Set<PParameter>> calledNegFinds;
+	private Multimap<PQuery, Set<String>> calledNegFinds;
 	
 	public PatternCallModes(PQuery theCallee)
 	{
 		thePattern = theCallee;
-		paramVars = new ArrayList<PParameter>();
-		for (PParameter param : thePattern.getParameters())
+		paramVars = new ArrayList<String>();
+		for (String param : thePattern.getParameterNames())
 			paramVars.add(param);
 		calledFinds = new HashSet<PQuery>();
-		calledNegFinds = HashMultimap.create();//new HashMap<PQuery, Set<PVariable>>();
+		calledNegFinds = HashMultimap.create();
 	}
 	
 	/**
@@ -52,7 +51,7 @@ public class PatternCallModes
 		return calledFinds.add(callee);
 	}
 	
-	public boolean AddNegativeCall(PQuery negCallee, Set<PParameter> indexCallingOn, boolean isNotFullIndex)
+	public boolean AddNegativeCall(PQuery negCallee, Set<String> indexCallingOn, boolean isNotFullIndex)
 	{
 		if (isNotFullIndex)
 			return calledNegFinds.put(negCallee, indexCallingOn);

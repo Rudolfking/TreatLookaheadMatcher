@@ -22,7 +22,6 @@ import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.incquery.runtime.matchers.psystem.PBody;
 import org.eclipse.incquery.runtime.matchers.psystem.PConstraint;
-import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatternCall;
@@ -181,11 +180,11 @@ public class LookaheadMatcherInterface
 				{
 					PatternCallBasedDeferred pdd = (PatternCallBasedDeferred)calls;
 					
-					Set<PParameter> filterKey = new HashSet<PParameter>();
+					Set<String> filterKey = new HashSet<String>();
 					Tuple actuals = pdd.getActualParametersTuple();
 					boolean isNotFull = false;
 					//for (Object a: actuals.getElements())
-					List<PParameter> patternPars = pdd.getReferredQuery().getParameters();
+					List<String> patternPars = pdd.getReferredQuery().getParameterNames();
 					for (int i=0;i<actuals.getSize();i++)
 					{
 						PVariable callA = (PVariable) actuals.get(i);

@@ -4,9 +4,7 @@ import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
@@ -14,8 +12,6 @@ import org.eclipse.incquery.runtime.matchers.psystem.DeferredPConstraint;
 import org.eclipse.incquery.runtime.matchers.psystem.EnumerablePConstraint;
 import org.eclipse.incquery.runtime.matchers.psystem.PBody;
 import org.eclipse.incquery.runtime.matchers.psystem.PConstraint;
-import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
-import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.Equality;
 import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.ExportedParameter;
@@ -25,7 +21,6 @@ import org.eclipse.incquery.runtime.matchers.psystem.basicdeferred.NegativePatte
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.ConstantValue;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.PositivePatternCall;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.TypeBinary;
-import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.TypeTernary;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.TypeUnary;
 
 public class AheadStructure implements Cloneable

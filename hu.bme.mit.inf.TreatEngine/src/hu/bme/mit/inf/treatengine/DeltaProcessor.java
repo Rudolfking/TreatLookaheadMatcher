@@ -22,7 +22,6 @@
 //import org.eclipse.core.runtime.AssertionFailedException;
 //import org.eclipse.incquery.runtime.api.IQuerySpecification;
 //import org.eclipse.incquery.runtime.api.IncQueryEngine;
-//import org.eclipse.incquery.runtime.matchers.psystem.PParameter;
 //import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 //import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 //import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;

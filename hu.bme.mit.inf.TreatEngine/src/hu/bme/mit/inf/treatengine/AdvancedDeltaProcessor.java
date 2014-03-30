@@ -20,7 +20,6 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.NACConstraint;
 
-import org.eclipse.incquery.patternlanguage.patternLanguage.CheckConstraint;
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
