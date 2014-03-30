@@ -126,11 +126,52 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	 * Might be faster to call this first!
 	 */
 	@Override
-	public int GetMatchCountFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatching,
+	public int GetMatchCountFromPartial(PQuery resolvingQuery, HashMap<PVariable, Object> partialMatchingWithNullsAndEverything,
 			List<PVariable> variablesInOrder, boolean forceMakeIndexIfNotIndexed)
 	{
-		// buta solution:
-		return this.GetMatchingsFromPartial(resolvingQuery, partialMatching, variablesInOrder, forceMakeIndexIfNotIndexed).size();
+		// if no hints added, return all:
+		if (partialMatchingWithNullsAndEverything == null)
+			return this.lookaheadTreat.matchThePattern(resolvingQuery).size();
+
+		// the called patterns variables in order (only known)
+		List<PParameter> calledPatternsVariablesInOrder_dirty = resolvingQuery.getParameters();
+		List<PParameter> calledPatternsVariablesInOrder = new ArrayList<PParameter>();
+		for (PParameter param : calledPatternsVariablesInOrder_dirty)
+			calledPatternsVariablesInOrder.add(param);
+		
+		HashMap<PVariable, Object> partialMatching = new HashMap<PVariable, Object>();
+		// create a "partial matching" where nulls are removed (to use as key, and use counts etc.)
+		for (Entry<PVariable, Object> entry : partialMatchingWithNullsAndEverything.entrySet())
+		{
+			if (entry.getValue() != null && variablesInOrder.contains(entry.getKey()))
+				partialMatching.put(entry.getKey(), entry.getValue()); // add to watch set if (1) its value is not null (2) key is in affected variables of query ( parameter )
+		}
+		if (partialMatching.size() == 0 || partialMatching.size() == variablesInOrder.size())
+		{
+			// match nothing or everything
+			return this.lookaheadTreat.matchThePattern(resolvingQuery).size();
+		}
+		
+		// determine key:
+		HashSet<PParameter> calledPatternsIndexParamsKeySet = new HashSet<PParameter>();
+		for (int i=0;i<variablesInOrder.size();i++)
+		{
+			if (partialMatching.get(variablesInOrder.get(i)) != null)
+				calledPatternsIndexParamsKeySet.add(calledPatternsVariablesInOrder.get(i));
+		}
+		
+		// use key to determine: do we have an index for that?
+		if (patternsPartialMatchings.containsKey(resolvingQuery) && 
+				patternsPartialMatchings.get(resolvingQuery).indexes.containsKey(calledPatternsIndexParamsKeySet))
+		{
+			// we have an index for this! yeah, return fast with size
+			return patternsPartialMatchings.get(resolvingQuery).indexes.get(calledPatternsIndexParamsKeySet).size();
+		}
+		else
+		{
+			// build index... it is slow, but will be fast when iterating
+			return this.GetMatchingsFromPartial(resolvingQuery, partialMatching, variablesInOrder, forceMakeIndexIfNotIndexed).size();
+		}
 	}
 
 
@@ -145,7 +186,10 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		if (partialMatchingWithNullsAndEverything == null)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
 
-		List<PParameter> calledPatternsVariablesInOrder = resolvingQuery.getParameters();
+		List<PParameter> calledPatternsVariablesInOrder_dirty = resolvingQuery.getParameters();
+		List<PParameter> calledPatternsVariablesInOrder = new ArrayList<PParameter>();
+		for (PParameter param : calledPatternsVariablesInOrder_dirty)
+			calledPatternsVariablesInOrder.add(param);
 		
 		HashMap<PVariable, Object> partialMatching = new HashMap<PVariable, Object>();
 		// create a "partial matching" where nulls are removed (to use as key, and use counts etc.)

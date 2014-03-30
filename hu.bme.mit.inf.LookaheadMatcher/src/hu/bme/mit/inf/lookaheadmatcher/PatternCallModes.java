@@ -1,5 +1,6 @@
 package hu.bme.mit.inf.lookaheadmatcher;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,8 +36,9 @@ public class PatternCallModes
 	public PatternCallModes(PQuery theCallee)
 	{
 		thePattern = theCallee;
-		paramVars = thePattern.getParameters();
-		
+		paramVars = new ArrayList<PParameter>();
+		for (PParameter param : thePattern.getParameters())
+			paramVars.add(param);
 		calledFinds = new HashSet<PQuery>();
 		calledNegFinds = HashMultimap.create();//new HashMap<PQuery, Set<PVariable>>();
 	}

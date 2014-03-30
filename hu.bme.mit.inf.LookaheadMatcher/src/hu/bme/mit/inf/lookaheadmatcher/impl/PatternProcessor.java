@@ -75,7 +75,7 @@ public class PatternProcessor
 	public ArrayList<AheadStructure> Process(PQuery pattern) //, boolean flattenIt)
 	{
 		// this.flatteningEnabled = flattenIt;
-		List<PParameter> vars = pattern.getParameters();
+		List<String> vars = pattern.getParameterNames();
 		// parameters
 		this.flattenedPatterns = new ArrayList<AheadStructure>();
 		

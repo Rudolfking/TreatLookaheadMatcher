@@ -117,7 +117,7 @@ public class AheadStructure implements Cloneable
 		return false;
 	}*/
 	
-	public AheadStructure(PBody pBody, List<PParameter> params, IPartialPatternCacher partialCacher, IncQueryEngine engine)
+	public AheadStructure(PBody pBody, List<String> params, IPartialPatternCacher partialCacher, IncQueryEngine engine)
 	{
 		this.setInnerPBody(pBody);
 		
