@@ -24,6 +24,7 @@ import org.eclipse.incquery.runtime.base.api.DataTypeListener;
 import org.eclipse.incquery.runtime.base.api.FeatureListener;
 import org.eclipse.incquery.runtime.base.api.IncQueryBaseIndexChangeListener;
 import org.eclipse.incquery.runtime.base.api.InstanceListener;
+import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
@@ -33,12 +34,14 @@ public class MyFeatureListeners
 {
 	private LookaheadMatcherTreat treat;
 	private LookaheadMatcherInterface lookaheadMatcher;
+	private NavigationHelper navHelper;
 
 
-	public MyFeatureListeners(LookaheadMatcherTreat treat, LookaheadMatcherInterface lookMatcher)
+	public MyFeatureListeners(LookaheadMatcherTreat treat, LookaheadMatcherInterface lookMatcher, NavigationHelper navigationHelper)
 	{
 		this.treat = treat; 
 		this.lookaheadMatcher = lookMatcher;
+		this.navHelper = navigationHelper;
 	}
 	
 	private boolean isModified;
@@ -508,7 +511,6 @@ public class MyFeatureListeners
 	
 	private List<ModelChange> modelChanges = new ArrayList<ModelChange>();
 	
-	@SuppressWarnings("unchecked")
 	public void MagicProcessor()
 	{
 		// gets all model deltas and processes!
@@ -516,154 +518,152 @@ public class MyFeatureListeners
 		
 		long start = System.currentTimeMillis();
 
-		ArrayList<ModelChange>[] sortedModelChanges = (ArrayList<ModelChange>[]) new ArrayList[2];
-		sortedModelChanges[0] = new ArrayList<ModelChange>();
-		sortedModelChanges[1] = new ArrayList<ModelChange>();
-		boolean neg = false;
-		for (int i = 0; i < modelChanges.size(); i++)
+		Set<PQuery> affecteds = new HashSet<PQuery>();
+		for (ModelChange change : modelChanges)
 		{
-			if (modelChanges.get(i).isAddition() == false)
-			{
-				sortedModelChanges[0].add(modelChanges.get(i));
-				if (neg)
-					throw new AssertionError("Mixed changes are not supported!");
-			}
-			else
-			{
-				neg = true;
-				sortedModelChanges[1].add(modelChanges.get(i));
-			}
+			if (change instanceof EFeatureChange)
+				affecteds.addAll(LookaheadMatcherTreat.RelativeSet.get(((EFeatureChange) change).getChangedFeature()));
+			if (change instanceof EClassChange)
+				affecteds.addAll(LookaheadMatcherTreat.RelativeSet.get(((EClassChange) change).getChange()));
+			if (change instanceof EDataTypeChange)
+				affecteds.addAll(LookaheadMatcherTreat.RelativeSet.get(((EDataTypeChange) change).getChange()));
 		}
 		
-		for (ArrayList<ModelChange> modelChangesL : sortedModelChanges)
+		ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
+		
+		for (PQuery affectedQuery : affecteds)
 		{
-			boolean changeType = true;
 			
-			// collect all patterns related to these changes
-			Set<PQuery> affecteds = new HashSet<PQuery>();
-			for (ModelChange change : modelChangesL)
+			ArrayList<AheadStructure> cachedStructures = LookaheadMatcherTreat.GodSetStructures.get(affectedQuery);
+			// deliver deltas for pattern!
+			for (ModelChange change : modelChanges)
 			{
-				if (change instanceof EFeatureChange)
-					affecteds.addAll(LookaheadMatcherTreat.RelativeSet.get(((EFeatureChange) change).getChangedFeature()));
-				if (change instanceof EClassChange)
-					affecteds.addAll(LookaheadMatcherTreat.RelativeSet.get(((EClassChange) change).getChange()));
-				if (change instanceof EDataTypeChange)
-					affecteds.addAll(LookaheadMatcherTreat.RelativeSet.get(((EDataTypeChange) change).getChange()));
-				changeType = change.isAddition();
-			}
-			
-			if (affecteds.size() != 0)
-			{
-			
-				
-				// changes:
-				ArrayList<ModelDelta> deltas = new ArrayList<ModelDelta>();
-				
-				for (PQuery maybeModPattern : affecteds)
+				for (AheadStructure aSn : cachedStructures)
 				{
-					// this lookvariable should be ---> this object (the matcher will bind it)
-					HashMap<PVariable, Object> knownLocalAndParameters = new HashMap<PVariable, Object>();
-					
-					isModified = false;
-					ArrayList<AheadStructure> cachedStructures = LookaheadMatcherTreat.GodSetStructures.get(maybeModPattern);
-					for (ModelChange change : modelChangesL)
+					for (AxisConstraint rC : aSn.SearchedConstraints)
 					{
-						for (AheadStructure aSn : cachedStructures)
+						if (rC instanceof RelationConstraint && change instanceof EFeatureChange)
 						{
-							// find all relationConstraints
-							for (AxisConstraint rC : aSn.SearchedConstraints)
+							EFeatureChange changenow = (EFeatureChange) change;
+							if (((RelationConstraint) rC).getEdge().equals(changenow.getChangedFeature()))
+								rC.putToMailbox(change);
+						}
+						else if (rC instanceof TypeConstraint && change instanceof EDataTypeChange)
+						{
+							EDataTypeChange changenow = (EDataTypeChange) change;
+							if (((TypeConstraint) rC).getType().equals(changenow.getChange()))
+								rC.putToMailbox(change);
+						}
+						if (rC instanceof TypeConstraint && change instanceof EClassChange)
+						{
+							EClassChange changenow = (EClassChange) change;
+							if (((TypeConstraint) rC).getType().equals(changenow.getChange()))
+								rC.putToMailbox(change);
+						}
+					}
+				}
+			}
+
+			for (ModelChange change : modelChanges)
+			{
+				// process this change: first remove all deltas from constraints with this change
+				for (AheadStructure aSn : cachedStructures)
+				{
+					for (AxisConstraint rC : aSn.SearchedConstraints)
+					{
+						if (rC.hasMailboxContent())
+						{
+							if (rC.getMailboxContent().contains(change))
+								rC.removeFromMailbox(change);
+						}
+					}
+				}
+				// apply modelchange:
+				HashMap<PVariable, Object> knownLocalAndParameters = new HashMap<PVariable, Object>();
+				for (AheadStructure aSn : cachedStructures)
+				{
+					// find all relationConstraints
+					for (AxisConstraint rC : aSn.SearchedConstraints)
+					{
+						if (rC instanceof RelationConstraint && change instanceof EFeatureChange)
+						{
+							EFeatureChange changenow = (EFeatureChange) change;
+							if (((RelationConstraint) rC).getEdge().equals(changenow.getChangedFeature()))
 							{
-								if (rC instanceof RelationConstraint && change instanceof EFeatureChange)
-								{
-									EFeatureChange changenow = (EFeatureChange) change;
-									if (((RelationConstraint) rC).getEdge().equals(changenow.getChangedFeature()))
-									{
-										// affected relaconstraint's lookvariables should be bound!!
-										knownLocalAndParameters.put(((RelationConstraint) rC).getSource(), changenow.getHost());
-										knownLocalAndParameters.put(((RelationConstraint) rC).getTarget(), changenow.getInstance());
-									}
-								}
-								else if (rC instanceof TypeConstraint && change instanceof EDataTypeChange)
-								{
-									EDataTypeChange changenow = (EDataTypeChange) change;
-									if (((TypeConstraint) rC).getType().equals(changenow.getChange()))
-									{
-										// affected typeconstraint's lookvariable should be bound!!
-										knownLocalAndParameters.put(((TypeConstraint) rC).getTypedVariable(), changenow.getInstance());
-									}
-								}
-								if (rC instanceof TypeConstraint && change instanceof EClassChange)
-								{
-									EClassChange changenow = (EClassChange) change;
-									if (((TypeConstraint) rC).getType().equals(changenow.getChange()))
-									{
-										// affected typeconstraint's lookvariable should be bound!!
-										knownLocalAndParameters.put(((TypeConstraint) rC).getTypedVariable(), changenow.getInstance());
-									}
-								}
+								// affected relaconstraint's lookvariables should be bound!!
+								knownLocalAndParameters.put(((RelationConstraint) rC).getSource(), changenow.getHost());
+								knownLocalAndParameters.put(((RelationConstraint) rC).getTarget(), changenow.getInstance());
+							}
+						}
+						else if (rC instanceof TypeConstraint && change instanceof EDataTypeChange)
+						{
+							EDataTypeChange changenow = (EDataTypeChange) change;
+							if (((TypeConstraint) rC).getType().equals(changenow.getChange()))
+							{
+								// affected typeconstraint's lookvariable should be bound!!
+								knownLocalAndParameters.put(((TypeConstraint) rC).getTypedVariable(), changenow.getInstance());
+							}
+						}
+						if (rC instanceof TypeConstraint && change instanceof EClassChange)
+						{
+							EClassChange changenow = (EClassChange) change;
+							if (((TypeConstraint) rC).getType().equals(changenow.getChange()))
+							{
+								// affected typeconstraint's lookvariable should be bound!!
+								knownLocalAndParameters.put(((TypeConstraint) rC).getTypedVariable(), changenow.getInstance());
 							}
 						}
 					}
-									
-					isModified = false;
-					// manual satisfy:
-					ArrayList<AheadStructure> newStructs = null;
-					for (ModelChange change : modelChangesL)
-					{
-						if ( change instanceof EFeatureChange)
-						{
-							EFeatureChange changenow = (EFeatureChange) change;
-							newStructs = createNewFromOldRelaC(changenow.getHost(), changenow.getInstance(), changenow.getChangedFeature(),
-									LookaheadMatcherTreat.GodSetStructures.get(maybeModPattern));
-						}
-						else if (change instanceof EDataTypeChange)
-						{
-							EDataTypeChange changenow = (EDataTypeChange) change;
-							newStructs = createNewFromOldTypeC(false, changenow.getChange(), changenow.getInstance(), 
-									LookaheadMatcherTreat.GodSetStructures.get(maybeModPattern));
-						}
-						if (change instanceof EClassChange)
-						{
-							EClassChange changenow = (EClassChange) change;
-							newStructs = createNewFromOldTypeC(false, changenow.getChange(), changenow.getInstance(), 
-									LookaheadMatcherTreat.GodSetStructures.get(maybeModPattern));
-						}
-					}
-					if (isModified)
-					{
-						// the new matches that'll appear in matching based on manually satisfied structure
-						MultiSet<LookaheadMatching> newbies_toExamine = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), maybeModPattern, newStructs, knownLocalAndParameters, null);
-						
-						// a new map to store a matching and whether it is added or removed
-						HashMultimap<LookaheadMatching, Boolean> newMatchingsAndChange = HashMultimap.create();
-						
-						// iterate over multiset and create delta
-						for (Entry<LookaheadMatching, Integer> inners : newbies_toExamine.getInnerMap().entrySet())
-						{
-							for (int pi = 0; pi < inners.getValue(); pi++)
-								newMatchingsAndChange.put(inners.getKey(), changeType);
-						}
-						// delta needed to propagate the changes
-						if (newMatchingsAndChange.size() > 0)
-						{
-							ModelDelta d = new ModelDelta(maybeModPattern, newMatchingsAndChange);
-							deltas.add(d);
-						}
-					}
 				}
-				// apply deltas
-				for (ModelDelta delta : deltas)
+				
+				// manual satisfy and clone cachedStructures (createNew* clones input):
+				ArrayList<AheadStructure> newStructs = null;
+				isModified = false;
+				if ( change instanceof EFeatureChange)
 				{
-					AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
+					EFeatureChange changenow = (EFeatureChange) change;
+					newStructs = createNewFromOldRelaC(changenow.getHost(), changenow.getInstance(), changenow.getChangedFeature(), cachedStructures);
 				}
-				AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
-	
-			
+				else if (change instanceof EDataTypeChange)
+				{
+					EDataTypeChange changenow = (EDataTypeChange) change;
+					newStructs = createNewFromOldTypeC(false, changenow.getChange(), changenow.getInstance(), cachedStructures);
+				}
+				if (change instanceof EClassChange)
+				{
+					EClassChange changenow = (EClassChange) change;
+					newStructs = createNewFromOldTypeC(false, changenow.getChange(), changenow.getInstance(), cachedStructures);
+				}
+				if (isModified)
+				{
+					// the new matches that'll appear in matching based on manually satisfied structure
+					MultiSet<LookaheadMatching> newbies_toExamine = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), affectedQuery, newStructs, knownLocalAndParameters, new TreatConstraintEnumerator(this.navHelper));
+					
+					// a new map to store a matching and whether it is added or removed
+					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndChange = HashMultimap.create();
+					
+					// iterate over multiset and create delta
+					for (Entry<LookaheadMatching, Integer> inners : newbies_toExamine.getInnerMap().entrySet())
+					{
+						for (int pi = 0; pi < inners.getValue(); pi++)
+							newMatchingsAndChange.put(inners.getKey(), change.isAddition());
+					}
+					// delta needed to propagate the changes
+					if (newMatchingsAndChange.size() > 0)
+					{
+						ModelDelta d = new ModelDelta(affectedQuery, newMatchingsAndChange);
+						deltas.add(d);
+					}
+				}
 			}
-			else
-				System.out.println("nothing to process...");
-
 		}
+		
+		// apply deltas
+		for (ModelDelta delta : deltas)
+		{
+			AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
+		}
+		AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 		
 		System.out.println("[MAGIC] Update match set based on model change ended! Time:" + Long.toString(System.currentTimeMillis() - start));
 		

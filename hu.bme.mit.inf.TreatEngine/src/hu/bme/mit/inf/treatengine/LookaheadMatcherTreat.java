@@ -88,8 +88,6 @@ public class LookaheadMatcherTreat
 		{
 			e.printStackTrace();
 		}
-		
-		this.featureListeners = new MyFeatureListeners(this, matcher);
 	}
 	
 	/**
@@ -242,7 +240,8 @@ public class LookaheadMatcherTreat
 	}
 	public void subscribeToIndexer() 
 	{
-		navHelp.addBaseIndexChangeListener(featureListeners.baseIndexChangeListener);
+		this.featureListeners = new MyFeatureListeners(this, matcher, this.navHelp);
+		navHelp.addBaseIndexChangeListener(this.featureListeners.baseIndexChangeListener);
 	}
 
 }

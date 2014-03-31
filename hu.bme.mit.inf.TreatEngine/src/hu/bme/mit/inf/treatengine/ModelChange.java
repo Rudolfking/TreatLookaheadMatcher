@@ -1,6 +1,8 @@
 package hu.bme.mit.inf.treatengine;
 
-public abstract class ModelChange
+import hu.bme.mit.inf.lookaheadmatcher.IDelta;
+
+public abstract class ModelChange implements IDelta
 {
 	public boolean isAddition()
 	{

@@ -1,23 +1,19 @@
 package hu.bme.mit.inf.treatengine;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
-import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 import hu.bme.mit.inf.lookaheadmatcher.IConstraintEnumerator;
 import hu.bme.mit.inf.lookaheadmatcher.IDelta;
-import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
-import hu.bme.mit.inf.lookaheadmatcher.impl.CheckableConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.FindConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
-import hu.bme.mit.inf.lookaheadmatcher.impl.NACConstraint;
+import hu.bme.mit.inf.lookaheadmatcher.impl.EasyConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.SimpleConstraintEnumerator;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
@@ -40,9 +36,83 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 			return simpleInner.getCost(constraint, matchingVariables);
 		else
 		{
-			if (!(constraint instanceof FindConstraint))
-				throw new AssertionError("Not findconstraint mailbox content is not supported!"); // but should return fallback? no, should not
-			else
+			if (constraint instanceof EasyConstraint)
+			{
+				return simpleInner.getCost(constraint, matchingVariables);
+				// fuck easy constraint
+			}
+			else if (constraint instanceof RelationConstraint)
+			{
+				// should get delta of caller!
+				List<IDelta> d = constraint.getMailboxContent();
+				List<Object[]> newMatchMagic = simpleInner.enumerateConstraint(constraint, matchingVariables);
+				int newMatchCount = newMatchMagic.size();
+				for (IDelta del : d)
+				{
+					ModelChange mchan = (ModelChange)del;
+					if (mchan instanceof EFeatureChange)
+					{
+						for (Object[] change : newMatchMagic)
+						{
+							if (change[0].equals(((EFeatureChange) mchan).getHost()) && change[1].equals(((EFeatureChange) mchan).getInstance()))
+							{
+								// this relation is found but in delta too: mirror!
+								// "rollback" this change
+								if (mchan.isAddition())
+									newMatchCount--;
+								else
+									newMatchCount++;
+							}
+						}
+					}
+				}
+				return newMatchCount;
+			}
+			else if (constraint instanceof TypeConstraint)
+			{
+				// should get delta of caller!
+				List<IDelta> d = constraint.getMailboxContent();
+				List<Object[]> newMatchMagic = simpleInner.enumerateConstraint(constraint, matchingVariables);
+				int newMatchCount = newMatchMagic.size();
+				for (IDelta del : d)
+				{
+					ModelChange mchan = (ModelChange)del;
+					if (mchan instanceof EClassChange)
+					{
+						for (Object[] change : newMatchMagic)
+						{
+							// no type check needed
+							if (change[0].equals(((EClassChange) mchan).getInstance()))
+							{
+								// this relation is found but in delta too: mirror!
+								// "rollback" this change
+								if (mchan.isAddition())
+									newMatchCount--;
+								else
+									newMatchCount++;
+							}
+						}
+					}
+					else if (mchan instanceof EDataTypeChange)
+					{
+						for (Object[] change : newMatchMagic)
+						{
+							// no type check needed
+							if (change[0].equals(((EDataTypeChange) mchan).getInstance()))
+							{
+								// this relation is found but in delta too: mirror!
+								// "rollback" this change
+								if (mchan.isAddition())
+									newMatchCount--;
+								else
+									newMatchCount++;
+							}
+						}
+					}
+				}
+				return newMatchCount;
+			}
+			else if (constraint instanceof FindConstraint)
 			{
 				// get and return: this will filter by content
 				try
@@ -70,6 +140,8 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 					return enumerateConstraint(constraint, matchingVariables).size();
 				}
 			}
+			else
+				return -1;
 		}
 		// return 0; // something went bad
 	}
@@ -90,13 +162,13 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 			List<IDelta> deltas = constraint.getMailboxContent();
 			// modifications:
 			List<Integer> deleteIndexes = new ArrayList<Integer>();
-			ArrayList<Object> additions = new ArrayList<Object>();
+			List<Object[]> additions = new ArrayList<Object[]>();
 			// check all delta:
-			for (IDelta deltai : deltas)
+			if (constraint instanceof FindConstraint)
 			{
-				Delta delta = (Delta)deltai;
-				if (constraint instanceof FindConstraint)
+				for (IDelta deltai : deltas)
 				{
+					Delta delta = (Delta)deltai;
 					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						for (int cd = 0; cd < candidates.size(); cd++)
@@ -112,27 +184,81 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 							
 							if (equal)
 							{
-								if (change.getValue() == false)
+								if (change.getValue())
 									deleteIndexes.add(cd);
 								else
-									additions.addAll(Arrays.asList(change.getKey().getParameterMatchValuesOnlyAsArray()));
+									additions.add(change.getKey().getParameterMatchValuesOnlyAsArray());
 							}
 						}
 					}
 				}
-				else if (constraint instanceof TypeConstraint)
+			}
+			else if (constraint instanceof TypeConstraint)
+			{
+				// hope should not even implement
+				// should get delta of caller!
+				List<IDelta> d = constraint.getMailboxContent();
+				for (IDelta del : d)
 				{
-					// hope should not even implement
-					throw new AssertionError("Not implemented!");
+					for (int cd = 0; cd < candidates.size(); cd++)
+					{
+						ModelChange mchan = (ModelChange)del;
+						if (mchan instanceof EClassChange)
+						{
+							// no type check needed
+							if (candidates.get(cd)[0].equals(((EClassChange) mchan).getInstance()))
+							{
+								// this relation is found but in delta too: mirror!
+								// "rollback" this change
+								if (mchan.isAddition())
+									deleteIndexes.add(cd);
+								else
+									additions.add(new Object[]{((EClassChange) mchan).getInstance()});
+							}
+						}
+						else if (mchan instanceof EDataTypeChange)
+						{
+							// no type check needed
+							if (candidates.get(cd)[0].equals(((EDataTypeChange) mchan).getInstance()))
+							{
+								// this relation is found but in delta too: mirror!
+								// "rollback" this change
+								if (mchan.isAddition())
+									deleteIndexes.add(cd);
+								else
+									additions.add(new Object[]{((EDataTypeChange) mchan).getInstance()});
+							}
+						}
+					}
 				}
-				else if (constraint instanceof RelationConstraint)
+			}
+			else if (constraint instanceof RelationConstraint)
+			{				
+				// should get delta of caller!
+				List<IDelta> d = constraint.getMailboxContent();
+				for (IDelta del : d)
 				{
-					throw new AssertionError("Not implemented!");
+					for (int cd = 0; cd < candidates.size(); cd++)
+					{
+						ModelChange mchan = (ModelChange)del;
+						if (mchan instanceof EFeatureChange)
+						{
+							if (candidates.get(cd)[0].equals(((EFeatureChange) mchan).getHost()) && candidates.get(cd)[1].equals(((EFeatureChange) mchan).getInstance()))
+							{
+								// this relation is found but in delta too: mirror!
+								// "rollback" this change
+								if (mchan.isAddition())
+									deleteIndexes.add(cd);
+								else
+									additions.add(new Object[]{((EFeatureChange) mchan).getHost(), ((EFeatureChange) mchan).getInstance()});
+							}
+						}
+					}
 				}
-				else
-				{
-					throw new AssertionError("Unknown constraint, which should be filtered!");
-				}
+			}
+			else
+			{
+				throw new AssertionError("Unknown constraint, which should be filtered!");
 			}
 			ret = new ArrayList<Object[]>();
 			// then delete the indexes, (candidate), so full
@@ -141,6 +267,10 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 				if (deleteIndexes.contains(Integer.valueOf(i)))
 					continue; // leave out deleteds
 				ret.add(candidates.get(i));
+			}
+			for (Object[] fasz : additions)
+			{
+				ret.add(fasz);
 			}
 		}
 		
