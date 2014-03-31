@@ -513,6 +513,15 @@ public class MyFeatureListeners
 	
 	public void MagicProcessor()
 	{
+		if (modelChanges == null)
+		{
+			modelChanges = new ArrayList<ModelChange>();
+			return;
+		}
+		else if (modelChanges.size() == 0)
+			return;
+		// else go!
+		
 		// gets all model deltas and processes!
 		System.out.println("[MAGIC] Update match set based on model change started...");
 		
