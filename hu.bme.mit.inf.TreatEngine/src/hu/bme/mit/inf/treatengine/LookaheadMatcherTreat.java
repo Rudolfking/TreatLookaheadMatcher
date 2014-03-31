@@ -240,5 +240,9 @@ public class LookaheadMatcherTreat
 			FillPatternCallsPatterns(finded);
 		}
 	}
+	public void subscribeToIndexer() 
+	{
+		navHelp.addBaseIndexChangeListener(featureListeners.baseIndexChangeListener);
+	}
 
 }

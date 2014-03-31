@@ -6,7 +6,7 @@ public class Utils
 {
 	public static boolean isRunning(PVariable pVar)
 	{
-		if (pVar.getName().startsWith("_")) // (o_O)
+		if (pVar.isDeducable() == false || pVar.getName().startsWith("_"))
 			return true;
 		return false;
 	}
