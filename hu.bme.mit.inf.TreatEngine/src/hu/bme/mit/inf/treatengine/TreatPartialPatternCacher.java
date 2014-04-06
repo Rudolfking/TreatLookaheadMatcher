@@ -311,4 +311,10 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			return this.patternsPartialMatchings.get(ddelta.getPattern()).maintainIntegrity(ddelta); // add delta to maintain
 		return null; // no delta can occur
 	}
+	
+	public void clean() 
+	{		
+		patternsPartialMatchings.clear();
+		patternsPartialMatchings = new HashMap<>();
+	}
 }

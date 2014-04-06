@@ -251,5 +251,24 @@ public class LookaheadMatcherTreat
 	{
 		navHelp.removeBaseIndexChangeListener(this.featureListeners.baseIndexChangeListener);
 	}
+	
+	public void emptyAll()
+	{
+		// statics to new values
+		GodSet = new HashMap<>();
+		GodSetStructures = new HashMap<>();
+		RelativeSet = new HashMap<>();
+		PatternCallsPatterns = new HashMap<>();
+		treatPartialCacher.setLookaheadTreat(null);
+		treatPartialCacher.clean();
+		treatPartialCacher = new TreatPartialPatternCacher();
+		
+		featureListeners = null;
+		engine = null;
+		matcher = null;
+		navHelp = null;
+		AdvancedDeltaProcessor.getInstance().setEngine(null);
+		AdvancedDeltaProcessor.getInstance().setPartialCacher(null);
+	}
 
 }

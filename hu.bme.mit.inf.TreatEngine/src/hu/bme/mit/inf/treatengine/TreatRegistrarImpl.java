@@ -68,6 +68,7 @@ public class TreatRegistrarImpl
 			{
 				entry.getValue().unregisterAll();
 				entry.getValue().unsubscribeFromIndexer();
+				entry.getValue().emptyAll();
 			}
 			TreatIQEngineDrot.clear();
 			TreatIQEngineDrot = null;
