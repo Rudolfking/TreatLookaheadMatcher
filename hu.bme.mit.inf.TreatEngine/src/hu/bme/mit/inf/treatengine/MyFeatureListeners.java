@@ -33,14 +33,12 @@ import com.google.common.collect.HashMultimap;
 public class MyFeatureListeners
 {
 	private LookaheadMatcherTreat treat;
-	private LookaheadMatcherInterface lookaheadMatcher;
 	private NavigationHelper navHelper;
 
 
-	public MyFeatureListeners(LookaheadMatcherTreat treat, LookaheadMatcherInterface lookMatcher, NavigationHelper navigationHelper)
+	public MyFeatureListeners(LookaheadMatcherTreat treat, NavigationHelper navigationHelper)
 	{
 		this.treat = treat; 
-		this.lookaheadMatcher = lookMatcher;
 		this.navHelper = navigationHelper;
 	}
 	
@@ -657,7 +655,7 @@ public class MyFeatureListeners
 				if (isModified)
 				{
 					// the new matches that'll appear in matching based on manually satisfied structure
-					MultiSet<LookaheadMatching> newbies_toExamine = lookaheadMatcher.searchChangesAll(treat.getIncQueryEngine(), affectedQuery, newStructs, knownLocalAndParameters, new TreatConstraintEnumerator(this.navHelper));
+					MultiSet<LookaheadMatching> newbies_toExamine = (new LookaheadMatcherInterface()).searchChangesAll(treat.getIncQueryEngine(), affectedQuery, newStructs, knownLocalAndParameters, new TreatConstraintEnumerator(this.navHelper));
 					
 					// a new map to store a matching and whether it is added or removed
 					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndChange = HashMultimap.create();

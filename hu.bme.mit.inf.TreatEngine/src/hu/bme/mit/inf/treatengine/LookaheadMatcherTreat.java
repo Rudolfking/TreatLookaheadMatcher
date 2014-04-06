@@ -27,7 +27,6 @@ public class LookaheadMatcherTreat
 {
 	// engine (incquery), matcher(lookahead) and navigationhelper(IQbase)
 	private IncQueryEngine engine;
-	private LookaheadMatcherInterface matcher;
 	private NavigationHelper navHelp;
 	
 	private static TreatPartialPatternCacher treatPartialCacher = new TreatPartialPatternCacher();
@@ -56,7 +55,6 @@ public class LookaheadMatcherTreat
 	 */
 	public LookaheadMatcherTreat(IncQueryEngine engineRe)
 	{
-		matcher = new LookaheadMatcherInterface();
 		treatPartialCacher.setLookaheadTreat(this);
 		engine = engineRe;
 		
@@ -102,6 +100,7 @@ public class LookaheadMatcherTreat
 	 */
 	public boolean registerPatternWithMatches(PQuery chosenQuery)
 	{
+		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
 		// match!
 		MultiSet<LookaheadMatching> matches = matcher.matchAll(engine, treatPartialCacher, chosenQuery, null, null);
 
@@ -232,7 +231,7 @@ public class LookaheadMatcherTreat
 	private void FillPatternCallsPatterns(PQuery actRoot)
 	{
 		// find children of this root
-		PatternCallModes findedNegfindedPatterns = matcher.getFindListForPattern(actRoot);
+		PatternCallModes findedNegfindedPatterns = (new LookaheadMatcherInterface()).getFindListForPattern(actRoot);
 		if (findedNegfindedPatterns != null && findedNegfindedPatterns.allSize() > 0)
 			PatternCallsPatterns.put(actRoot, findedNegfindedPatterns);
 		else return; // no more children
@@ -244,7 +243,7 @@ public class LookaheadMatcherTreat
 	}
 	public void subscribeToIndexer() 
 	{
-		this.featureListeners = new MyFeatureListeners(this, matcher, this.navHelp);
+		this.featureListeners = new MyFeatureListeners(this, this.navHelp);
 		navHelp.addBaseIndexChangeListener(this.featureListeners.baseIndexChangeListener);
 	}
 	public void unsubscribeFromIndexer()
@@ -265,7 +264,6 @@ public class LookaheadMatcherTreat
 		
 		featureListeners = null;
 		engine = null;
-		matcher = null;
 		navHelp = null;
 		AdvancedDeltaProcessor.getInstance().setEngine(null);
 		AdvancedDeltaProcessor.getInstance().setPartialCacher(null);
