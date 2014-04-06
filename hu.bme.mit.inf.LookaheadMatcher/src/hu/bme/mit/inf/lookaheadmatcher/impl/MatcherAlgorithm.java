@@ -55,9 +55,6 @@ public class MatcherAlgorithm
 		}
 		
 		matchPattern(patternState.SearchedConstraints, patternState.FoundConstraints, patternState.CheckConstraints, patternState.MatchingVariables);
-		System.out.println("Matches are the following:");
-		
-		System.out.println("Match for this body finished! Found: " + Integer.toString(matchCounter));
 		return foundMatches;
 	}
 	

@@ -58,7 +58,8 @@ public class MyFeatureListeners
 		@Override
 		public void notifyChanged(boolean indexChanged)
 		{
-			System.out.println("[MAGIC] After magic collect:" + modelChanges.size());
+			if (modelChanges != null && modelChanges.size() > 0)
+				System.out.println("[MAGIC] After magic collect:" + modelChanges.size());
 			MagicProcessor(); // remove list
 			return;
 		}

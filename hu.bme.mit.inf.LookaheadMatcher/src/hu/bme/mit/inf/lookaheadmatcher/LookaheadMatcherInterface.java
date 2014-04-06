@@ -120,7 +120,6 @@ public class LookaheadMatcherInterface
 		// return with matches (knownvalues when matching, known_even_locals is that we don't have in this case)
 		MultiSet<LookaheadMatching> rett = matchWithProcessed(matchingStates, knownValues, null, consEnum);
 		
-		System.out.println("Match finished for pattern " + patternQuery.getFullyQualifiedName());
 		return rett;
 	}
 	
@@ -161,7 +160,7 @@ public class LookaheadMatcherInterface
 		// match all with no known values but known mapped values to bind (can be local etc.)
 		matches.addAll(matchWithProcessed(cachedStructures, null, knownValues, consEnum));
 		
-		System.out.println("[Update] Find new matches for pattern " + modPattern.getFullyQualifiedName() + " (all bodies): " + matches.size());
+		// System.out.println("[Update] Find new matches for pattern " + modPattern.getFullyQualifiedName() + " (all bodies): " + matches.size());
 		
 		return matches;
 	}
@@ -268,12 +267,12 @@ public class LookaheadMatcherInterface
 		
 		// write out!
 		int laza = 0;
-		for (LookaheadMatching oneMatch : matches.toArrayListDeprecated())
-		{
-			System.out.println("Match " + Integer.toString(laza) + ":" + oneMatch.toString());
-			laza++;
-		}
-		System.out.println("Total matches from all body: " + matches.size() + " and unique: " + matches.uniqueSize());
+//		for (LookaheadMatching oneMatch : matches.toArrayListDeprecated())
+//		{
+//			System.out.println("Match " + Integer.toString(laza) + ":" + oneMatch.toString());
+//			laza++;
+//		}
+		// System.out.println("Total matches from all body: " + matches.size() + " and unique: " + matches.uniqueSize());
 		
 		return matches;
 	}

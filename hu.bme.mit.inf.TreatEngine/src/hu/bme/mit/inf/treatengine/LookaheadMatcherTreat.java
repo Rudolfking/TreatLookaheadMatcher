@@ -1,44 +1,27 @@
 package hu.bme.mit.inf.treatengine;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map.Entry;
 
-import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
 import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 import hu.bme.mit.inf.lookaheadmatcher.PatternCallModes;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
-import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
-import hu.bme.mit.inf.lookaheadmatcher.impl.FindConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
 //import com.google.common.collect.*;
 
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;
 import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.ENamedElement;
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
-import org.eclipse.emf.common.notify.Notifier;
-import org.eclipse.incquery.runtime.base.api.DataTypeListener;
-import org.eclipse.incquery.runtime.base.api.FeatureListener;
-import org.eclipse.incquery.runtime.base.api.InstanceListener;
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
-import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 public class LookaheadMatcherTreat
 {
@@ -197,6 +180,27 @@ public class LookaheadMatcherTreat
 		return true;
 	}
 	
+	public void unregisterAll()
+	{
+		HashSet<EDataType> dtps = new HashSet<EDataType>();
+		HashSet<EClass> ecls = new HashSet<EClass>();
+		HashSet<EStructuralFeature> esfs = new HashSet<EStructuralFeature>();
+		for (Entry<ENamedElement, HashSet<PQuery>> rem : RelativeSet.entrySet())
+		{
+			ENamedElement element = rem.getKey();
+			if (element instanceof EDataType)
+				dtps.add((EDataType) element);
+			else if (element instanceof EClass)
+				ecls.add((EClass) element);
+			else if (element instanceof EStructuralFeature)
+				esfs.add((EStructuralFeature) element);
+		}
+
+		navHelp.removeDataTypeListener(dtps, featureListeners.dataTypeListener);
+		navHelp.removeInstanceListener(ecls, featureListeners.classListener);
+		navHelp.removeFeatureListener(esfs, featureListeners.featureListener);
+	}
+	
 	
 	/**
 	 * matches a pattern using TREAT caching or creates a new cache if pattern is previously not cached
@@ -242,6 +246,10 @@ public class LookaheadMatcherTreat
 	{
 		this.featureListeners = new MyFeatureListeners(this, matcher, this.navHelp);
 		navHelp.addBaseIndexChangeListener(this.featureListeners.baseIndexChangeListener);
+	}
+	public void unsubscribeFromIndexer()
+	{
+		navHelp.removeBaseIndexChangeListener(this.featureListeners.baseIndexChangeListener);
 	}
 
 }

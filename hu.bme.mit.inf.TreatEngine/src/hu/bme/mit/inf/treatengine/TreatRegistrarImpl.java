@@ -64,6 +64,11 @@ public class TreatRegistrarImpl
 		
 		public static void Clean()
 		{
+			for (Entry<IncQueryEngine, LookaheadMatcherTreat> entry : TreatIQEngineDrot.entrySet())
+			{
+				entry.getValue().unregisterAll();
+				entry.getValue().unsubscribeFromIndexer();
+			}
 			TreatIQEngineDrot.clear();
 			TreatIQEngineDrot = null;
 		}
