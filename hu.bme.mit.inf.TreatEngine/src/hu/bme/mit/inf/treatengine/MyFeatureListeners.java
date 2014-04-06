@@ -58,8 +58,8 @@ public class MyFeatureListeners
 		@Override
 		public void notifyChanged(boolean indexChanged)
 		{
-			if (modelChanges != null && modelChanges.size() > 0)
-				System.out.println("[MAGIC] After magic collect:" + modelChanges.size());
+//			if (modelChanges != null && modelChanges.size() > 0)
+//				System.out.println("[MAGIC] After magic collect:" + modelChanges.size());
 			MagicProcessor(); // remove list
 			return;
 		}
@@ -74,7 +74,7 @@ public class MyFeatureListeners
 		@Override
 		public void instanceInserted(EClass clazz, EObject instance)
 		{
-			System.out.println("[Instance] inserted!");
+			//System.out.println("[Instance] inserted!");
 			modelChanges.add(new EClassChange(clazz, instance, true));
 			
 			
@@ -146,7 +146,7 @@ public class MyFeatureListeners
 		@Override
 		public void instanceDeleted(EClass clazz, EObject instance)
 		{
-			System.out.println("[Instance] deleted!");
+			//System.out.println("[Instance] deleted!");
 			
 			modelChanges.add(new EClassChange(clazz, instance, false));
 			
@@ -225,7 +225,7 @@ public class MyFeatureListeners
 		@Override
 		public void dataTypeInstanceInserted(EDataType type, Object instance, boolean firstOccurrence)
 		{
-			System.out.println("[EDataType] inserted!");
+			//System.out.println("[EDataType] inserted!");
 			modelChanges.add(new EDataTypeChange(type, instance, true));
 			
 			
@@ -298,7 +298,7 @@ public class MyFeatureListeners
 		@Override
 		public void dataTypeInstanceDeleted(EDataType type, Object instance, boolean firstOccurrence)
 		{
-			System.out.println("[EDataType] deleted!");
+			//System.out.println("[EDataType] deleted!");
 			
 			modelChanges.add(new EDataTypeChange(type, instance, false));
 			
@@ -373,7 +373,7 @@ public class MyFeatureListeners
 		@Override
 		public void featureInserted(EObject host, EStructuralFeature feature, Object value)
 		{
-			System.out.println("[Feature] inserted!");
+			//System.out.println("[Feature] inserted!");
 			
 			modelChanges.add(new EFeatureChange(host, feature, value, true));
 			
@@ -446,7 +446,7 @@ public class MyFeatureListeners
 		@Override
 		public void featureDeleted(EObject host, EStructuralFeature feature, Object value)
 		{
-			System.out.println("[Feature] deleted!");
+			//System.out.println("[Feature] deleted!");
 			
 			modelChanges.add(new EFeatureChange(host, feature, value, false));
 			
@@ -534,7 +534,7 @@ public class MyFeatureListeners
 		// else go!
 		
 		// gets all model deltas and processes!
-		System.out.println("[MAGIC] Update match set based on model change started...");
+		//System.out.println("[MAGIC] Update match set based on model change started...");
 		
 		long start = System.currentTimeMillis();
 
@@ -685,7 +685,7 @@ public class MyFeatureListeners
 		}
 		AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 		
-		System.out.println("[MAGIC] Update match set based on model change ended! Time:" + Long.toString(System.currentTimeMillis() - start));
+		//System.out.println("[MAGIC] Update match set based on model change ended! Time:" + Long.toString(System.currentTimeMillis() - start));
 		
 		// finally:
 		modelChanges = new ArrayList<ModelChange>();

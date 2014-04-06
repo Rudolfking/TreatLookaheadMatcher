@@ -142,10 +142,26 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			if (entry.getValue() != null && variablesInOrder.contains(entry.getKey()))
 				partialMatching.put(entry.getKey(), entry.getValue()); // add to watch set if (1) its value is not null (2) key is in affected variables of query ( parameter )
 		}
-		if (partialMatching.size() == 0 || partialMatching.size() == variablesInOrder.size())
+		if (partialMatching.size() == 0)
 		{
-			// match nothing or everything
+			// match everything
 			return this.lookaheadTreat.matchThePattern(resolvingQuery).size();
+		}
+		else if (partialMatching.size() == variablesInOrder.size())
+		{
+			MultiSet<LookaheadMatching> curr = this.lookaheadTreat.matchThePattern(resolvingQuery);
+			ArrayList<Object> sortedVals = new ArrayList<Object>();
+			for(int i=0;i<variablesInOrder.size();i++)
+			{
+				// add item: if known, the known value, if not known, null
+				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
+			}
+			for (LookaheadMatching item : curr.toArrayList(false))
+			{
+				if (item.getParameterMatchValuesOnlyAsArray().equals(sortedVals.toArray()))
+					return 1; // item found!
+			}
+			return 0; // item not found!
 		}
 		
 		// determine key:
@@ -198,10 +214,30 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				partialMatching.put(entry.getKey(), entry.getValue()); // add to watch set if (1) its value is not null (2) key is in affected variables of query ( parameter )
 		}
 		
-		if (partialMatching.size() == 0 || partialMatching.size() == variablesInOrder.size())
+		if (partialMatching.size() == 0)
 		{
 			// case is easy: get ALL matches! should check forcemakeindex (matchThePattern() will cache...)
 			return this.lookaheadTreat.matchThePattern(resolvingQuery);
+		}
+		else if (partialMatching.size() == variablesInOrder.size())
+		{
+			MultiSet<LookaheadMatching> curr = this.lookaheadTreat.matchThePattern(resolvingQuery);
+			ArrayList<Object> sortedVals = new ArrayList<Object>();
+			for(int i=0;i<variablesInOrder.size();i++)
+			{
+				// add item: if known, the known value, if not known, null
+				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
+			}
+			MultiSet<LookaheadMatching> msRet = new MultiSet<LookaheadMatching>();
+			for (LookaheadMatching item : curr.toArrayList(true))
+			{
+				if (item.getParameterMatchValuesOnlyAsArray().equals(sortedVals.toArray()))
+				{
+					// one item found!
+					msRet.add(item);
+				}
+			}
+			return msRet; // item not found!
 		}
 		else
 		{

@@ -174,7 +174,7 @@ public class AdvancedDeltaProcessor
 				{
 					if (!oldMatches.contains(changedMatch.getKey()))
 					{
-						throw new AssertionError("This match is not even in this set!");
+						//throw new AssertionError("This match is not even in this set!");
 					}
 					oldMatches.remove(changedMatch.getKey()); // model delta means that this is decremented
 					if (!oldMatches.contains(changedMatch.getKey()))
