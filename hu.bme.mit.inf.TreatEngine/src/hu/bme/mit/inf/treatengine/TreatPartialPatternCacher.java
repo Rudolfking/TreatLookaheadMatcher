@@ -156,12 +156,19 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				// add item: if known, the known value, if not known, null
 				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
 			}
-			for (LookaheadMatching item : curr.toArrayList(false))
+			int ret = 0;
+			main: for (LookaheadMatching item : curr.toArrayList(false))
 			{
-				if (item.getParameterMatchValuesOnlyAsArray().equals(sortedVals.toArray()))
-					return 1; // item found!
+				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().length;i++)
+				{
+					Object obj1=item.getParameterMatchValuesOnlyAsArray()[i];
+					Object obj2=sortedVals.get(i);
+					if (obj1.equals(obj2) == false)
+						continue main;
+				}
+				ret++; // item is found
 			}
-			return 0; // item not found!
+			return ret; // item not found!
 		}
 		
 		// determine key:
@@ -229,13 +236,16 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
 			}
 			MultiSet<LookaheadMatching> msRet = new MultiSet<LookaheadMatching>();
-			for (LookaheadMatching item : curr.toArrayList(true))
+			main: for (LookaheadMatching item : curr.toArrayList(true))
 			{
-				if (item.getParameterMatchValuesOnlyAsArray().equals(sortedVals.toArray()))
+				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().length;i++)
 				{
-					// one item found!
-					msRet.add(item);
+					Object obj1=item.getParameterMatchValuesOnlyAsArray()[i];
+					Object obj2=sortedVals.get(i);
+					if (obj1.equals(obj2) == false)
+						continue main;
 				}
+				msRet.add(item); 
 			}
 			return msRet; // item not found!
 		}
