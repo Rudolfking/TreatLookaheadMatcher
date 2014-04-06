@@ -1,8 +1,11 @@
 package hu.bme.mit.inf.treatengine;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
 
@@ -17,9 +20,10 @@ public class TreatRegistrarImpl
 		
 		public static void Connect(IncQueryEngine engine, LookaheadMatcherTreat lomatreRef)
 		{
-			if (TreatIQEngineDrot != null)
-				return;
-			TreatIQEngineDrot = new HashMap<IncQueryEngine, LookaheadMatcherTreat>();
+			if (TreatIQEngineDrot == null)
+			{
+				TreatIQEngineDrot = new HashMap<IncQueryEngine, LookaheadMatcherTreat>();
+			}
 			TreatIQEngineDrot.put(engine, lomatreRef);
 			lomatreRef.subscribeToIndexer();
 		}
@@ -31,6 +35,37 @@ public class TreatRegistrarImpl
 				return null;
 			}
 			return TreatIQEngineDrot.get(engine);
+		}
+		
+		public static boolean RemoveLookaheadMatcherTreat(IncQueryEngine engine)
+		{
+			if (TreatIQEngineDrot == null)
+			{ 
+				return false;
+			}
+			return TreatIQEngineDrot.remove(engine) != null;
+		}
+		
+		public static void RemoveLookaheadMatcherTreat(LookaheadMatcherTreat treat)
+		{
+			if (TreatIQEngineDrot == null)
+			{ 
+				return;
+			}
+			List<IncQueryEngine> engsToRemove = new ArrayList<IncQueryEngine>();
+			for (Entry<IncQueryEngine, LookaheadMatcherTreat> entry : TreatIQEngineDrot.entrySet())
+			{
+				if (entry.getValue().equals(treat))
+					engsToRemove.add(entry.getKey());
+			}
+			for (IncQueryEngine eng : engsToRemove)
+				TreatIQEngineDrot.remove(eng);
+		}
+		
+		public static void Clean()
+		{
+			TreatIQEngineDrot.clear();
+			TreatIQEngineDrot = null;
 		}
 	}
 	

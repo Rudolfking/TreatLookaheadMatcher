@@ -73,6 +73,7 @@ public class MyFeatureListeners
 		@Override
 		public void instanceInserted(EClass clazz, EObject instance)
 		{
+			System.out.println("[Instance] inserted!");
 			modelChanges.add(new EClassChange(clazz, instance, true));
 			
 			
@@ -144,6 +145,8 @@ public class MyFeatureListeners
 		@Override
 		public void instanceDeleted(EClass clazz, EObject instance)
 		{
+			System.out.println("[Instance] deleted!");
+			
 			modelChanges.add(new EClassChange(clazz, instance, false));
 			
 //			
@@ -221,6 +224,7 @@ public class MyFeatureListeners
 		@Override
 		public void dataTypeInstanceInserted(EDataType type, Object instance, boolean firstOccurrence)
 		{
+			System.out.println("[EDataType] inserted!");
 			modelChanges.add(new EDataTypeChange(type, instance, true));
 			
 			
@@ -293,6 +297,8 @@ public class MyFeatureListeners
 		@Override
 		public void dataTypeInstanceDeleted(EDataType type, Object instance, boolean firstOccurrence)
 		{
+			System.out.println("[EDataType] deleted!");
+			
 			modelChanges.add(new EDataTypeChange(type, instance, false));
 			
 			
@@ -366,6 +372,8 @@ public class MyFeatureListeners
 		@Override
 		public void featureInserted(EObject host, EStructuralFeature feature, Object value)
 		{
+			System.out.println("[Feature] inserted!");
+			
 			modelChanges.add(new EFeatureChange(host, feature, value, true));
 			
 //			
@@ -437,6 +445,8 @@ public class MyFeatureListeners
 		@Override
 		public void featureDeleted(EObject host, EStructuralFeature feature, Object value)
 		{
+			System.out.println("[Feature] deleted!");
+			
 			modelChanges.add(new EFeatureChange(host, feature, value, false));
 			
 			
