@@ -69,14 +69,20 @@ public class AdvancedDeltaProcessor
 		Delta properPropagatableDelta = updatePatternsMatchingsFromDelta(d);
 		// update indexes!
 		Collection<IndexDelta> negFindDeltas = updateIndexesFromDelta(properPropagatableDelta);
+		if (negFindDeltas != null)
+			System.out.println("Neg find deltas: " + negFindDeltas.toString());
+		else 
+			System.out.println("Neg find deltas are null!");
 		// mailbox: deliver deltas and get call hierarchy to extend affected pattern list
 		Multimap<PQuery, Boolean> affPats = deliverDelta(properPropagatableDelta);
+		System.out.println("Affected patterns: " + affPats.size() + affPats.toString());
 		if (negFindDeltas != null)
 		{
 			for (IndexDelta id : negFindDeltas)
 			{
 				Multimap<PQuery, Boolean> moreAffPats = deliverDelta(id);
 				affectedPatterns.addAll(moreAffPats.keySet());
+				System.out.print("");
 			}
 		}
 		affectedPatterns.addAll(affPats.keySet());
@@ -92,6 +98,7 @@ public class AdvancedDeltaProcessor
 		HashSet<PQuery> currentAffectedPatterns = (HashSet<PQuery>) ((HashSet) affectedPatterns).clone();
 		
 		Set<PQuery> topologicalFirstPatterns = getTopologicalOkayPatterns(currentAffectedPatterns);
+		System.out.println("topologicalFirstPatterns:" + topologicalFirstPatterns.toString());
 		
 		// evaluate topological okay patterns:
 		for (PQuery topOK : topologicalFirstPatterns)
@@ -303,7 +310,7 @@ public class AdvancedDeltaProcessor
 					if (!(d instanceof IndexDelta))
 						throw new AssertionError("This neg find got a not IndexDelta type delta! It cannot process other delta types!");
 					IndexDelta delta = (IndexDelta)d;
-					delta.getIndexVariables();
+
 					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						// match with lookahead, search for changes based on delta change
@@ -403,7 +410,7 @@ public class AdvancedDeltaProcessor
 						// put simple delta only in find calls
 						for (AxisConstraint ac : struct.SearchedConstraints)
 						{
-							if (ac instanceof FindConstraint)
+							if (ac instanceof FindConstraint && ((FindConstraint)ac).getInnerFindCall().getReferredQuery().equals(((Delta)delta).getPattern()))
 							{
 								((FindConstraint)ac).putToMailbox(delta);
 								ret.put(caller, true);

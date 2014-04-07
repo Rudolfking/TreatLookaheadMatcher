@@ -3,15 +3,16 @@ package hu.bme.mit.inf.treatengine;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 
 public class IndexDelta extends Delta {
 
-	private Set<String> indexVariables;
+	private List<String> indexVariables;
 	
-	public IndexDelta(PQuery changedPattern, HashMap<LookaheadMatching, Boolean> changes, Set<String> indexVars)
+	public IndexDelta(PQuery changedPattern, HashMap<LookaheadMatching, Boolean> changes, List<String> indexVars)
 	{
 		// classic delta:
 		super(changedPattern, changes);
@@ -19,7 +20,7 @@ public class IndexDelta extends Delta {
 		indexVariables = indexVars;
 	}
 
-	public Set<String> getIndexVariables()
+	public List<String> getIndexVariables()
 	{
 		return indexVariables;
 	}

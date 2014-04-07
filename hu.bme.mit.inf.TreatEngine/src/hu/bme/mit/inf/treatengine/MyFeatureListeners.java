@@ -444,7 +444,7 @@ public class MyFeatureListeners
 		@Override
 		public void featureDeleted(EObject host, EStructuralFeature feature, Object value)
 		{
-			System.out.println("[Feature] deleted!");
+			//System.out.println("[Feature] deleted!");
 			
 			modelChanges.add(new EFeatureChange(host, feature, value, false));
 			
@@ -532,7 +532,7 @@ public class MyFeatureListeners
 		// else go!
 		
 		// gets all model deltas and processes!
-		System.out.println("[MAGIC] Update match set based on model change started...");
+		//System.out.println("[MAGIC] Update match set based on model change started...");
 		
 		long start = System.currentTimeMillis();
 
@@ -684,7 +684,7 @@ public class MyFeatureListeners
 		}
 		AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
 		
-		System.out.println("[MAGIC] Update match set based on model change ended! Time:" + Long.toString(System.currentTimeMillis() - start));
+		//System.out.println("[MAGIC] Update match set based on model change ended! Time:" + Long.toString(System.currentTimeMillis() - start));
 		
 		// finally:
 		modelChanges = new ArrayList<ModelChange>();

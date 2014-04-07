@@ -103,9 +103,25 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 						}
 					}
 				}
+				
+				List<String> indexesOrdered = new ArrayList<String>();
+				for (String strParam : delta.getPattern().getParameterNames())
+				{
+					boolean found = false;
+					for (String keyParam: index.getKey())
+					{
+						if (strParam.equals(keyParam))
+						{
+							indexesOrdered.add(strParam);
+							found = true;
+						}
+					}
+					if (!found)
+						indexesOrdered.add(null);
+				}
 
 				if (changeMap.size() > 0)
-					deltaSet.add(new IndexDelta(this.theQuery, changeMap, index.getKey()));
+					deltaSet.add(new IndexDelta(this.theQuery, changeMap, indexesOrdered));
 			}
 			// the delta for THIS index
 			if (deltaSet.size() != 0)
