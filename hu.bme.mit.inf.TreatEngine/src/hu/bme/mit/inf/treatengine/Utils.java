@@ -28,7 +28,8 @@ public class Utils
 				indexMightBe.add(s.getName()); // csunya, de vegul is ez a "parameter"
 		}
 		
-		if (indexDelta.getIndexVariables().equals(indexMightBe))
+		if ((indexDelta.getIndexVariables() == null && indexMightBe.size() == nacC.getAffectedVariables().size()) 
+				|| indexDelta.getIndexVariables().equals(indexMightBe))
 			return true;
 		return false;
 	}

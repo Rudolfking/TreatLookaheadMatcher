@@ -354,8 +354,21 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 	{
 		Delta ddelta = (Delta) delta;
 		if (this.patternsPartialMatchings.get(ddelta.getPattern()) != null) // if in indexed list!
-			return this.patternsPartialMatchings.get(ddelta.getPattern()).maintainIntegrity(ddelta); // add delta to maintain
-		return null; // no delta can occur
+		{
+			Collection<IndexDelta> ret = this.patternsPartialMatchings.get(ddelta.getPattern()).maintainIntegrity(ddelta); // add delta to maintain
+			if (ret == null || ret.size() == 0)
+			{
+				// create an empty-type indexdelta if no indexes found (TODO this is bad i think)
+				IndexDelta id = new IndexDelta(delta.getPattern(), delta.getChangeset(), null);
+				ret.add(id);
+				return ret;
+			}
+			else return ret;
+		}
+		Collection<IndexDelta> retNl = new HashSet<IndexDelta>();
+		IndexDelta id = new IndexDelta(delta.getPattern(), delta.getChangeset(), null);
+		retNl.add(id);
+		return retNl;
 	}
 	
 	public void clean() 

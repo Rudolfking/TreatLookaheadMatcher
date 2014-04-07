@@ -69,7 +69,6 @@ public class AdvancedDeltaProcessor
 		Delta properPropagatableDelta = updatePatternsMatchingsFromDelta(d);
 		// update indexes!
 		Collection<IndexDelta> negFindDeltas = updateIndexesFromDelta(properPropagatableDelta);
-		
 		// mailbox: deliver deltas and get call hierarchy to extend affected pattern list
 		Multimap<PQuery, Boolean> affPats = deliverDelta(properPropagatableDelta);
 		if (negFindDeltas != null)
