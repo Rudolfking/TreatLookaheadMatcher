@@ -69,20 +69,20 @@ public class AdvancedDeltaProcessor
 		Delta properPropagatableDelta = updatePatternsMatchingsFromDelta(d);
 		// update indexes!
 		Collection<IndexDelta> negFindDeltas = updateIndexesFromDelta(properPropagatableDelta);
-		if (negFindDeltas != null)
-			System.out.println("Neg find deltas: " + negFindDeltas.toString());
-		else 
-			System.out.println("Neg find deltas are null!");
+//		if (negFindDeltas != null)
+//			System.out.println("Neg find deltas: " + negFindDeltas.toString());
+//		else 
+//			System.out.println("Neg find deltas are null!");
 		// mailbox: deliver deltas and get call hierarchy to extend affected pattern list
 		Multimap<PQuery, Boolean> affPats = deliverDelta(properPropagatableDelta);
-		System.out.println("Affected patterns: " + affPats.size() + affPats.toString());
+		//System.out.println("Affected patterns: " + affPats.size() + affPats.toString());
 		if (negFindDeltas != null)
 		{
 			for (IndexDelta id : negFindDeltas)
 			{
 				Multimap<PQuery, Boolean> moreAffPats = deliverDelta(id);
 				affectedPatterns.addAll(moreAffPats.keySet());
-				System.out.print("");
+				//System.out.print("");
 			}
 		}
 		affectedPatterns.addAll(affPats.keySet());
@@ -98,7 +98,7 @@ public class AdvancedDeltaProcessor
 		HashSet<PQuery> currentAffectedPatterns = (HashSet<PQuery>) ((HashSet) affectedPatterns).clone();
 		
 		Set<PQuery> topologicalFirstPatterns = getTopologicalOkayPatterns(currentAffectedPatterns);
-		System.out.println("topologicalFirstPatterns:" + topologicalFirstPatterns.toString());
+		//System.out.println("topologicalFirstPatterns:" + topologicalFirstPatterns.toString());
 		
 		// evaluate topological okay patterns:
 		for (PQuery topOK : topologicalFirstPatterns)

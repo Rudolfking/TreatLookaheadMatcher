@@ -679,7 +679,7 @@ public class MyFeatureListeners
 		// apply deltas
 		for (ModelDelta delta : deltas)
 		{
-			System.out.println("Propagate a delta: " + delta.getPattern().getFullyQualifiedName());
+			//System.out.println("Propagate a delta: " + delta.getPattern().getFullyQualifiedName());
 			AdvancedDeltaProcessor.getInstance().ReceiveDelta(delta);
 		}
 		AdvancedDeltaProcessor.getInstance().ProcessReceivedDeltaSet();
