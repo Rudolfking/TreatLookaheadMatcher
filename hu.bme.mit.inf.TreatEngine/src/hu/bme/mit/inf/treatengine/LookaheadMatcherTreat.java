@@ -3,11 +3,14 @@ package hu.bme.mit.inf.treatengine;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 import hu.bme.mit.inf.lookaheadmatcher.PatternCallModes;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
+import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
@@ -93,6 +96,7 @@ public class LookaheadMatcherTreat
 	public static HashMap<ENamedElement, HashSet<PQuery>> RelativeSet = new HashMap<ENamedElement, HashSet<PQuery>>();
 
 	
+
 	/**
 	 *  matches a pattern and creates and saves listeners to the pattern's instances/datatypes/structuralfeatures
 	 * @param chosenQuery
@@ -100,25 +104,59 @@ public class LookaheadMatcherTreat
 	 */
 	public boolean registerPatternWithMatches(PQuery chosenQuery)
 	{
+		// this whole code should run ONCE for each query:
+		if (GodSet.containsKey(chosenQuery))
+			throw new AssertionError("Why are we searching for this pattern if we have all matchings in cache?");
+		
+		// adds listening to NavHelper
+		PowerTreatUp(chosenQuery);
+		
 		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
 		// match!
 		MultiSet<LookaheadMatching> matches = matcher.matchAll(engine, treatPartialCacher, chosenQuery, null, null);
 
 		// put pattern matches to registry
 		GodSet.put(chosenQuery, matches);
-		// put structures to registry (if modified, fast matching available)
-		GodSetStructures.put(chosenQuery, matcher.GetAheadStructures());
 		
-		// register new types!
-		ArrayList<ENamedElement> nameds = new ArrayList<ENamedElement>();
-		for (TypeConstraint tCon : matcher.GetTypeConstraints())
+		// adds the listeners
+		addListeners(chosenQuery);
+		
+		return true;
+	}
+	
+	public void PowerTreatUp(PQuery query)
+	{
+		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
+		ArrayList<AheadStructure> structs = matcher.PatternOnlyProcess(query, this.engine, treatPartialCacher);
+
+		// put structures to registry (if modified, fast matching available)
+		GodSetStructures.put(query, structs);
+		
+		
+		Set<ENamedElement> nameds = new HashSet<ENamedElement>();
+		
+		Set<EDataType> types = new HashSet<EDataType>();
+		Set<EClass> classes = new HashSet<EClass>();
+		Set<EStructuralFeature> featureds = new HashSet<EStructuralFeature>();
+		
+		for (AheadStructure struct : structs)
 		{
-			// register if class and register if not already registered type
-			if (!nameds.contains(tCon.getType()))
-				nameds.add(tCon.getType());
+			for (AxisConstraint ac : struct.SearchedConstraints)
+			{
+				if (ac instanceof TypeConstraint)
+				{
+					nameds.add(((TypeConstraint)ac).getType());
+				}
+				else if (ac instanceof RelationConstraint)
+				{
+					RelationConstraint rCon = (RelationConstraint) ac;
+					// register if class and register if not already registered type
+					featureds.add(rCon.getEdge());
+					// egysegesen
+					nameds.add(rCon.getEdge());
+				}
+			}
 		}
-		ArrayList<EDataType> types = new ArrayList<EDataType>();
-		ArrayList<EClass> classes = new ArrayList<EClass>();
 		for (ENamedElement eNamed : nameds)
 		{
 			if (eNamed instanceof EDataType)
@@ -127,29 +165,58 @@ public class LookaheadMatcherTreat
 				classes.add((EClass) eNamed);
 		}
 		
-		// register new relations!
-		ArrayList<EStructuralFeature> featureds = new ArrayList<EStructuralFeature>();
-		for (RelationConstraint rCon : matcher.GetRelationConstraints())
+		// navhelper: watch all these!!!!:
+		navHelp.registerObservedTypes(classes, types, featureds);
+	}
+	
+	private void addListeners(PQuery query)
+	{
+		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
+		ArrayList<AheadStructure> structs = matcher.PatternOnlyProcess(query, this.engine, treatPartialCacher);
+
+		// put structures to registry (if modified, fast matching available)
+		GodSetStructures.put(query, structs);
+		
+		
+		Set<ENamedElement> nameds = new HashSet<ENamedElement>();
+		
+		Set<EDataType> types = new HashSet<EDataType>();
+		Set<EClass> classes = new HashSet<EClass>();
+		Set<EStructuralFeature> featureds = new HashSet<EStructuralFeature>();
+		
+		for (AheadStructure struct : structs)
 		{
-			// register if class and register if not already registered type
-			if (!featureds.contains(rCon.getEdge()))
-				featureds.add(rCon.getEdge());
-			// egysegesen
-			if (!nameds.contains(rCon.getEdge()))
-				nameds.add(rCon.getEdge());
+			for (AxisConstraint ac : struct.SearchedConstraints)
+			{
+				if (ac instanceof TypeConstraint)
+				{
+					nameds.add(((TypeConstraint)ac).getType());
+				}
+				else if (ac instanceof RelationConstraint)
+				{
+					RelationConstraint rCon = (RelationConstraint) ac;
+					// register if class and register if not already registered type
+					featureds.add(rCon.getEdge());
+					// egysegesen
+					nameds.add(rCon.getEdge());
+				}
+			}
 		}
-		ArrayList<EStructuralFeature> features = new ArrayList<EStructuralFeature>();
-		for (EStructuralFeature eFeatured : featureds)
+		for (ENamedElement eNamed : nameds)
 		{
-			features.add(eFeatured);
+			if (eNamed instanceof EDataType)
+				types.add((EDataType) eNamed);
+			else if (eNamed instanceof EClass)
+				classes.add((EClass) eNamed);
 		}
 		
+		// navhelper: add listeners to these changes!!:
 		if (types.size() > 0)
 			navHelp.addDataTypeListener(types, featureListeners.dataTypeListener);
 		if (classes.size() > 0)
 			navHelp.addInstanceListener(classes, featureListeners.classListener);
-		if (features.size() > 0)
-			navHelp.addFeatureListener(features, featureListeners.featureListener);
+		if (featureds.size() > 0)
+			navHelp.addFeatureListener(featureds, featureListeners.featureListener);
 		
 		// fill relativeSet!
 		for (ENamedElement eNamed : nameds)
@@ -158,26 +225,57 @@ public class LookaheadMatcherTreat
 			{
 				// add to already existing list
 				HashSet<PQuery> pats = RelativeSet.get(eNamed);
-				if (!pats.contains(eNamed))
-					pats.add(chosenQuery);
+				pats.add(query);
 				RelativeSet.put(eNamed, pats);
 			}
 			else
 			{
 				// add as first (never will be null)
 				HashSet<PQuery> newPatInSet = new HashSet<PQuery>();
-				newPatInSet.add(chosenQuery);
+				newPatInSet.add(query);
 				RelativeSet.put(eNamed, newPatInSet);
 			}
 		}
 		
 		// find/negfind patterns (whole tree) of the pattern
 		
-		FillPatternCallsPatterns(chosenQuery);
-		
-		
-		return true;
+		FillPatternCallsPatterns(query);
 	}
+	
+
+//	// register new types!
+//	for (TypeConstraint tCon : matcher.GetTypeConstraints())
+//	{
+//		// register if class and register if not already registered type
+//		if (!nameds.contains(tCon.getType()))
+//			nameds.add(tCon.getType());
+//	}
+//	ArrayList<EDataType> types = new ArrayList<EDataType>();
+//	ArrayList<EClass> classes = new ArrayList<EClass>();
+//	for (ENamedElement eNamed : nameds)
+//	{
+//		if (eNamed instanceof EDataType)
+//			types.add((EDataType) eNamed);
+//		else if (eNamed instanceof EClass)
+//			classes.add((EClass) eNamed);
+//	}
+//	
+//	// register new relations!
+//	ArrayList<EStructuralFeature> featureds = new ArrayList<EStructuralFeature>();
+//	for (RelationConstraint rCon : matcher.GetRelationConstraints())
+//	{
+//		// register if class and register if not already registered type
+//		if (!featureds.contains(rCon.getEdge()))
+//			featureds.add(rCon.getEdge());
+//		// egysegesen
+//		if (!nameds.contains(rCon.getEdge()))
+//			nameds.add(rCon.getEdge());
+//	}
+//	ArrayList<EStructuralFeature> features = new ArrayList<EStructuralFeature>();
+//	for (EStructuralFeature eFeatured : featureds)
+//	{
+//		features.add(eFeatured);
+//	}
 	
 	public void unregisterAll()
 	{

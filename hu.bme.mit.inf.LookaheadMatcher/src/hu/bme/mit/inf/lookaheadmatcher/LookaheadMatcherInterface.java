@@ -40,22 +40,22 @@ public class LookaheadMatcherInterface
 	
 	private NavigationHelper navigationHelper;
 	
-	private ArrayList<TypeConstraint> typeConstraints = new ArrayList<TypeConstraint>();
-	private ArrayList<RelationConstraint> relationConstraints = new ArrayList<RelationConstraint>();
-	private ArrayList<AheadStructure> aheadStructures = new ArrayList<AheadStructure>();
-	
-	public ArrayList<TypeConstraint> GetTypeConstraints()
-	{
-		return this.typeConstraints;
-	}
-	public ArrayList<RelationConstraint> GetRelationConstraints()
-	{
-		return this.relationConstraints;
-	}
-	public ArrayList<AheadStructure> GetAheadStructures()
-	{
-		return this.aheadStructures;
-	}
+//	private ArrayList<TypeConstraint> typeConstraints = new ArrayList<TypeConstraint>();
+//	private ArrayList<RelationConstraint> relationConstraints = new ArrayList<RelationConstraint>();
+//	private ArrayList<AheadStructure> aheadStructures = new ArrayList<AheadStructure>();
+//	
+//	public ArrayList<TypeConstraint> GetTypeConstraints()
+//	{
+//		return this.typeConstraints;
+//	}
+//	public ArrayList<RelationConstraint> GetRelationConstraints()
+//	{
+//		return this.relationConstraints;
+//	}
+//	public ArrayList<AheadStructure> GetAheadStructures()
+//	{
+//		return this.aheadStructures;
+//	}
 	
 	
 	/*
@@ -77,8 +77,8 @@ public class LookaheadMatcherInterface
 			e.printStackTrace();
 			return false;
 		}
-		PatternProcessor pProc = new PatternProcessor(engine, patternCacher);
-		ArrayList<AheadStructure> matchingStates = pProc.Process(pattern);
+		
+		ArrayList<AheadStructure> matchingStates =  processPattern(pattern, engine, patternCacher);
 		
 		MultiSet<LookaheadMatching> matches = new MultiSet<LookaheadMatching>();
 		
@@ -114,7 +114,6 @@ public class LookaheadMatcherInterface
 		
 		// process pattern
 		ArrayList<AheadStructure> matchingStates = processPattern(patternQuery, engine, patternCacher);
-		this.aheadStructures = (ArrayList<AheadStructure>) matchingStates.clone(); // clone to cache
 		
 		
 		// return with matches (knownvalues when matching, known_even_locals is that we don't have in this case)
@@ -238,15 +237,15 @@ public class LookaheadMatcherInterface
 		{
 			AheadStructure state = stateNoClone.clone(); // 1st step!
 			// cache constraints (empty then add)
-			this.typeConstraints.clear();
-			this.relationConstraints.clear();
-			for (AxisConstraint conss : state.SearchedConstraints)
-			{
-				if (conss instanceof TypeConstraint)
-					this.typeConstraints.add((TypeConstraint) conss);
-				else if (conss instanceof RelationConstraint)
-					this.relationConstraints.add((RelationConstraint) conss);
-			}
+//			this.typeConstraints.clear();
+//			this.relationConstraints.clear();
+//			for (AxisConstraint conss : state.SearchedConstraints)
+//			{
+//				if (conss instanceof TypeConstraint)
+//					this.typeConstraints.add((TypeConstraint) conss);
+//				else if (conss instanceof RelationConstraint)
+//					this.relationConstraints.add((RelationConstraint) conss);
+//			}
 			
 			// insert locals into the game
 			if (knownLocalAndParameterValues != null)
@@ -266,7 +265,7 @@ public class LookaheadMatcherInterface
 		}
 		
 		// write out!
-		int laza = 0;
+//		int laza = 0;
 //		for (LookaheadMatching oneMatch : matches.toArrayListDeprecated())
 //		{
 //			System.out.println("Match " + Integer.toString(laza) + ":" + oneMatch.toString());
@@ -275,5 +274,10 @@ public class LookaheadMatcherInterface
 		// System.out.println("Total matches from all body: " + matches.size() + " and unique: " + matches.uniqueSize());
 		
 		return matches;
+	}
+	
+	public ArrayList<AheadStructure> PatternOnlyProcess(PQuery query, IncQueryEngine engine, IPartialPatternCacher patternCacher)
+	{
+		return processPattern(query, engine, patternCacher);
 	}
 }
