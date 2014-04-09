@@ -371,7 +371,7 @@ public class MyFeatureListeners
 		@Override
 		public void featureInserted(EObject host, EStructuralFeature feature, Object value)
 		{
-			System.out.println("[Feature] inserted!");
+			// System.out.println("[Feature] inserted!");
 			
 			modelChanges.add(new EFeatureChange(host, feature, value, true));
 			
