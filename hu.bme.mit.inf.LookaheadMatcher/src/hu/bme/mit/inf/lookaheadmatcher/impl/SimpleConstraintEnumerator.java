@@ -32,6 +32,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 	 * Should return the cost for the given constraint and partial matching. This might be faster than enumerating it.
 	 * Hardly relies on 'enumerateConstraint(..)', almost code duplicate (without that much memory footprint)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public int getCost(AxisConstraint constraint, HashMap<PVariable, Object> matchingVariables)
 	{
@@ -108,7 +109,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			else if (cost != 1) // if the COSTS[melyikszaml] not equals to 1 (see above)
 			{
 				//else if not 0/1 found in an other way (1)
-				return getAllInstances(typeCons.getType()).size();
+				return getAllInstanceSize(typeCons.getType());
 			}
 		}
 		else if (constraint instanceof RelationConstraint)
@@ -120,7 +121,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			if (boundSorcO == null && boundTargO == null)
 			{
 				// no source-target bound
-				return getAllSourceTargetPairs(conCons.getEdge()).size();
+				return getAllSourceTargetPairSize(conCons.getEdge());
 			}
 			else if (boundSorcO != null && boundTargO == null)
 			{
@@ -140,9 +141,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					else if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EList<?>)
 					{
 						// if an outgoing relation type has other ends, remember the "other ends"
-						@SuppressWarnings("unchecked")
-						EList<EObject> listaOf = (EList<EObject>) boundSorc.eGet(esf);
-						mtch += listaOf.size();
+						mtch += ((EList<EObject>) boundSorc.eGet(esf)).size();
 					}
 					else
 					{
@@ -158,38 +157,21 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			else if (boundSorcO == null && boundTargO != null && boundTargO instanceof EObject)
 			{
 				// if target is bound, try to navigate backwards
-				Collection<EObject> sources = new ArrayList<EObject>();
 				if (conCons.PointsToAttribute() == false)
 				{
 					// eclass-eclass connection
-					sources = this.navigationHelper.getInverseReferences((EObject) boundTargO, (EReference) conCons.getEdge());
+					return (this.navigationHelper.getInverseReferences((EObject) boundTargO, (EReference) conCons.getEdge())).size();
 				}
 				else
 				{
 					// eclass-object connection
-					sources = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
+					return (this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge())).size();
 				}
-				int mtch = 0;
-				for (EObject sorc : sources)
-				{
-					if (sorc instanceof EObject)
-					{
-						//it should be instance of EObject
-						mtch++;
-					}
-					else
-					{
-						throw new AssertionError("Breee, noooooo, some target's inverse navigation source is not EObject - then wtf what?");
-					}
-				}
-				return mtch; // items that match from this source
 			}
 			else if (boundSorcO == null && boundTargO != null) // && ! ( boundTargO instanceof EObject)
 			{
 				// source unknown and target is NOT EObject, rather some strange bullshit
-				Collection<EObject> attrOwners = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
-
-				return attrOwners.size();
+				return (this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge())).size();
 			}
 			else if (boundSorcO != null && boundTargO != null)
 			{
@@ -203,8 +185,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 						if (boundSorc.eGet(conCons.getEdge()) instanceof EObject)
 						{
 							// is there eobj at the end?
-							EObject targetOfSource = (EObject) boundSorc.eGet(conCons.getEdge());
-							if (targetOfSource.equals(boundTarg))
+							if (((EObject) boundSorc.eGet(conCons.getEdge())).equals(boundTarg))
 							{
 								return 1;
 							}
@@ -225,9 +206,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					else
 					{
 						// list of target objects along this edge
-						@SuppressWarnings("unchecked")
-						List<Object> targetObjects = (List<Object>) boundSorc.eGet(conCons.getEdge());
-						if (targetObjects.contains(boundTarg))
+						if (((List<Object>) boundSorc.eGet(conCons.getEdge())).contains(boundTarg))
 						{
 							return 1; // the edge is okay, this is a match with cost 1
 						}
@@ -242,8 +221,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 				{
 					EObject boundSorc = (EObject) boundSorcO;
 					// boundTarg is boundTargO
-					Collection<EObject> attrOwners = this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge());
-					if (!attrOwners.contains(boundSorc))
+					if (!(this.navigationHelper.findByAttributeValue(boundTargO, (EAttribute) conCons.getEdge())).contains(boundSorc))
 					{
 						// no source that contains this target
 						return 0;
@@ -258,7 +236,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			{
 				// will it ever pass to here?
 				// no source-target bound
-				return getAllSourceTargetPairs(conCons.getEdge()).size();
+				return getAllSourceTargetPairSize(conCons.getEdge());
 			}
 		}
 		return 0;
@@ -622,6 +600,20 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 		return ret;
 	}
 	
+	private int getAllInstanceSize(ENamedElement type)
+	{
+		if (type instanceof EClass)
+		{
+			// ret will be filled with EClasses
+			return this.navigationHelper.getAllInstances((EClass) type).size();
+		}
+		else if (type instanceof EDataType)
+		{
+			return this.navigationHelper.getDataTypeInstances((EDataType) type).size();
+		}
+		else return 0;
+	}
+	
 	// gets all source-target pairs based on an ereference OR eattribute
 	private List<Object[]> getAllSourceTargetPairs(EStructuralFeature fet)
 	{
@@ -651,6 +643,28 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 				objR[0] = source;
 				objR[1] = target;
 				ret.add(objR);
+			}
+		}
+		return ret;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private int getAllSourceTargetPairSize(EStructuralFeature fet)
+	{
+		int ret = 0;
+		Collection<EObject> sources = this.navigationHelper.getHoldersOfFeature(fet);
+		for (EObject obj : sources)
+		{
+			EObject source = (EObject) obj;
+			Object target = source.eGet(fet);
+			boolean fetismany_hehe = fet.isMany();
+			if (fetismany_hehe)
+			{
+				ret += ((EList<EObject>) target).size();
+			}
+			else
+			{
+				ret++;
 			}
 		}
 		return ret;
