@@ -119,7 +119,7 @@ public class AheadStructure implements Cloneable
 		// get all fix symbolic (parameter) vars
 		int sz = 0;
 		this.FixSymbolicVariables = new PVariable[pBody.getSymbolicParameters().size()];
-		for (PVariable pv : pBody.getSymbolicParameters())
+		for (PVariable pv : pBody.getSymbolicParameterVariables())
 			this.FixSymbolicVariables[sz++] = pv;
 		
 		//get all other vars
