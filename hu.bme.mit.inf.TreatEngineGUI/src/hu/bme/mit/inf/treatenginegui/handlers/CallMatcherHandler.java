@@ -2,13 +2,10 @@
 package hu.bme.mit.inf.treatenginegui.handlers;
 
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
-import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.treatengine.LookaheadMatcherTreat;
 import hu.bme.mit.inf.treatengine.TreatRegistrarImpl;
 
 import java.util.List;
-import java.util.Map.Entry;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -17,11 +14,11 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.incquery.tooling.ui.queryexplorer.QueryExplorer;
-import org.eclipse.incquery.tooling.ui.queryexplorer.content.matcher.ObservablePatternMatcherRoot;
+import org.eclipse.incquery.tooling.ui.queryexplorer.content.matcher.PatternMatcherRootContent;
 import org.eclipse.incquery.tooling.ui.queryexplorer.util.QueryExplorerPatternRegistry;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;
 import org.eclipse.incquery.runtime.api.*;
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
+
+import com.google.common.collect.Multiset;
 
 
 /**
@@ -64,9 +61,9 @@ public class CallMatcherHandler extends AbstractHandler
 		
 		IStructuredSelection selection = (IStructuredSelection) HandlerUtil.getCurrentSelection(event);
 		Object firstElement = selection.getFirstElement();
-		if (firstElement instanceof ObservablePatternMatcherRoot)
+		if (firstElement instanceof PatternMatcherRootContent)
 		{
-			engine = ((ObservablePatternMatcherRoot) firstElement).getKey().getEngine();
+			engine = ((PatternMatcherRootContent) firstElement).getKey().getEngine();
 			System.out.println("Registered engine: " + engine.toString());
 		}
 		else
@@ -101,7 +98,7 @@ public class CallMatcherHandler extends AbstractHandler
 			long begin = System.currentTimeMillis();
 			for (IQuerySpecification<?> specification : QueryExplorerPatternRegistry.getInstance().getActivePatterns()) 
 			{
-				MultiSet<LookaheadMatching> matches = null;
+				Multiset<LookaheadMatching> matches = null;
 				try
 				{
 					matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(specification);
@@ -117,19 +114,19 @@ public class CallMatcherHandler extends AbstractHandler
 					continue;
 				}
 				if (matches != null) // might represent "no-matching"?
-					System.out.println("Matched " + specification.getFullyQualifiedName() + " count: " + matches.uniqueSize() + "(" +  matches.size() + ")");
+					System.out.println("Matched " + specification.getFullyQualifiedName() + " count: " + matches.elementSet().size() + "(" + matches.size() + ")");
 			}
 			System.out.println("Finished matching everything!");
-			MultiSet<LookaheadMatching> matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(chosenSpecification);
+			Multiset<LookaheadMatching> matches = TreatRegistrarImpl.LookaheadToEngineConnector.GetLookaheadMatcherTreat(engine).matchThePattern(chosenSpecification);
 			if (matches.size() == 0)
 				System.out.println("No matches!");
 			else
 			{
-				for (Entry<LookaheadMatching, Integer> mg : matches.getInnerMap().entrySet())
+				for (com.google.common.collect.Multiset.Entry<LookaheadMatching> mg : matches.entrySet())
 				{
-					if (mg.getValue() < 2)
-						System.out.println(mg.toString());
-					else System.out.println(mg.getValue().toString() + " matches of: " + mg.toString());
+					if (mg.getCount() < 2)
+						System.out.println(mg.getElement().toString());
+					else System.out.println(mg.getCount() + " matches of: " + mg.getElement().toString());
 				}
 			}
 			System.out.println("Time spent to match: " + Long.toString(System.currentTimeMillis() - begin));

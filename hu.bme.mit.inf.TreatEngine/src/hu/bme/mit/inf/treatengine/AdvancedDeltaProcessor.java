@@ -269,12 +269,12 @@ public class AdvancedDeltaProcessor
 					{
 						// match with lookahead, search for changes based on delta change
 						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
-						Object[] callingPatternMatches = change.getKey().getParameterMatchValuesOnlyAsArray();
+						List<Object> callingPatternMatches = change.getKey().getParameterMatchValuesOnlyAsArray();
 						HashMap<PVariable, Object> callerMatches = new HashMap<PVariable, Object>();
 						List<PVariable> affectedVars = ((FindConstraint)ac).getAffectedVariables();
-						for (int i = 0; i < callingPatternMatches.length; i++)
+						for (int i = 0; i < callingPatternMatches.size(); i++)
 						{
-							callerMatches.put(affectedVars.get(i), callingPatternMatches[i]);
+							callerMatches.put(affectedVars.get(i), callingPatternMatches.get(i));
 						}
 						Multiset<LookaheadMatching> changeResult = null;
 						try {
@@ -316,12 +316,12 @@ public class AdvancedDeltaProcessor
 					{
 						// match with lookahead, search for changes based on delta change
 						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
-						Object[] callingPatternMatches = change.getKey().getParameterMatchValuesOnlyAsArray();
+						List<Object> callingPatternMatches = change.getKey().getParameterMatchValuesOnlyAsArray();
 						HashMap<PVariable, Object> callerMatches = new HashMap<PVariable, Object>();
 						List<PVariable> affectedVars = ((NACConstraint)cc).getAffectedVariables();
-						for (int i = 0; i < callingPatternMatches.length; i++)
+						for (int i = 0; i < callingPatternMatches.size(); i++)
 						{
-							callerMatches.put(affectedVars.get(i), callingPatternMatches[i]);
+							callerMatches.put(affectedVars.get(i), callingPatternMatches.get(i));
 						}
 						Multiset<LookaheadMatching> changeResult = null;
 						try {

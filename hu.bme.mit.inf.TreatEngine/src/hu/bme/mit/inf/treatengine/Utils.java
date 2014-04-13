@@ -11,15 +11,15 @@ import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 public class Utils
 {
-	public static PVariable getVariableFromParamString(Set<PVariable> vars, String param)
-	{
-		for (PVariable var : vars)
-		{
-			if (var.getName().equals(param))
-				return var;
-		}
-		return null;
-	}
+//	public static PVariable getVariableFromParamString(Set<PVariable> vars, String param)
+//	{
+//		for (PVariable var : vars)
+//		{
+//			if (var.getName().equals(param))
+//				return var;
+//		}
+//		return null;
+//	}
 
 	public static boolean isProperIndex(NACConstraint nacC, IndexDelta indexDelta)
 	{

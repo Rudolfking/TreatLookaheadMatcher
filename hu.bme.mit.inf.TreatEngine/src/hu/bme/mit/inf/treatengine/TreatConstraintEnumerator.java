@@ -176,9 +176,9 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 							boolean equal = true;
 							
 							// add or remove from changeset!
-							for (int vizs = 0; vizs < change.getKey().getParameterMatchValuesOnlyAsArray().length; vizs++)
+							for (int vizs = 0; vizs < change.getKey().getParameterMatchValuesOnlyAsArray().size(); vizs++)
 							{
-								if (change.getKey().getParameterMatchValuesOnlyAsArray()[vizs].equals(candidates.get(cd)[vizs]) == false)
+								if (change.getKey().getParameterMatchValuesOnlyAsArray().get(vizs).equals(candidates.get(cd)[vizs]) == false)
 									equal = false;
 							}
 							
@@ -187,7 +187,7 @@ public class TreatConstraintEnumerator implements IConstraintEnumerator
 								if (change.getValue())
 									deleteIndexes.add(cd);
 								else
-									additions.add(change.getKey().getParameterMatchValuesOnlyAsArray());
+									additions.add(change.getKey().getParameterMatchValuesOnlyAsArray().toArray());
 							}
 						}
 					}

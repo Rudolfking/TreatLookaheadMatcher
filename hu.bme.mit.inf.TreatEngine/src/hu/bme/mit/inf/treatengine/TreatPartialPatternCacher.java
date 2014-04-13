@@ -80,7 +80,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 					{
 						if (index.getKey().contains(oneVar))
 						{
-							currentNewKey.add(changMatch.getMatches().get(Utils.getVariableFromParamString(changMatch.getMatches().keySet(), oneVar)));
+							currentNewKey.add(changMatch.get(oneVar));//.getMatches().get(Utils.getVariableFromParamString(changMatch.getMatches().keySet(), oneVar)));
 						}
 					}
 					if (entry.getValue())
@@ -176,9 +176,9 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			int ret = 0;
 			main: for (LookaheadMatching item : curr.elementSet())//.toArrayList(false))
 			{
-				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().length;i++)
+				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().size();i++)
 				{
-					Object obj1=item.getParameterMatchValuesOnlyAsArray()[i];
+					Object obj1=item.getParameterMatchValuesOnlyAsArray().get(i);
 					Object obj2=sortedVals.get(i);
 					if (obj1.equals(obj2) == false)
 						continue main;
@@ -255,9 +255,9 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			Multiset<LookaheadMatching> msRet = HashMultiset.create();//new MultiSet<LookaheadMatching>();
 			main: for (LookaheadMatching item : curr.elementSet())//.toArrayList(true))
 			{
-				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().length;i++)
+				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().size();i++)
 				{
-					Object obj1=item.getParameterMatchValuesOnlyAsArray()[i];
+					Object obj1=item.getParameterMatchValuesOnlyAsArray().get(i);
 					Object obj2=sortedVals.get(i);
 					if (obj1.equals(obj2) == false)
 						continue main;
@@ -318,7 +318,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				// check all matches and filter it according to the condition: create the index set!
 				for (com.google.common.collect.Multiset.Entry<LookaheadMatching> match : foundUnfilteredMatches.entrySet())//.toArrayList(true))
 				{
-					if (match.getElement().getParameterMatchValuesOnlyAsArray().length != sortedVals.size())
+					if (match.getElement().getParameterMatchValuesOnlyAsArray().size() != sortedVals.size())
 					{
 						System.err.println("The cached match size is not equal to requested match size! (Typical \"cannot happen\".)");
 						// problem is big!
@@ -326,12 +326,12 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 					}
 					// check equality:
 					boolean okay = true;
-					Object[] otherPatternsVals = match.getElement().getParameterMatchValuesOnlyAsArray(); // in-order
+					List<Object> otherPatternsVals = match.getElement().getParameterMatchValuesOnlyAsArray(); // in-order
 					ArrayList<Object> keyObjects = new ArrayList<Object>();
-					for (int i = 0; i < otherPatternsVals.length; i++)
+					for (int i = 0; i < otherPatternsVals.size(); i++)
 					{
 						if (sortedVals.get(i) != null) // key item
-							keyObjects.add(otherPatternsVals[i]);
+							keyObjects.add(otherPatternsVals.get(i));
 						
 					}
 					if (okay)
@@ -376,6 +376,8 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 			Collection<IndexDelta> ret = this.patternsPartialMatchings.get(ddelta.getPattern()).maintainIntegrity(ddelta); // add delta to maintain
 			if (ret == null || ret.size() == 0)
 			{
+				if (ret == null)
+					ret = new HashSet<IndexDelta>();
 				// create an empty-type indexdelta if no indexes found (TODO this is bad i think)
 				IndexDelta id = new IndexDelta(delta.getPattern(), delta.getChangeset(), null);
 				ret.add(id);

@@ -1,31 +1,11 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
 import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
-import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.eclipse.emf.common.util.EList;
-import org.eclipse.incquery.patternlanguage.patternLanguage.IntValue;
-import org.eclipse.incquery.patternlanguage.patternLanguage.LiteralValueReference;
-import org.eclipse.incquery.patternlanguage.patternLanguage.ParameterRef;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Pattern;
-import org.eclipse.incquery.patternlanguage.patternLanguage.PatternCall;
-import org.eclipse.incquery.patternlanguage.patternLanguage.StringValue;
-import org.eclipse.incquery.patternlanguage.patternLanguage.ValueReference;
-import org.eclipse.incquery.patternlanguage.patternLanguage.Variable;
-import org.eclipse.incquery.patternlanguage.patternLanguage.VariableValue;
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
-import org.eclipse.incquery.runtime.api.IncQueryEngine;
-import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 import org.eclipse.incquery.runtime.matchers.psystem.annotations.PAnnotation;
-//import org.eclipse.incquery.runtime.extensibility.MatcherFactoryRegistry;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.PositivePatternCall;
 import org.eclipse.incquery.runtime.matchers.tuple.Tuple;
 
@@ -51,7 +31,7 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 			for(LookaheadMatching match : result.elementSet())//.toArrayList(false))
 			{
 				// add all matchings as a "line" multi-matches only once
-				ret.add(match.getParameterMatchValuesOnlyAsArray());
+				ret.add(match.getParameterMatchValuesOnlyAsArray().toArray());
 			}
 			return ret;
 		}

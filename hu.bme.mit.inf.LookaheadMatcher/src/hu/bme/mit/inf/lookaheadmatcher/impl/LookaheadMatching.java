@@ -1,6 +1,7 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,44 +13,40 @@ import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 public class LookaheadMatching implements IPatternMatch
 {
-	private HashMap<PVariable, Object> matches;
-	public HashMap<PVariable, Object> getMatches()
-	{
-		return matches;
-	}
-	public void setMatches(HashMap<PVariable, Object> matches)
-	{
-		this.matches = matches;
-	}
+	private List<Object> matches;
+	private Map<String, Integer> indexFromString;
+//	private HashMap<PVariable, Object> matches;
+//	public HashMap<PVariable, Object> getMatches()
+//	{
+//		return matches;
+//	}
+//	public void setMatches(HashMap<PVariable, Object> matches)
+//	{
+//		this.matches = matches;
+//	}
 	
-	private PVariable[] ParameterVariables;
-	public PVariable[] getParameterVariables()
+	private String[] ParameterVariables;
+	public String[] getParameterVariables()
 	{
 		return ParameterVariables;
 	}
-	public void setParameterVariables(PVariable[] parameterLookVariables)
+	public void setParameterVariables(String[] parameterLookVariables)
 	{
 		ParameterVariables = parameterLookVariables;
 	}
 	
-	public HashMap<PVariable, Object> getParameterMatchesOnly()
+//	public HashMap<PVariable, Object> getParameterMatchesOnly()
+//	{
+//		HashMap<PVariable, Object> ret = new HashMap<PVariable, Object>();
+//		for (PVariable parVar : ParameterVariables)
+//		{
+//			ret.put(parVar, this.matches.get(parVar));
+//		}
+//		return ret;
+//	}
+	public List<Object> getParameterMatchValuesOnlyAsArray()
 	{
-		HashMap<PVariable, Object> ret = new HashMap<PVariable, Object>();
-		for (PVariable parVar : ParameterVariables)
-		{
-			ret.put(parVar, this.matches.get(parVar));
-		}
-		return ret;
-	}
-	public Object[] getParameterMatchValuesOnlyAsArray()
-	{
-		Object[] ret = new Object[this.ParameterVariables.length];
-		int ind = 0;
-		for (PVariable parVar : ParameterVariables)
-		{
-			ret[ind++] = this.matches.get(parVar);
-		}
-		return ret;
+		return this.matches;
 	}
 	
 	
@@ -59,24 +56,29 @@ public class LookaheadMatching implements IPatternMatch
 		super();
 	}
 	
-	public LookaheadMatching(PVariable[] variables, HashMap<PVariable, Object> foundMatches)
+	public LookaheadMatching(String[] variableNames, List<Object> variables)
 	{
-		this.ParameterVariables = variables.clone();
-		
-		this.matches = new HashMap<>();
-		for (int i = 0; i < variables.length; i++)
+		this.ParameterVariables = variableNames;
+		this.matches = variables;
+		this.indexFromString = new HashMap<>();
+		for (int i=0;i<variableNames.length;i++)
 		{
-			this.matches.put(variables[i], foundMatches.get(variables[i]));
+			indexFromString.put(variableNames[i], i);
 		}
+//		this.matches = new HashMap<>();
+//		for (int i = 0; i < variables.length; i++)
+//		{
+//			this.matches.put(variables[i], foundMatches.get(variables[i]));
+//		}
 	}
 	
 	@Override
 	public String toString()
 	{
 		String ret = "";
-		for (Map.Entry<PVariable, Object> entry : this.matches.entrySet())
+		for (int i = 0; i < this.matches.size(); i++)
 		{
-			ret += "(" + entry.getKey().toString() + "->" + entry.getValue().toString() + ") ";
+			ret += "(" + this.ParameterVariables[i] + "->" + this.matches.get(i) + ") ";
 		}
 		return ret;
 	}
@@ -112,13 +114,13 @@ public class LookaheadMatching implements IPatternMatch
 		return matches.hashCode();// + ma;
 	}
 	
-	private PVariable getVariableFromName(String name) {
-		for (PVariable item : this.ParameterVariables) {
-			if (item.getName().equals(name))
-				return item;
-		}
-		return null;
-	}
+//	private PVariable getVariableFromName(String name) {
+//		for (PVariable item : this.ParameterVariables) {
+//			if (item.getName().equals(name))
+//				return item;
+//		}
+//		return null;
+//	}
 	
 	@Override
 	public IQuerySpecification<? extends IncQueryMatcher<? extends IPatternMatch>> specification() {
@@ -132,28 +134,24 @@ public class LookaheadMatching implements IPatternMatch
 	}
 	@Override
 	public List<String> parameterNames() {
-		ArrayList<String> ret = new ArrayList<String>();
-		for (PVariable par : this.ParameterVariables) {
-			ret.add(par.getName());
-		}
-		return ret;
+		return Arrays.asList(this.ParameterVariables);
 	}
 	@Override
 	public Object get(String parameterName) {
 		
-		return this.matches.get(getVariableFromName(parameterName));
+		return this.matches.get(this.indexFromString.get(parameterName));
 	}
 	@Override
 	public Object get(int position) {
-		return this.matches.get(this.ParameterVariables[position]);
+		return this.matches.get(position);
 	}
 	@Override
 	public boolean set(String parameterName, Object newValue) {
-		return this.matches.put(getVariableFromName(parameterName), newValue) != null;
+		return this.matches.set(this.indexFromString.get(parameterName), newValue) != null;
 	}
 	@Override
 	public boolean set(int position, Object newValue) {
-		return this.matches.put(this.ParameterVariables[position], newValue) != null;
+		return this.matches.set(position, newValue) != null;
 	}
 	@Override
 	public boolean isMutable() {
@@ -161,7 +159,7 @@ public class LookaheadMatching implements IPatternMatch
 	}
 	@Override
 	public Object[] toArray() {
-		return this.matches.values().toArray();
+		return this.matches.toArray();
 	}
 	@Override
 	public String prettyPrint() {

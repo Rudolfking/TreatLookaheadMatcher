@@ -115,23 +115,32 @@ public class MatcherAlgorithm
 			matchCounter++;
 			try
 			{
+				//System.out.println("match found!");
 				// create a new matching:
-				LookaheadMatching newMatch = new LookaheadMatching(actualPatternDefinition.FixSymbolicVariables, MatchingVariables);
-				if (newMatch.getMatches().containsValue(null))
+				List<Object> objsInOrder = new ArrayList<Object>();
+				for (PVariable var : actualPatternDefinition.FixSymbolicVariables)
+				{
+					objsInOrder.add(MatchingVariables.get(var));
+				}
+				//System.out.println(objsInOrder.toString());
+				Object[] parNams = actualPatternDefinition.getInnerPBody().getPattern().getParameterNames().toArray();
+				String[] parNamsReal = new String[parNams.length];
+				int inde = 0;
+				for (Object o : parNams)
+					parNamsReal[inde++] = (String)o; // fos!
+				LookaheadMatching newMatch = new LookaheadMatching(parNamsReal, objsInOrder);//(actualPatternDefinition.FixSymbolicVariables, MatchingVariables);
+				//System.out.println(newMatch.toString());
+				if (newMatch.getParameterMatchValuesOnlyAsArray().contains(null))
 				{
 					System.err.println("Critical error, one variable in found match is not bound!");
 				}
-				/*if (!foundMatches.add(newMatch))
-				{
-					matchCounter--;
-					return;
-				}*/
+
 				foundMatches.add(newMatch);
 			}
 			catch (Exception e)
 			{
 				if (verbose)
-					System.out.println(e.getMessage()); // not all variables are bound (how can it be)
+					System.err.println(e.getMessage()); // not all variables are bound (how can it be)
 				matchCounter--; // sorry-sorry-sorry-sorry
 			}
 			if (matchOne == true)

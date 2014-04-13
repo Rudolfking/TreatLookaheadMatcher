@@ -25,6 +25,8 @@ import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.TypeUnary;
 
 public class AheadStructure implements Cloneable
 {
+	
+	private PBody innerPBody;
 	// fix symbolic variables
 	public PVariable[] FixSymbolicVariables;
 	// currently searched restrictions
@@ -191,8 +193,6 @@ public class AheadStructure implements Cloneable
 		}
 		// well, it is initalized and ready, good job guys, good job guys
 	}
-	
-	private PBody innerPBody;
 
 	@Override
 	public AheadStructure clone()
@@ -203,6 +203,7 @@ public class AheadStructure implements Cloneable
 		ast.FoundConstraints.addAll(this.FoundConstraints);
 		ast.CheckConstraints.addAll(this.CheckConstraints);
 		ast.MatchingVariables.putAll(this.MatchingVariables);
+		ast.innerPBody = this.innerPBody;
 		
 		// equalVariable contains an ArrayList, so cloning is a bit more complicated
 		/*for (Entry<LookVariable, ArrayList<LookVariable>> a : this.EqualVariables.entrySet())
