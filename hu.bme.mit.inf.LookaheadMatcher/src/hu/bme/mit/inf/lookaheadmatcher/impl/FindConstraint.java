@@ -29,6 +29,8 @@ import org.eclipse.incquery.runtime.matchers.psystem.annotations.PAnnotation;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.PositivePatternCall;
 import org.eclipse.incquery.runtime.matchers.tuple.Tuple;
 
+import com.google.common.collect.Multiset;
+
 public class FindConstraint extends AxisConstraint implements IConstraint
 {
 	private List<PVariable> affectedVariables;
@@ -42,11 +44,11 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 	{
 		if (true || innerFindCall.getReferredQuery().getAllAnnotations().contains(new PAnnotation("incremental")))
 		{
-			MultiSet<LookaheadMatching> result = treatPatternCacher.GetMatchingsFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, true);
+			Multiset<LookaheadMatching> result = treatPatternCacher.GetMatchingsFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, true);
 			// result must be parsed to List<Object[]>
 			List<Object[]> ret = new ArrayList<Object[]>();
 			// toarraylist false because only REAL matches count as a match, no need to count local-duplicated matches multiple mode
-			for(LookaheadMatching match : result.toArrayList(false))
+			for(LookaheadMatching match : result.elementSet())//.toArrayList(false))
 			{
 				// add all matchings as a "line" multi-matches only once
 				ret.add(match.getParameterMatchValuesOnlyAsArray());

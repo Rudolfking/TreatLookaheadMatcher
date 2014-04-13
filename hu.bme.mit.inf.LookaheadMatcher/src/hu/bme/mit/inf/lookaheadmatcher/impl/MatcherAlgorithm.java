@@ -9,6 +9,9 @@ import java.util.List;
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+
 public class MatcherAlgorithm
 {
 	// the navigationHelper
@@ -31,9 +34,9 @@ public class MatcherAlgorithm
 	private AheadStructure actualPatternDefinition;
 	
 	// already found matches list
-	private MultiSet<LookaheadMatching> foundMatches = new MultiSet<LookaheadMatching>();
+	private Multiset<LookaheadMatching> foundMatches = HashMultiset.create();//new Multiset<LookaheadMatching>();
 	
-	public MultiSet<LookaheadMatching> getPatternMatches(AheadStructure patternState, boolean matchOne, NavigationHelper navHelper, ArrayList<Object> knownValues, IConstraintEnumerator consEnumerator)
+	public Multiset<LookaheadMatching> getPatternMatches(AheadStructure patternState, boolean matchOne, NavigationHelper navHelper, ArrayList<Object> knownValues, IConstraintEnumerator consEnumerator)
 	{
 		this.navigationHelper = navHelper;
 		this.matchOne = matchOne;
@@ -478,10 +481,10 @@ public class MatcherAlgorithm
 					// if there is a target bound and this node doesn't have the edge in its incoming relations, ERROR
 					/*if (mTarget instanceof EObject && !((EObject)mTarget).eClass().getEAllStructuralFeatures().contains(((EReference)mRelation).getEOpposite()))
 					{
-						// ha nem EObject, hanem valami egyéb szar, amúgyis bajban vagyunk, ráadásul nem feltétln van EOpposite-ja
+						// ha nem EObject, hanem valami egyï¿½b szar, amï¿½gyis bajban vagyunk, rï¿½adï¿½sul nem feltï¿½tln van EOpposite-ja
 						if (verbose) System.out.print("Wrong relation target");
 						return false;
-						// TODO eopposite okoskodáás
+						// TODO eopposite okoskodï¿½ï¿½s
 					}
 					
 					if (mTarget instanceof EObject)

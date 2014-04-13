@@ -4,7 +4,6 @@ import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
-import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
 
@@ -29,6 +28,7 @@ import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multiset;
 
 public class MyFeatureListeners
 {
@@ -655,16 +655,16 @@ public class MyFeatureListeners
 				if (isModified)
 				{
 					// the new matches that'll appear in matching based on manually satisfied structure
-					MultiSet<LookaheadMatching> newbies_toExamine = (new LookaheadMatcherInterface()).searchChangesAll(treat.getIncQueryEngine(), affectedQuery, newStructs, knownLocalAndParameters, new TreatConstraintEnumerator(this.navHelper));
+					Multiset<LookaheadMatching> newbies_toExamine = (new LookaheadMatcherInterface()).searchChangesAll(treat.getIncQueryEngine(), affectedQuery, newStructs, knownLocalAndParameters, new TreatConstraintEnumerator(this.navHelper));
 					
 					// a new map to store a matching and whether it is added or removed
 					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndChange = HashMultimap.create();
 					
 					// iterate over multiset and create delta
-					for (Entry<LookaheadMatching, Integer> inners : newbies_toExamine.getInnerMap().entrySet())
+					for (com.google.common.collect.Multiset.Entry<LookaheadMatching> inners : newbies_toExamine.entrySet())
 					{
-						for (int pi = 0; pi < inners.getValue(); pi++)
-							newMatchingsAndChange.put(inners.getKey(), change.isAddition());
+						for (int pi = 0; pi < inners.getCount(); pi++)
+							newMatchingsAndChange.put(inners.getElement(), change.isAddition());
 					}
 					// delta needed to propagate the changes
 					if (newMatchingsAndChange.size() > 0)

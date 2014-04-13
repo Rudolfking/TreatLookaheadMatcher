@@ -3,7 +3,6 @@ package hu.bme.mit.inf.treatengine;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -12,7 +11,6 @@ import hu.bme.mit.inf.lookaheadmatcher.PatternCallModes;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AheadStructure;
 import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
-import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
 //import com.google.common.collect.*;
@@ -25,6 +23,8 @@ import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
+
+import com.google.common.collect.Multiset;
 
 public class LookaheadMatcherTreat
 {
@@ -77,7 +77,7 @@ public class LookaheadMatcherTreat
 	/**
 	 *  maps a pattern to a matching (multi set): one pattern, more matches and a specific match can occur more than once (different local variables pl.)
 	 */
-	public static HashMap<PQuery, MultiSet<LookaheadMatching>> GodSet = new HashMap<PQuery, MultiSet<LookaheadMatching>>();
+	public static HashMap<PQuery, Multiset<LookaheadMatching>> GodSet = new HashMap<PQuery, Multiset<LookaheadMatching>>();
 	
 	/**
 	 *  a pattern and its processed structures
@@ -113,7 +113,7 @@ public class LookaheadMatcherTreat
 		
 		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
 		// match!
-		MultiSet<LookaheadMatching> matches = matcher.matchAll(engine, treatPartialCacher, chosenQuery, null, null);
+		Multiset<LookaheadMatching> matches = matcher.matchAll(engine, treatPartialCacher, chosenQuery, null, null);
 
 		// put pattern matches to registry
 		GodSet.put(chosenQuery, matches);
@@ -304,7 +304,7 @@ public class LookaheadMatcherTreat
 	 * @param chosenQuery Match this pattern (query)
 	 * @return The matches from cache or after match
 	 */
-	public MultiSet<LookaheadMatching> matchThePattern(PQuery chosenQuery)
+	public Multiset<LookaheadMatching> matchThePattern(PQuery chosenQuery)
 	{
 		// null: does not contain, not null: contains, maybe empty
 		if (GodSet.get(chosenQuery) != null)

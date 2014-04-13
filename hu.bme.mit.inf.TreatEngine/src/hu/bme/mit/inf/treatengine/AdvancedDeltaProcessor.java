@@ -17,7 +17,6 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.AxisConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.CheckableConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.FindConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
-import hu.bme.mit.inf.lookaheadmatcher.impl.MultiSet;
 import hu.bme.mit.inf.lookaheadmatcher.impl.NACConstraint;
 
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
@@ -27,6 +26,8 @@ import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
 
 public class AdvancedDeltaProcessor
 {
@@ -165,7 +166,7 @@ public class AdvancedDeltaProcessor
 			// this is a model delta, multiples allowed!
 			HashMap<LookaheadMatching, Boolean> changes = new HashMap<LookaheadMatching, Boolean>();
 			ModelDelta d = (ModelDelta) delta;
-			MultiSet<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
+			Multiset<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
 			for (Entry<LookaheadMatching, Boolean> changedMatch : d.getChangeset().entries())
 			{
 				// remove or add (based on change type)
@@ -193,7 +194,7 @@ public class AdvancedDeltaProcessor
 		{
 			// this is a hard delta, increases or removes all
 			Delta d = (Delta) delta;
-			MultiSet<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
+			Multiset<LookaheadMatching> oldMatches = LookaheadMatcherTreat.GodSet.get(d.getPattern());
 			for (Entry<LookaheadMatching, Boolean> changedMatch : d.getChangeset().entrySet())
 			{
 				// remove or add (based on change type)
@@ -211,7 +212,7 @@ public class AdvancedDeltaProcessor
 					{
 						System.err.println("Not contained match, what to delete? Is it a bug? Or is it noone's fault?");
 					}
-					oldMatches.removeAll(changedMatch.getKey()); // delta means that this is absolutely KOd
+					oldMatches.remove(changedMatch.getKey(), oldMatches.count(changedMatch.getKey())); // delta means that this is absolutely KOd
 				}
 			}
 			return (Delta) delta; // no new form needed
@@ -275,7 +276,7 @@ public class AdvancedDeltaProcessor
 						{
 							callerMatches.put(affectedVars.get(i), callingPatternMatches[i]);
 						}
-						MultiSet<LookaheadMatching> changeResult = null;
+						Multiset<LookaheadMatching> changeResult = null;
 						try {
 							changeResult = lmi.searchChangesAll(engine, pattern, clonedBody.clone(), callerMatches, new TreatConstraintEnumerator(engine.getBaseIndex()));
 						} catch (IncQueryException e) {
@@ -283,7 +284,7 @@ public class AdvancedDeltaProcessor
 						}
 						if (changeResult == null)
 							continue; // failed to get change res or base index etc.
-						for(LookaheadMatching changed : changeResult.toArrayList(true))
+						for(LookaheadMatching changed : changeResult.elementSet())//.toArrayList(true))
 						{
 							boolean additionOrRemoval = change.getValue();
 							if (changesToUpdatingPattern.containsKey(changed) && changesToUpdatingPattern.get(changed) != additionOrRemoval)
@@ -322,7 +323,7 @@ public class AdvancedDeltaProcessor
 						{
 							callerMatches.put(affectedVars.get(i), callingPatternMatches[i]);
 						}
-						MultiSet<LookaheadMatching> changeResult = null;
+						Multiset<LookaheadMatching> changeResult = null;
 						try {
 							changeResult = lmi.searchChangesAll(engine, pattern, clonedBody.clone(), callerMatches, new TreatConstraintEnumerator(engine.getBaseIndex()));
 						} catch (IncQueryException e) {
@@ -330,7 +331,7 @@ public class AdvancedDeltaProcessor
 						}
 						if (changeResult == null)
 							continue; // failed to get change res or base index etc.
-						for(LookaheadMatching changed : changeResult.toArrayList(true))
+						for(LookaheadMatching changed : changeResult.elementSet())
 						{
 							boolean additionOrRemoval = change.getValue() == false; // invert value!! (NAC!)
 							if (changesToUpdatingPattern.containsKey(changed) && changesToUpdatingPattern.get(changed) != additionOrRemoval)
