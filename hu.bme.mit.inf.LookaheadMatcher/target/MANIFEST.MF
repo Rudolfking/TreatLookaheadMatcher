@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Export-Package: hu.bme.mit.inf.lookaheadmatcher,hu.bme.mit.inf.lookahe
+ admatcher.impl
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",org.ec
+ lipse.incquery.runtime.base;bundle-version="0.8.0";visibility:=reexpo
+ rt,org.eclipse.incquery.runtime.matchers;bundle-version="0.8.0";visib
+ ility:=reexport,org.eclipse.emf.ecore,org.eclipse.incquery.runtime;bu
+ ndle-version="0.8.0";visibility:=reexport,org.eclipse.xtext.xbase;bun
+ dle-version="2.4.3";resolution:=optional,org.eclipse.incquery.pattern
+ language.emf;bundle-version="0.8.0";visibility:=reexport,org.eclipse.
+ core.resources;bundle-version="3.8.1",org.eclipse.jdt.core;bundle-ver
+ sion="3.8.2",org.eclipse.jdt.launching;bundle-version="3.6.100"
+Bundle-ActivationPolicy: lazy
+Bundle-Version: 0.0.1.201404121213
+Bundle-Name: LookaheadMatcherTreat
+Bundle-Activator: hu.bme.mit.inf.lookaheadmatcher.Activator
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: hu.bme.mit.inf.LookaheadMatcher
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+
