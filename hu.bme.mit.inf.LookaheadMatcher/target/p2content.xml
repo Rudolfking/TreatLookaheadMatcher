@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <units size='2'>
-  <unit id='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404121213' singleton='false'>
-    <update id='hu.bme.mit.inf.LookaheadMatcher' range='[0.0.0,0.0.1.201404121213)' severity='0'/>
+  <unit id='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404140722' singleton='false'>
+    <update id='hu.bme.mit.inf.LookaheadMatcher' range='[0.0.0,0.0.1.201404140722)' severity='0'/>
     <properties size='4'>
       <property name='org.eclipse.equinox.p2.name' value='LookaheadMatcherTreat'/>
       <property name='maven-groupId' value='hu.bme.mit.inf.LookaheadMatcher'/>
@@ -9,8 +9,8 @@
       <property name='maven-version' value='0.0.1-SNAPSHOT'/>
     </properties>
     <provides size='5'>
-      <provided namespace='org.eclipse.equinox.p2.iu' name='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404121213'/>
-      <provided namespace='osgi.bundle' name='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404121213'/>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404140722'/>
+      <provided namespace='osgi.bundle' name='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404140722'/>
       <provided namespace='java.package' name='hu.bme.mit.inf.lookaheadmatcher' version='0.0.0'/>
       <provided namespace='java.package' name='hu.bme.mit.inf.lookaheadmatcher.impl' version='0.0.0'/>
       <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
@@ -28,19 +28,19 @@
       <required namespace='osgi.bundle' name='org.eclipse.jdt.launching' range='3.6.100'/>
     </requires>
     <artifacts size='1'>
-      <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404121213'/>
+      <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404140722'/>
     </artifacts>
     <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
     <touchpointData size='1'>
       <instructions size='1'>
         <instruction key='manifest'>
-          Bundle-SymbolicName: hu.bme.mit.inf.LookaheadMatcher&#xA;Bundle-Version: 0.0.1.201404121213&#xA;
+          Bundle-SymbolicName: hu.bme.mit.inf.LookaheadMatcher&#xA;Bundle-Version: 0.0.1.201404140722&#xA;
         </instruction>
       </instructions>
     </touchpointData>
   </unit>
-  <unit id='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404121213' singleton='false'>
-    <update id='hu.bme.mit.inf.LookaheadMatcher.source' range='[0.0.0,0.0.1.201404121213)' severity='0'/>
+  <unit id='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404140722' singleton='false'>
+    <update id='hu.bme.mit.inf.LookaheadMatcher.source' range='[0.0.0,0.0.1.201404140722)' severity='0'/>
     <properties size='9'>
       <property name='df_LT.bundleVendor' value='unknown'/>
       <property name='df_LT.bundleName' value='LookaheadMatcherTreat Source'/>
@@ -53,19 +53,19 @@
       <property name='maven-classifier' value='sources'/>
     </properties>
     <provides size='4'>
-      <provided namespace='org.eclipse.equinox.p2.iu' name='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404121213'/>
-      <provided namespace='osgi.bundle' name='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404121213'/>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404140722'/>
+      <provided namespace='osgi.bundle' name='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404140722'/>
       <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
       <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
     </provides>
     <artifacts size='1'>
-      <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404121213'/>
+      <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404140722'/>
     </artifacts>
     <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
     <touchpointData size='1'>
       <instructions size='1'>
         <instruction key='manifest'>
-          Bundle-SymbolicName: hu.bme.mit.inf.LookaheadMatcher.source&#xA;Bundle-Version: 0.0.1.201404121213&#xA;
+          Bundle-SymbolicName: hu.bme.mit.inf.LookaheadMatcher.source&#xA;Bundle-Version: 0.0.1.201404140722&#xA;
         </instruction>
       </instructions>
     </touchpointData>

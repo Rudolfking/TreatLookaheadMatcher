@@ -11,7 +11,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",org.ec
  core.resources;bundle-version="3.8.1",org.eclipse.jdt.core;bundle-ver
  sion="3.8.2",org.eclipse.jdt.launching;bundle-version="3.6.100"
 Bundle-ActivationPolicy: lazy
-Bundle-Version: 0.0.1.201404121213
+Bundle-Version: 0.0.1.201404140722
 Bundle-Name: LookaheadMatcherTreat
 Bundle-Activator: hu.bme.mit.inf.lookaheadmatcher.Activator
 Bundle-ManifestVersion: 2

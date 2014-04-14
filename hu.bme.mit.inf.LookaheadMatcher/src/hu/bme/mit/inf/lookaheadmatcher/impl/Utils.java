@@ -1,5 +1,7 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
+import java.util.List;
+
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 public class Utils

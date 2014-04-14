@@ -648,26 +648,25 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 		return ret;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private int getAllSourceTargetPairSize(EStructuralFeature fet)
 	{
-		int ret = 0;
-		Collection<EObject> sources = this.navigationHelper.getHoldersOfFeature(fet);
-		for (EObject obj : sources)
-		{
-			EObject source = (EObject) obj;
-			Object target = source.eGet(fet);
-			boolean fetismany_hehe = fet.isMany();
-			if (fetismany_hehe)
-			{
-				ret += ((EList<EObject>) target).size();
-			}
-			else
-			{
-				ret++;
-			}
-		}
-		return ret;
+		return this.navigationHelper.getHoldersOfFeature(fet).size();
+//		Collection<EObject> sources = this.navigationHelper.getHoldersOfFeature(fet);
+//		for (EObject obj : sources)
+//		{
+//			EObject source = (EObject) obj;
+//			Object target = source.eGet(fet);
+//			boolean fetismany_hehe = fet.isMany();
+//			if (fetismany_hehe)
+//			{
+//				ret += ((EList<EObject>) target).size();
+//			}
+//			else
+//			{
+//				ret++;
+//			}
+//		}
+//		return ret;
 	}
 
 	public int ejnyeGetCost()

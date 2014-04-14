@@ -122,13 +122,13 @@ public class MatcherAlgorithm
 				{
 					objsInOrder.add(MatchingVariables.get(var));
 				}
-				//System.out.println(objsInOrder.toString());
-				Object[] parNams = actualPatternDefinition.getInnerPBody().getPattern().getParameterNames().toArray();
-				String[] parNamsReal = new String[parNams.length];
-				int inde = 0;
-				for (Object o : parNams)
-					parNamsReal[inde++] = (String)o; // fos!
-				LookaheadMatching newMatch = new LookaheadMatching(parNamsReal, objsInOrder);//(actualPatternDefinition.FixSymbolicVariables, MatchingVariables);
+//				//System.out.println(objsInOrder.toString());
+//				Object[] parNams = ;
+//				String[] parNamsReal = new String[parNams.length];
+//				int inde = 0;
+//				for (Object o : parNams)
+//					parNamsReal[inde++] = (String)o; // fos!
+				LookaheadMatching newMatch = new LookaheadMatching(actualPatternDefinition.getInnerPBody().getPattern().getParameterNames(), objsInOrder);//(actualPatternDefinition.FixSymbolicVariables, MatchingVariables);
 				//System.out.println(newMatch.toString());
 				if (newMatch.getParameterMatchValuesOnlyAsArray().contains(null))
 				{

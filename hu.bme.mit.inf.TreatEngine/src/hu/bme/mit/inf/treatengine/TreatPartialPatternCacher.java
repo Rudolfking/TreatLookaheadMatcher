@@ -19,6 +19,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
 
 /**
  * Implementation of the IPartialPatternCacher class. Can cache partial matches, also incrementally
@@ -166,26 +167,28 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		}
 		else if (partialMatching.size() == variablesInOrder.size())
 		{
-			Multiset<LookaheadMatching> curr = this.lookaheadTreat.matchThePattern(resolvingQuery);
+//			Multiset<LookaheadMatching> curr = this.lookaheadTreat.matchThePattern(resolvingQuery);
 			ArrayList<Object> sortedVals = new ArrayList<Object>();
 			for(int i=0;i<variablesInOrder.size();i++)
 			{
 				// add item: if known, the known value, if not known, null
 				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
 			}
-			int ret = 0;
-			main: for (LookaheadMatching item : curr.elementSet())//.toArrayList(false))
-			{
-				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().size();i++)
-				{
-					Object obj1=item.getParameterMatchValuesOnlyAsArray().get(i);
-					Object obj2=sortedVals.get(i);
-					if (obj1.equals(obj2) == false)
-						continue main;
-				}
-				ret++; // item is found
-			}
-			return ret; // item not found!
+			LookaheadMatching chec = new LookaheadMatching(calledPatternsVariablesInOrder, sortedVals);
+			return this.lookaheadTreat.matchThePattern(resolvingQuery).count(chec);
+//			int ret = 0;
+//			main: for (LookaheadMatching item : curr.elementSet())//.toArrayList(false))
+//			{
+//				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().size();i++)
+//				{
+//					Object obj1=item.getParameterMatchValuesOnlyAsArray().get(i);
+//					Object obj2=sortedVals.get(i);
+//					if (obj1.equals(obj2) == false)
+//						continue main;
+//				}
+//				ret++; // item is found
+//			}
+//			return ret; // item not found!
 		}
 		
 		// determine key:
@@ -245,26 +248,29 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 		}
 		else if (partialMatching.size() == variablesInOrder.size())
 		{
-			Multiset<LookaheadMatching> curr = this.lookaheadTreat.matchThePattern(resolvingQuery);
+//			Multiset<LookaheadMatching> curr = this.lookaheadTreat.matchThePattern(resolvingQuery);
 			ArrayList<Object> sortedVals = new ArrayList<Object>();
 			for(int i=0;i<variablesInOrder.size();i++)
 			{
 				// add item: if known, the known value, if not known, null
 				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
 			}
+			LookaheadMatching chec = new LookaheadMatching(calledPatternsVariablesInOrder, sortedVals);
 			Multiset<LookaheadMatching> msRet = HashMultiset.create();//new MultiSet<LookaheadMatching>();
-			main: for (LookaheadMatching item : curr.elementSet())//.toArrayList(true))
-			{
-				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().size();i++)
-				{
-					Object obj1=item.getParameterMatchValuesOnlyAsArray().get(i);
-					Object obj2=sortedVals.get(i);
-					if (obj1.equals(obj2) == false)
-						continue main;
-				}
-				msRet.add(item); 
-			}
-			return msRet; // item not found!
+			msRet.add(chec, this.lookaheadTreat.matchThePattern(resolvingQuery).count(msRet));
+			return msRet;
+//			main: for (LookaheadMatching item : curr.elementSet())//.toArrayList(true))
+//			{
+//				inner: for (int i = 0; i< item.getParameterMatchValuesOnlyAsArray().size();i++)
+//				{
+//					Object obj1=item.getParameterMatchValuesOnlyAsArray().get(i);
+//					Object obj2=sortedVals.get(i);
+//					if (obj1.equals(obj2) == false)
+//						continue main;
+//				}
+//				msRet.add(item); 
+//			}
+//			return msRet; // item not found!
 		}
 		else
 		{

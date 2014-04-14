@@ -1,7 +1,5 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +7,6 @@ import java.util.Map;
 import org.eclipse.incquery.runtime.api.IPatternMatch;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.eclipse.incquery.runtime.api.IncQueryMatcher;
-import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
 public class LookaheadMatching implements IPatternMatch
 {
@@ -25,12 +22,12 @@ public class LookaheadMatching implements IPatternMatch
 //		this.matches = matches;
 //	}
 	
-	private String[] ParameterVariables;
-	public String[] getParameterVariables()
+	private List<String> ParameterVariables;
+	public List<String> getParameterVariables()
 	{
 		return ParameterVariables;
 	}
-	public void setParameterVariables(String[] parameterLookVariables)
+	public void setParameterVariables(List<String> parameterLookVariables)
 	{
 		ParameterVariables = parameterLookVariables;
 	}
@@ -56,14 +53,14 @@ public class LookaheadMatching implements IPatternMatch
 		super();
 	}
 	
-	public LookaheadMatching(String[] variableNames, List<Object> variables)
+	public LookaheadMatching(List<String> variableNames, List<Object> variables)
 	{
 		this.ParameterVariables = variableNames;
 		this.matches = variables;
 		this.indexFromString = new HashMap<>();
-		for (int i=0;i<variableNames.length;i++)
+		for (int i=0;i<variableNames.size();i++)
 		{
-			indexFromString.put(variableNames[i], i);
+			indexFromString.put(variableNames.get(i), i);
 		}
 //		this.matches = new HashMap<>();
 //		for (int i = 0; i < variables.length; i++)
@@ -78,7 +75,7 @@ public class LookaheadMatching implements IPatternMatch
 		String ret = "";
 		for (int i = 0; i < this.matches.size(); i++)
 		{
-			ret += "(" + this.ParameterVariables[i] + "->" + this.matches.get(i) + ") ";
+			ret += "(" + this.ParameterVariables.get(i) + "->" + this.matches.get(i) + ") ";
 		}
 		return ret;
 	}
@@ -134,7 +131,7 @@ public class LookaheadMatching implements IPatternMatch
 	}
 	@Override
 	public List<String> parameterNames() {
-		return Arrays.asList(this.ParameterVariables);
+		return this.ParameterVariables;
 	}
 	@Override
 	public Object get(String parameterName) {
