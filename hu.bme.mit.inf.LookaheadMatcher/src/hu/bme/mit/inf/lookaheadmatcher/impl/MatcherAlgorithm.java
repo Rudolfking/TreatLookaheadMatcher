@@ -128,7 +128,7 @@ public class MatcherAlgorithm
 //				int inde = 0;
 //				for (Object o : parNams)
 //					parNamsReal[inde++] = (String)o; // fos!
-				LookaheadMatching newMatch = new LookaheadMatching(actualPatternDefinition.getInnerPBody().getPattern().getParameterNames(), objsInOrder);//(actualPatternDefinition.FixSymbolicVariables, MatchingVariables);
+				LookaheadMatching newMatch = new LookaheadMatching(/*actualPatternDefinition.getInnerPBody().getPattern().getParameterNames(), */objsInOrder);//(actualPatternDefinition.FixSymbolicVariables, MatchingVariables);
 				//System.out.println(newMatch.toString());
 				if (newMatch.getParameterMatchValuesOnlyAsArray().contains(null))
 				{

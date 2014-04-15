@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?artifactRepository version='1.1.0'?>
 <artifacts size='2'>
-  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.TreatEngine' version='0.0.1.201404142139'>
+  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.TreatEngine' version='0.0.1.201404152118'>
     <properties size='5'>
-      <property name='artifact.size' value='40850'/>
-      <property name='download.size' value='40850'/>
+      <property name='artifact.size' value='40851'/>
+      <property name='download.size' value='40851'/>
       <property name='maven-groupId' value='hu.bme.mit.inf.TreatEngine'/>
       <property name='maven-artifactId' value='hu.bme.mit.inf.TreatEngine'/>
       <property name='maven-version' value='0.0.1-SNAPSHOT'/>
     </properties>
   </artifact>
-  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.TreatEngine.source' version='0.0.1.201404142139'>
+  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.TreatEngine.source' version='0.0.1.201404152118'>
     <properties size='6'>
       <property name='artifact.size' value='27430'/>
       <property name='download.size' value='27430'/>

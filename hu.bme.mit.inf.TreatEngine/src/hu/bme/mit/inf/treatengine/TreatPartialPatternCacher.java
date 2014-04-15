@@ -77,12 +77,14 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 					LookaheadMatching changMatch = entry.getKey();
 					// construct the key
 					List<Object> currentNewKey = new ArrayList<Object>();
+					int indInternal = 0;
 					for (String oneVar : this.theVariablesInOrder)
 					{
 						if (index.getKey().contains(oneVar))
 						{
-							currentNewKey.add(changMatch.get(oneVar));//.getMatches().get(Utils.getVariableFromParamString(changMatch.getMatches().keySet(), oneVar)));
+							currentNewKey.add(changMatch.get(indInternal));//.getMatches().get(Utils.getVariableFromParamString(changMatch.getMatches().keySet(), oneVar)));
 						}
+						indInternal++;
 					}
 					if (entry.getValue())
 					{
@@ -174,7 +176,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				// add item: if known, the known value, if not known, null
 				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
 			}
-			LookaheadMatching chec = new LookaheadMatching(calledPatternsVariablesInOrder, sortedVals);
+			LookaheadMatching chec = new LookaheadMatching(/*calledPatternsVariablesInOrder, */sortedVals);
 			return this.lookaheadTreat.matchThePattern(resolvingQuery).count(chec);
 //			int ret = 0;
 //			main: for (LookaheadMatching item : curr.elementSet())//.toArrayList(false))
@@ -255,7 +257,7 @@ public class TreatPartialPatternCacher implements IPartialPatternCacher
 				// add item: if known, the known value, if not known, null
 				sortedVals.add(partialMatching.containsKey(variablesInOrder.get(i)) ? partialMatching.get(variablesInOrder.get(i)) : null);
 			}
-			LookaheadMatching chec = new LookaheadMatching(calledPatternsVariablesInOrder, sortedVals);
+			LookaheadMatching chec = new LookaheadMatching(/*calledPatternsVariablesInOrder, */sortedVals);
 			Multiset<LookaheadMatching> msRet = HashMultiset.create();//new MultiSet<LookaheadMatching>();
 			msRet.add(chec, this.lookaheadTreat.matchThePattern(resolvingQuery).count(msRet));
 			return msRet;

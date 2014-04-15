@@ -8,10 +8,10 @@ import org.eclipse.incquery.runtime.api.IPatternMatch;
 import org.eclipse.incquery.runtime.api.IQuerySpecification;
 import org.eclipse.incquery.runtime.api.IncQueryMatcher;
 
-public class LookaheadMatching implements IPatternMatch
+public class LookaheadMatching // implements IPatternMatch
 {
 	private List<Object> matches;
-	private Map<String, Integer> indexFromString;
+//	private Map<String, Integer> indexFromString;
 //	private HashMap<PVariable, Object> matches;
 //	public HashMap<PVariable, Object> getMatches()
 //	{
@@ -22,15 +22,15 @@ public class LookaheadMatching implements IPatternMatch
 //		this.matches = matches;
 //	}
 	
-	private List<String> ParameterVariables;
-	public List<String> getParameterVariables()
-	{
-		return ParameterVariables;
-	}
-	public void setParameterVariables(List<String> parameterLookVariables)
-	{
-		ParameterVariables = parameterLookVariables;
-	}
+//	private List<String> ParameterVariables;
+//	public List<String> getParameterVariables()
+//	{
+//		return ParameterVariables;
+//	}
+//	public void setParameterVariables(List<String> parameterLookVariables)
+//	{
+//		ParameterVariables = parameterLookVariables;
+//	}
 	
 //	public HashMap<PVariable, Object> getParameterMatchesOnly()
 //	{
@@ -53,15 +53,15 @@ public class LookaheadMatching implements IPatternMatch
 		super();
 	}
 	
-	public LookaheadMatching(List<String> variableNames, List<Object> variables)
+	public LookaheadMatching(/*List<String> variableNames, */List<Object> variables)
 	{
-		this.ParameterVariables = variableNames;
+		//this.ParameterVariables = variableNames;
 		this.matches = variables;
-		this.indexFromString = new HashMap<>();
-		for (int i=0;i<variableNames.size();i++)
-		{
-			indexFromString.put(variableNames.get(i), i);
-		}
+//		this.indexFromString = new HashMap<>();
+//		for (int i=0;i<variableNames.size();i++)
+//		{
+//			indexFromString.put(variableNames.get(i), i);
+//		}
 //		this.matches = new HashMap<>();
 //		for (int i = 0; i < variables.length; i++)
 //		{
@@ -75,7 +75,7 @@ public class LookaheadMatching implements IPatternMatch
 		String ret = "";
 		for (int i = 0; i < this.matches.size(); i++)
 		{
-			ret += "(" + this.ParameterVariables.get(i) + "->" + this.matches.get(i) + ") ";
+			ret += "(" + /*this.ParameterVariables.get(i) + "->" + */this.matches.get(i) + ") ";
 		}
 		return ret;
 	}
@@ -119,51 +119,38 @@ public class LookaheadMatching implements IPatternMatch
 //		return null;
 //	}
 	
-	@Override
-	public IQuerySpecification<? extends IncQueryMatcher<? extends IPatternMatch>> specification() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	@Override
-	public String patternName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	@Override
-	public List<String> parameterNames() {
-		return this.ParameterVariables;
-	}
-	@Override
-	public Object get(String parameterName) {
-		
-		return this.matches.get(this.indexFromString.get(parameterName));
-	}
-	@Override
+//	@Override
+//	public IQuerySpecification<? extends IncQueryMatcher<? extends IPatternMatch>> specification() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//	@Override
+//	public String patternName() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//	@Override
+//	public List<String> parameterNames() {
+//		return null;//this.ParameterVariables;
+//	}
+//	@Override
+//	public Object get(String parameterName) {
+//		
+//		return this.matches.get(this.ParameterVariables.indexOf(parameterName));
+//	}
+	
 	public Object get(int position) {
 		return this.matches.get(position);
 	}
-	@Override
-	public boolean set(String parameterName, Object newValue) {
-		return this.matches.set(this.indexFromString.get(parameterName), newValue) != null;
-	}
-	@Override
+	
+//	public boolean set(String parameterName, Object newValue) {
+//		return this.matches.set(this.ParameterVariables.indexOf(parameterName), newValue) != null;
+//	}
+	
 	public boolean set(int position, Object newValue) {
 		return this.matches.set(position, newValue) != null;
 	}
-	@Override
-	public boolean isMutable() {
-		return false;
-	}
-	@Override
 	public Object[] toArray() {
 		return this.matches.toArray();
-	}
-	@Override
-	public String prettyPrint() {
-		return this.toString();
-	}
-	@Override
-	public boolean isCompatibleWith(IPatternMatch other) {
-		return false;
 	}
 }
