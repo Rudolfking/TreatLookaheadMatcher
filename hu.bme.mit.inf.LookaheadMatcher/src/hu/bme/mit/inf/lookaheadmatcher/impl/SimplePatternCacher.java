@@ -22,6 +22,9 @@ public class SimplePatternCacher implements IPartialPatternCacher {
 		this.engine = engin;
 	}
 	
+	// private HashMap<PQuery, Multiset<LookaheadMatching>> smallGodSet = new HashMap<PQuery, Multiset<LookaheadMatching>>();
+	// private HashMap<PQuery, Boolean> smallGodSetNeg = new HashMap<PQuery, Boolean>();
+	
 	@Override
 	public int GetMatchCountFromPartial(PQuery resolvingQuery,
 			HashMap<PVariable, Object> partialMatchingWithNullsAndEverything,
