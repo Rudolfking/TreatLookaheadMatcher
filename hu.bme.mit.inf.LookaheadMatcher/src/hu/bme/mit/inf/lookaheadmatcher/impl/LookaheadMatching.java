@@ -1,12 +1,6 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import org.eclipse.incquery.runtime.api.IPatternMatch;
-import org.eclipse.incquery.runtime.api.IQuerySpecification;
-import org.eclipse.incquery.runtime.api.IncQueryMatcher;
 
 public class LookaheadMatching // implements IPatternMatch
 {

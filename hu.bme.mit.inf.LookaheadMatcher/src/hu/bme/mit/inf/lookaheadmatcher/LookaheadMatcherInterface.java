@@ -316,6 +316,17 @@ public class LookaheadMatcherInterface
 		return processPattern(query, engine, patternCacher);
 	}
 	
+	public void InitializeAll(PQuery query, IncQueryEngine engine)
+	{
+		initialize(query, engine);
+		PatternCallModes list = getFindListForPattern(query);
+		for(PQuery q: list.getCallingPatternsSimply())
+		{
+			// no cycle (DAG):
+			InitializeAll(q, engine);
+		}
+	}
+	
 	private void initialize(PQuery query, IncQueryEngine engine)
 	{
 		if (this.initializeds.contains(query))
