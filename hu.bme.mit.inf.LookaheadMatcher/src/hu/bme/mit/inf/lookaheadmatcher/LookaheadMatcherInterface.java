@@ -6,6 +6,7 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 import hu.bme.mit.inf.lookaheadmatcher.impl.MatcherAlgorithm;
 import hu.bme.mit.inf.lookaheadmatcher.impl.PatternProcessor;
 import hu.bme.mit.inf.lookaheadmatcher.impl.RelationConstraint;
+import hu.bme.mit.inf.lookaheadmatcher.impl.SimplePatternCacher;
 import hu.bme.mit.inf.lookaheadmatcher.impl.TypeConstraint;
 import hu.bme.mit.inf.lookaheadmatcher.impl.Utils;
 
@@ -16,6 +17,10 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EDataType;
+import org.eclipse.emf.ecore.ENamedElement;
+import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
@@ -40,7 +45,7 @@ public class LookaheadMatcherInterface
 		super();
 	}
 	
-	private NavigationHelper navigationHelper;
+	private NavigationHelper navigationHelper = null;
 	
 //	private ArrayList<TypeConstraint> typeConstraints = new ArrayList<TypeConstraint>();
 //	private ArrayList<RelationConstraint> relationConstraints = new ArrayList<RelationConstraint>();
@@ -72,13 +77,19 @@ public class LookaheadMatcherInterface
 	{
 		try
 		{
-			this.navigationHelper = engine.getBaseIndex();
+			if (this.navigationHelper == null)
+				this.navigationHelper = engine.getBaseIndex();
 		}
 		catch (IncQueryException e)
 		{
 			e.printStackTrace();
 			return false;
 		}
+		if (patternCacher == null)
+		{
+			patternCacher = new SimplePatternCacher(engine);
+		}
+		System.out.println("Match!");
 		
 		ArrayList<AheadStructure> matchingStates =  processPattern(pattern, engine, patternCacher);
 		
@@ -99,21 +110,25 @@ public class LookaheadMatcherInterface
 	 *  This is the regular matching method: processes a pattern, then searches all matches, returns as a multiset
 	 *  (more matchings of the same parameter values but different local values are count as two
 	 */
-	@SuppressWarnings("unchecked")
 	public Multiset<LookaheadMatching> matchAll(IncQueryEngine engine, IPartialPatternCacher patternCacher,
 			PQuery patternQuery, ArrayList<Object> knownValues, IConstraintEnumerator consEnum)
 	{
 		// get navhelper
 		try
 		{
-			this.navigationHelper = engine.getBaseIndex();
+			if (this.navigationHelper == null)
+				this.navigationHelper = engine.getBaseIndex();
 		}
 		catch (IncQueryException e)
 		{
 			e.printStackTrace();
 			return null;
 		}
-		
+		if (patternCacher == null)
+		{
+			patternCacher = new SimplePatternCacher(engine);
+		}
+		System.out.println("Match!");
 		// process pattern
 		ArrayList<AheadStructure> matchingStates = processPattern(patternQuery, engine, patternCacher);
 		
@@ -142,7 +157,8 @@ public class LookaheadMatcherInterface
 	{
 		try
 		{
-			this.navigationHelper = engine.getBaseIndex();
+			if (this.navigationHelper == null)
+				this.navigationHelper = engine.getBaseIndex();
 		}
 		catch (IncQueryException e)
 		{
@@ -218,6 +234,10 @@ public class LookaheadMatcherInterface
 	// Processes a pattern, creating aheadstructures (aheadstructure: "subPlan")
 	private ArrayList<AheadStructure> processPattern(PQuery chosenSpecification, IncQueryEngine engine, IPartialPatternCacher patternCacher)
 	{
+		if (patternCacher == null)
+		{
+			patternCacher = new SimplePatternCacher(engine);
+		}
 		return (new PatternProcessor(engine, patternCacher)).Process(chosenSpecification);
 	}
 	
@@ -280,6 +300,61 @@ public class LookaheadMatcherInterface
 	
 	public ArrayList<AheadStructure> PatternOnlyProcess(PQuery query, IncQueryEngine engine, IPartialPatternCacher patternCacher)
 	{
+		if (patternCacher == null)
+		{
+			patternCacher = new SimplePatternCacher(engine);
+		}
 		return processPattern(query, engine, patternCacher);
+	}
+	
+	public void Initialize(PQuery query, IncQueryEngine engine)
+	{
+		ArrayList<AheadStructure> structs = PatternOnlyProcess(query, engine, null);
+		
+		Set<ENamedElement> nameds = new HashSet<ENamedElement>();
+		
+		Set<EDataType> types = new HashSet<EDataType>();
+		Set<EClass> classes = new HashSet<EClass>();
+		Set<EStructuralFeature> featureds = new HashSet<EStructuralFeature>();
+		
+		for (AheadStructure struct : structs)
+		{
+			for (AxisConstraint ac : struct.SearchedConstraints)
+			{
+				if (ac instanceof TypeConstraint)
+				{
+					nameds.add(((TypeConstraint)ac).getType());
+				}
+				else if (ac instanceof RelationConstraint)
+				{
+					RelationConstraint rCon = (RelationConstraint) ac;
+					// register if class and register if not already registered type
+					featureds.add(rCon.getEdge());
+					// egysegesen
+					nameds.add(rCon.getEdge());
+				}
+			}
+		}
+		for (ENamedElement eNamed : nameds)
+		{
+			if (eNamed instanceof EDataType)
+				types.add((EDataType) eNamed);
+			else if (eNamed instanceof EClass)
+				classes.add((EClass) eNamed);
+		}
+		if (this.navigationHelper == null)
+		{
+			try
+			{
+				this.navigationHelper = engine.getBaseIndex();
+			}
+			catch (IncQueryException e)
+			{
+				e.printStackTrace();
+				return;
+			}
+		}
+		// navhelper: watch all these!!!!:
+		this.navigationHelper.registerObservedTypes(classes, types, featureds);
 	}
 }

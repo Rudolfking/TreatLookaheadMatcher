@@ -24,7 +24,7 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 	{
 		if (true || innerFindCall.getReferredQuery().getAllAnnotations().contains(new PAnnotation("incremental")))
 		{
-			Multiset<LookaheadMatching> result = treatPatternCacher.GetMatchingsFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, true);
+			Multiset<LookaheadMatching> result = treatPatternCacher.GetMatchingsFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, false);
 			// result must be parsed to List<Object[]>
 			List<Object[]> ret = new ArrayList<Object[]>();
 			// toarraylist false because only REAL matches count as a match, no need to count local-duplicated matches multiple mode
@@ -43,7 +43,7 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 	{
 		if (true || innerFindCall.getReferredQuery().getAllAnnotations().contains(new PAnnotation("incremental")))
 		{
-			int result = treatPatternCacher.GetMatchCountFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, true);
+			int result = treatPatternCacher.GetMatchCountFromPartial(innerFindCall.getReferredQuery(), MatchingVariables, affectedVariables, false);
 			// result must be parsed to List<Object[]>
 			return result;
 		}
