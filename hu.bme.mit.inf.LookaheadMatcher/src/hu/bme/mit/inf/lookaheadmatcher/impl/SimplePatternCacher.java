@@ -29,8 +29,13 @@ public class SimplePatternCacher implements IPartialPatternCacher {
 	{
 		// we DO NOT WANT to use this as tengely, ALAP method: use as last
 		if (forceMakeIndexIfNotIndexed) // NAC! needing info
-			return (GetMatchingsFromPartial(resolvingQuery, partialMatchingWithNullsAndEverything, variablesInOrder, true)).size();
-		return Integer.MAX_VALUE;
+		{
+			ArrayList<Object> knownValues = new ArrayList<Object>();
+			for(PVariable var : variablesInOrder)
+				knownValues.add(partialMatchingWithNullsAndEverything.get(var));
+			return (new LookaheadMatcherInterface()).tryMatch(engine, null, resolvingQuery, knownValues, null) ? 1 : 0;
+		}
+		return Integer.MAX_VALUE - 10; // because mayvalue is the cost default :):):)
 	}
 
 	@Override

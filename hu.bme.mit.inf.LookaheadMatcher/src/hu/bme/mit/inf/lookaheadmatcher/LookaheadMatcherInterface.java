@@ -47,6 +47,8 @@ public class LookaheadMatcherInterface
 	
 	private NavigationHelper navigationHelper = null;
 	
+	private List<PQuery> initializeds = new ArrayList<PQuery>();
+	
 //	private ArrayList<TypeConstraint> typeConstraints = new ArrayList<TypeConstraint>();
 //	private ArrayList<RelationConstraint> relationConstraints = new ArrayList<RelationConstraint>();
 //	private ArrayList<AheadStructure> aheadStructures = new ArrayList<AheadStructure>();
@@ -89,19 +91,22 @@ public class LookaheadMatcherInterface
 		{
 			patternCacher = new SimplePatternCacher(engine);
 		}
-		System.out.println("Match!");
+		//System.out.println("Match!");
+		initialize(pattern, engine);
 		
 		ArrayList<AheadStructure> matchingStates =  processPattern(pattern, engine, patternCacher);
 		
-		Multiset<LookaheadMatching> matches = HashMultiset.create();//new MultiSet<LookaheadMatching>();
+		Multiset<LookaheadMatching> rett = matchWithProcessed(matchingStates, knownValues, null, consEnum);
+
+//		Multiset<LookaheadMatching> matches = HashMultiset.create();//new MultiSet<LookaheadMatching>();
+//		
+//		for (AheadStructure state : matchingStates)
+//		{
+//			AheadStructure clonedState = state.clone();// 1st step
+//			matches.addAll(matchWithProcessed(clonedState, knownValues, null, consEnum));//new MatcherAlgorithm().getPatternMatches(clonedState, true, navigationHelper, knownValues, consEnum));
+//		}
 		
-		for (AheadStructure state : matchingStates)
-		{
-			AheadStructure clonedState = state.clone();// 1st step
-			matches.addAll(new MatcherAlgorithm().getPatternMatches(clonedState, true, navigationHelper, knownValues, consEnum));
-		}
-		
-		if (matches.size() > 0)
+		if (rett.size() > 0)
 			return true; // matched on one of the branches
 		return false; // no matches
 	}
@@ -128,7 +133,8 @@ public class LookaheadMatcherInterface
 		{
 			patternCacher = new SimplePatternCacher(engine);
 		}
-		System.out.println("Match!");
+		//System.out.println("Match!");
+		initialize(patternQuery, engine);
 		// process pattern
 		ArrayList<AheadStructure> matchingStates = processPattern(patternQuery, engine, patternCacher);
 		
@@ -145,6 +151,8 @@ public class LookaheadMatcherInterface
 	public Multiset<LookaheadMatching> searchChangesAll(IncQueryEngine engine, PQuery modPattern, AheadStructure cachedStructure,
 			HashMap<PVariable, Object> knownValues, IConstraintEnumerator consEnum)
 	{
+		initialize(modPattern, engine);
+		
 		ArrayList<AheadStructure> structOne = new ArrayList<AheadStructure>();
 		structOne.add(cachedStructure);
 		return this.searchChangesAll(engine, modPattern, structOne, knownValues,consEnum);
@@ -165,6 +173,7 @@ public class LookaheadMatcherInterface
 			e.printStackTrace();
 			return null;
 		}
+		initialize(modPattern, engine);
 		
 		Multiset<LookaheadMatching> matches = HashMultiset.create();//new MultiSet<LookaheadMatching>();
 		
@@ -307,8 +316,10 @@ public class LookaheadMatcherInterface
 		return processPattern(query, engine, patternCacher);
 	}
 	
-	public void Initialize(PQuery query, IncQueryEngine engine)
+	private void initialize(PQuery query, IncQueryEngine engine)
 	{
+		if (this.initializeds.contains(query))
+			return;
 		ArrayList<AheadStructure> structs = PatternOnlyProcess(query, engine, null);
 		
 		Set<ENamedElement> nameds = new HashSet<ENamedElement>();
@@ -356,5 +367,6 @@ public class LookaheadMatcherInterface
 		}
 		// navhelper: watch all these!!!!:
 		this.navigationHelper.registerObservedTypes(classes, types, featureds);
+		initializeds.add(query);
 	}
 }

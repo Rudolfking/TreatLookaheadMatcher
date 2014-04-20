@@ -1,19 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?artifactRepository version='1.1.0'?>
 <artifacts size='2'>
-  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404200931'>
+  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher' version='0.0.1.201404201047'>
     <properties size='5'>
-      <property name='artifact.size' value='47627'/>
-      <property name='download.size' value='47627'/>
+      <property name='artifact.size' value='47640'/>
+      <property name='download.size' value='47640'/>
       <property name='maven-groupId' value='hu.bme.mit.inf.LookaheadMatcher'/>
       <property name='maven-artifactId' value='hu.bme.mit.inf.LookaheadMatcher'/>
       <property name='maven-version' value='0.0.1-SNAPSHOT'/>
     </properties>
   </artifact>
-  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404200931'>
+  <artifact classifier='osgi.bundle' id='hu.bme.mit.inf.LookaheadMatcher.source' version='0.0.1.201404201047'>
     <properties size='6'>
-      <property name='artifact.size' value='41377'/>
-      <property name='download.size' value='41377'/>
+      <property name='artifact.size' value='41510'/>
+      <property name='download.size' value='41510'/>
       <property name='maven-groupId' value='hu.bme.mit.inf.LookaheadMatcher'/>
       <property name='maven-artifactId' value='hu.bme.mit.inf.LookaheadMatcher'/>
       <property name='maven-version' value='0.0.1-SNAPSHOT'/>
