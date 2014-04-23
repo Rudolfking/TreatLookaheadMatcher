@@ -60,7 +60,7 @@ public class LookaheadMatcherTreat
 	{
 		treatPartialCacher.setLookaheadTreat(this);
 		engine = engineRe;
-		
+
 		AdvancedDeltaProcessor.getInstance().setEngine(engineRe);
 		AdvancedDeltaProcessor.getInstance().setPartialCacher(treatPartialCacher);
 		
@@ -72,6 +72,8 @@ public class LookaheadMatcherTreat
 		{
 			e.printStackTrace();
 		}
+		
+		AdvancedDeltaProcessor.getInstance().setNavHelper(this.navHelp);
 	}
 	
 	/**
@@ -111,7 +113,7 @@ public class LookaheadMatcherTreat
 		// adds listening to NavHelper
 		PowerTreatUp(chosenQuery);
 		
-		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
+		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface(this.navHelp);
 		// match!
 		Multiset<LookaheadMatching> matches = matcher.matchAll(engine, treatPartialCacher, chosenQuery, null, null);
 
@@ -126,11 +128,11 @@ public class LookaheadMatcherTreat
 	
 	public void PowerTreatUp(PQuery query)
 	{
-		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
+		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface(this.navHelp);
 		ArrayList<AheadStructure> structs = matcher.PatternOnlyProcess(query, this.engine, treatPartialCacher);
 
 		// put structures to registry (if modified, fast matching available)
-		GodSetStructures.put(query, structs);
+		// GodSetStructures.put(query, structs);
 		
 		
 		Set<ENamedElement> nameds = new HashSet<ENamedElement>();
@@ -171,7 +173,7 @@ public class LookaheadMatcherTreat
 	
 	private void addListeners(PQuery query)
 	{
-		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface();
+		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface(this.navHelp);
 		ArrayList<AheadStructure> structs = matcher.PatternOnlyProcess(query, this.engine, treatPartialCacher);
 
 		// put structures to registry (if modified, fast matching available)
@@ -329,7 +331,7 @@ public class LookaheadMatcherTreat
 	private void FillPatternCallsPatterns(PQuery actRoot)
 	{
 		// find children of this root
-		PatternCallModes findedNegfindedPatterns = (new LookaheadMatcherInterface()).getFindListForPattern(actRoot);
+		PatternCallModes findedNegfindedPatterns = (new LookaheadMatcherInterface(this.navHelp)).getFindListForPattern(actRoot);
 		if (findedNegfindedPatterns != null && findedNegfindedPatterns.allSize() > 0)
 			PatternCallsPatterns.put(actRoot, findedNegfindedPatterns);
 		else return; // no more children
@@ -364,6 +366,7 @@ public class LookaheadMatcherTreat
 		engine = null;
 		navHelp = null;
 		AdvancedDeltaProcessor.getInstance().setEngine(null);
+		AdvancedDeltaProcessor.getInstance().setNavHelper(null);
 		AdvancedDeltaProcessor.getInstance().setPartialCacher(null);
 	}
 

@@ -655,7 +655,7 @@ public class MyFeatureListeners
 				if (isModified)
 				{
 					// the new matches that'll appear in matching based on manually satisfied structure
-					Multiset<LookaheadMatching> newbies_toExamine = (new LookaheadMatcherInterface()).searchChangesAll(treat.getIncQueryEngine(), affectedQuery, newStructs, knownLocalAndParameters, new TreatConstraintEnumerator(this.navHelper));
+					Multiset<LookaheadMatching> newbies_toExamine = (new LookaheadMatcherInterface(this.navHelper)).searchChangesAll(treat.getIncQueryEngine(), affectedQuery, newStructs, knownLocalAndParameters, new TreatConstraintEnumerator(this.navHelper));
 					
 					// a new map to store a matching and whether it is added or removed
 					HashMultimap<LookaheadMatching, Boolean> newMatchingsAndChange = HashMultimap.create();

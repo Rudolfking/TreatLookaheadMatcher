@@ -40,9 +40,10 @@ import com.google.common.collect.Multiset;
 
 public class LookaheadMatcherInterface
 {
-	public LookaheadMatcherInterface()
+	public LookaheadMatcherInterface(NavigationHelper navHelper)
 	{
 		super();
+		this.navigationHelper = navHelper;
 	}
 	
 	private NavigationHelper navigationHelper = null;
@@ -77,19 +78,19 @@ public class LookaheadMatcherInterface
 	 */
 	public boolean tryMatch(IncQueryEngine engine, IPartialPatternCacher patternCacher, PQuery pattern, ArrayList<Object> knownValues, IConstraintEnumerator consEnum)
 	{
-		try
-		{
-			if (this.navigationHelper == null)
-				this.navigationHelper = engine.getBaseIndex();
-		}
-		catch (IncQueryException e)
-		{
-			e.printStackTrace();
-			return false;
-		}
+//		try
+//		{
+//			if (this.navigationHelper == null)
+//				this.navigationHelper = engine.getBaseIndex();
+//		}
+//		catch (IncQueryException e)
+//		{
+//			e.printStackTrace();
+//			return false;
+//		}
 		if (patternCacher == null)
 		{
-			patternCacher = new SimplePatternCacher(engine);
+			patternCacher = new SimplePatternCacher(engine, this.navigationHelper);
 		}
 		//System.out.println("Match!");
 		initialize(pattern, engine);
@@ -119,19 +120,19 @@ public class LookaheadMatcherInterface
 			PQuery patternQuery, ArrayList<Object> knownValues, IConstraintEnumerator consEnum)
 	{
 		// get navhelper
-		try
-		{
-			if (this.navigationHelper == null)
-				this.navigationHelper = engine.getBaseIndex();
-		}
-		catch (IncQueryException e)
-		{
-			e.printStackTrace();
-			return null;
-		}
+//		try
+//		{
+//			if (this.navigationHelper == null)
+//				this.navigationHelper = engine.getBaseIndex();
+//		}
+//		catch (IncQueryException e)
+//		{
+//			e.printStackTrace();
+//			return null;
+//		}
 		if (patternCacher == null)
 		{
-			patternCacher = new SimplePatternCacher(engine);
+			patternCacher = new SimplePatternCacher(engine, this.navigationHelper);
 		}
 		//System.out.println("Match!");
 		initialize(patternQuery, engine);
@@ -163,16 +164,16 @@ public class LookaheadMatcherInterface
 	 */
 	public Multiset<LookaheadMatching> searchChangesAll(IncQueryEngine engine, PQuery modPattern, ArrayList<AheadStructure> cachedStructures, HashMap<PVariable, Object> knownValues, IConstraintEnumerator consEnum)
 	{
-		try
-		{
-			if (this.navigationHelper == null)
-				this.navigationHelper = engine.getBaseIndex();
-		}
-		catch (IncQueryException e)
-		{
-			e.printStackTrace();
-			return null;
-		}
+//		try
+//		{
+//			if (this.navigationHelper == null)
+//				this.navigationHelper = engine.getBaseIndex();
+//		}
+//		catch (IncQueryException e)
+//		{
+//			e.printStackTrace();
+//			return null;
+//		}
 		initialize(modPattern, engine);
 		
 		Multiset<LookaheadMatching> matches = HashMultiset.create();//new MultiSet<LookaheadMatching>();
@@ -245,7 +246,7 @@ public class LookaheadMatcherInterface
 	{
 		if (patternCacher == null)
 		{
-			patternCacher = new SimplePatternCacher(engine);
+			patternCacher = new SimplePatternCacher(engine, this.navigationHelper);
 		}
 		return (new PatternProcessor(engine, patternCacher)).Process(chosenSpecification);
 	}
@@ -311,7 +312,7 @@ public class LookaheadMatcherInterface
 	{
 		if (patternCacher == null)
 		{
-			patternCacher = new SimplePatternCacher(engine);
+			patternCacher = new SimplePatternCacher(engine, this.navigationHelper);
 		}
 		return processPattern(query, engine, patternCacher);
 	}

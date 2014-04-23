@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
+import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 
@@ -16,10 +17,12 @@ import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 public class SimplePatternCacher implements IPartialPatternCacher {
 
 	private IncQueryEngine engine;
+	private NavigationHelper navigationHelper;
 	
-	public SimplePatternCacher(IncQueryEngine engin)
+	public SimplePatternCacher(IncQueryEngine engin, NavigationHelper navHelp)
 	{
 		this.engine = engin;
+		this.navigationHelper = navHelp;
 	}
 	
 	// private HashMap<PQuery, Multiset<LookaheadMatching>> smallGodSet = new HashMap<PQuery, Multiset<LookaheadMatching>>();
@@ -36,7 +39,7 @@ public class SimplePatternCacher implements IPartialPatternCacher {
 			ArrayList<Object> knownValues = new ArrayList<Object>();
 			for(PVariable var : variablesInOrder)
 				knownValues.add(partialMatchingWithNullsAndEverything.get(var));
-			return (new LookaheadMatcherInterface()).tryMatch(engine, null, resolvingQuery, knownValues, null) ? 1 : 0;
+			return (new LookaheadMatcherInterface(this.navigationHelper)).tryMatch(engine, null, resolvingQuery, knownValues, null) ? 1 : 0;
 		}
 		return Integer.MAX_VALUE - 10; // because mayvalue is the cost default :):):)
 	}
@@ -51,7 +54,7 @@ public class SimplePatternCacher implements IPartialPatternCacher {
 		ArrayList<Object> knownValues = new ArrayList<Object>();
 		for(PVariable var : variablesInOrder)
 			knownValues.add(partialMatchingWithNullsAndEverything.get(var));
-		return (new LookaheadMatcherInterface()).matchAll(engine, null, resolvingQuery, knownValues, null);
+		return (new LookaheadMatcherInterface(this.navigationHelper)).matchAll(engine, null, resolvingQuery, knownValues, null);
 	}
 
 }

@@ -20,6 +20,7 @@ import hu.bme.mit.inf.lookaheadmatcher.impl.LookaheadMatching;
 import hu.bme.mit.inf.lookaheadmatcher.impl.NACConstraint;
 
 import org.eclipse.incquery.runtime.api.IncQueryEngine;
+import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.exception.IncQueryException;
 import org.eclipse.incquery.runtime.matchers.psystem.PQuery;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
@@ -32,6 +33,7 @@ import com.google.common.collect.Multisets;
 public class AdvancedDeltaProcessor
 {
 	private IncQueryEngine engine;
+	private NavigationHelper navHelper;
 	private IPartialPatternCacher treatpartialCacher;
 	
 	private static AdvancedDeltaProcessor instance = null;
@@ -41,10 +43,14 @@ public class AdvancedDeltaProcessor
 			instance = new AdvancedDeltaProcessor();
 		return instance;
 	}
-	
+
 	public void setEngine(IncQueryEngine engineRe)
 	{
 		this.engine = engineRe;
+	}
+	public void setNavHelper(NavigationHelper navhelp)
+	{
+		this.navHelper = navhelp;
 	}
 	public void setPartialCacher(IPartialPatternCacher treatPartial)
 	{
@@ -268,7 +274,7 @@ public class AdvancedDeltaProcessor
 					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						// match with lookahead, search for changes based on delta change
-						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
+						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface(this.navHelper);
 						List<Object> callingPatternMatches = change.getKey().getParameterMatchValuesOnlyAsArray();
 						HashMap<PVariable, Object> callerMatches = new HashMap<PVariable, Object>();
 						List<PVariable> affectedVars = ((FindConstraint)ac).getAffectedVariables();
@@ -315,7 +321,7 @@ public class AdvancedDeltaProcessor
 					for (Entry<LookaheadMatching, Boolean> change : delta.getChangeset().entrySet())
 					{
 						// match with lookahead, search for changes based on delta change
-						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
+						LookaheadMatcherInterface lmi = new LookaheadMatcherInterface(this.navHelper);
 						List<Object> callingPatternMatches = change.getKey().getParameterMatchValuesOnlyAsArray();
 						HashMap<PVariable, Object> callerMatches = new HashMap<PVariable, Object>();
 						List<PVariable> affectedVars = ((NACConstraint)cc).getAffectedVariables();
@@ -406,7 +412,7 @@ public class AdvancedDeltaProcessor
 					// the patEntr.getKey is who calls the delta's pattern!!
 					PQuery caller = patEntr.getKey();
 					// put to mailboxes
-					for (AheadStructure struct : LookaheadMatcherTreat.GodSetStructures.get(caller))
+					try {for (AheadStructure struct : LookaheadMatcherTreat.GodSetStructures.get(caller))
 					{
 						// put simple delta only in find calls
 						for (AxisConstraint ac : struct.SearchedConstraints)
@@ -417,7 +423,7 @@ public class AdvancedDeltaProcessor
 								ret.put(caller, true);
 							}
 						}
-					}
+					} } catch (Exception exc) { System.out.println(caller.toString() + " " + exc.getMessage() + LookaheadMatcherTreat.GodSetStructures.size() + (LookaheadMatcherTreat.GodSetStructures.get(caller) == null ? "null!" : "notnull...") ); }
 				}
 			}
 		}

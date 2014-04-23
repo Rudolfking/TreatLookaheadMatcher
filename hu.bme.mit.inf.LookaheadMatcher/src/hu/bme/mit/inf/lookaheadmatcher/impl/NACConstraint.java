@@ -1,7 +1,6 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
 import hu.bme.mit.inf.lookaheadmatcher.IPartialPatternCacher;
-import hu.bme.mit.inf.lookaheadmatcher.LookaheadMatcherInterface;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,14 +45,14 @@ public class NACConstraint extends CheckableConstraint implements IConstraint
 				affectedVariables, true);
 		if (result != -1)
 			return result == 0; // no matches means good evaluation (NAC)
-		
+		throw new AssertionError("There is no partial cacher!");
 		// use my matcher from scratch (no caching):
-		LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
-		boolean tried = lmi.tryMatch(engineRef, treatPartialCacher, innerNegativeCallConstraint.getReferredQuery(), knownValues, null);
-		System.out.println("My (Lookahead Pattern Matches) NAC call returned: "+Boolean.toString(!tried));
-		if (tried)
-			return false; // can be matched, this is bad
-		return true;
+//		LookaheadMatcherInterface lmi = new LookaheadMatcherInterface();
+//		boolean tried = lmi.tryMatch(engineRef, treatPartialCacher, innerNegativeCallConstraint.getReferredQuery(), knownValues, null);
+//		System.out.println("My (Lookahead Pattern Matches) NAC call returned: "+Boolean.toString(!tried));
+//		if (tried)
+//			return false; // can be matched, this is bad
+//		return true;
 	}
 
 	@Override
