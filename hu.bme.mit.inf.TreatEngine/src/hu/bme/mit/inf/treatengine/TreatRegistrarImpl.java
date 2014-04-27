@@ -18,6 +18,11 @@ public class TreatRegistrarImpl
 		// garbage collector cannot free it (and all the matched pattern caches) and it's static, too
 		private static Map<IncQueryEngine, LookaheadMatcherTreat> TreatIQEngineDrot = null;
 		
+		/**
+		 * Connects a LookaheadMatcher to an engine
+		 * @param engine The IncQueryEngine created
+		 * @param lomatreRef The Treat engine
+		 */
 		public static void Connect(IncQueryEngine engine, LookaheadMatcherTreat lomatreRef)
 		{
 			if (TreatIQEngineDrot == null)
@@ -28,6 +33,11 @@ public class TreatRegistrarImpl
 			lomatreRef.subscribeToIndexer();
 		}
 		
+		/**
+		 * Gets the TreatEngine registered to this IncQuery engine
+		 * @param engine The engine given
+		 * @return Returns the TREAT engine for this IncQuery engine
+		 */
 		public static LookaheadMatcherTreat GetLookaheadMatcherTreat(IncQueryEngine engine)
 		{
 			if (TreatIQEngineDrot == null)
@@ -36,16 +46,33 @@ public class TreatRegistrarImpl
 			}
 			return TreatIQEngineDrot.get(engine);
 		}
-		
+
+		/**
+		 * Removes the TreatEngine registered to this IncQuery engine
+		 * @param engine The engine given
+		 * @return Returns true if something is removed
+		 */
 		public static boolean RemoveLookaheadMatcherTreat(IncQueryEngine engine)
 		{
 			if (TreatIQEngineDrot == null)
 			{ 
 				return false;
 			}
-			return TreatIQEngineDrot.remove(engine) != null;
+			LookaheadMatcherTreat toRemove = TreatIQEngineDrot.remove(engine);
+			boolean ret = toRemove != null;
+			if (toRemove != null)
+			{
+				toRemove.unregisterAll();
+				toRemove.unsubscribeFromIndexer();
+				toRemove.emptyAll();
+			}
+			return ret;
 		}
-		
+
+		/**
+		 * Removes a TreatEngine
+		 * @param treat The TREAT engine to remove
+		 */
 		public static void RemoveLookaheadMatcherTreat(LookaheadMatcherTreat treat)
 		{
 			if (TreatIQEngineDrot == null)
@@ -56,12 +83,23 @@ public class TreatRegistrarImpl
 			for (Entry<IncQueryEngine, LookaheadMatcherTreat> entry : TreatIQEngineDrot.entrySet())
 			{
 				if (entry.getValue().equals(treat))
+				{
+					// clean inner LMT
+					entry.getValue().unregisterAll();
+					entry.getValue().unsubscribeFromIndexer();
+					entry.getValue().emptyAll();
 					engsToRemove.add(entry.getKey());
+				}
 			}
 			for (IncQueryEngine eng : engsToRemove)
+			{
 				TreatIQEngineDrot.remove(eng);
+			}
 		}
 		
+		/**
+		 * Cleans everything: releases all TREAT engines
+		 */
 		public static void Clean()
 		{
 			for (Entry<IncQueryEngine, LookaheadMatcherTreat> entry : TreatIQEngineDrot.entrySet())

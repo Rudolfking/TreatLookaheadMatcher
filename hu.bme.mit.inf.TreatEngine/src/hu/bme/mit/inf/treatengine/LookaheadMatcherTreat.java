@@ -53,7 +53,10 @@ public class LookaheadMatcherTreat
 //	}
 	
 	/**
-	 *  rete engine and navigation helper in constructor
+	 * Creates an empty TREAT engine, based on the IncQuery engine. Creates the NavigationHelper via engine, and
+	 * initializes the inner systems (delta processor, partial indexer etc.). For pattern matching, use the following:
+	 * PowerTreatUp(PQuery query) - initializes the listeners and subscribes to the changes.
+	 * matchThePattern(PQuery query) - matches a pattern: tries to use cache if available.
 	 * @param engineRe RETE incqueryengine
 	 */
 	public LookaheadMatcherTreat(IncQueryEngine engineRe)
@@ -100,11 +103,11 @@ public class LookaheadMatcherTreat
 	
 
 	/**
-	 *  matches a pattern and creates and saves listeners to the pattern's instances/datatypes/structuralfeatures
-	 * @param chosenQuery
+	 * Matches a pattern and creates and saves listeners to the pattern's instances/datatypes/structuralfeatures
+	 * @param chosenQuery The query to register
 	 * @return true if succeeded
 	 */
-	public boolean registerPatternWithMatches(PQuery chosenQuery)
+	private boolean registerPatternWithMatches(PQuery chosenQuery)
 	{
 		// this whole code should run ONCE for each query:
 		if (GodSet.containsKey(chosenQuery))
@@ -126,6 +129,11 @@ public class LookaheadMatcherTreat
 		return true;
 	}
 	
+	/**
+	 * Initializes the TREAT system for the given query (registers the NavigationHelper for the types, subscribes to
+	 * change etc).
+	 * @param query The query to initialize for
+	 */
 	public void PowerTreatUp(PQuery query)
 	{
 		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface(this.navHelp);
@@ -171,6 +179,10 @@ public class LookaheadMatcherTreat
 		navHelp.registerObservedTypes(classes, types, featureds);
 	}
 	
+	/**
+	 * Inner: adds the listeners (subscribes) for a pattern
+	 * @param query The pattern
+	 */
 	private void addListeners(PQuery query)
 	{
 		LookaheadMatcherInterface matcher = new LookaheadMatcherInterface(this.navHelp);
@@ -279,6 +291,9 @@ public class LookaheadMatcherTreat
 //		features.add(eFeatured);
 //	}
 	
+	/**
+	 * Unregisters all listeners from the NavigationHelper
+	 */
 	public void unregisterAll()
 	{
 		HashSet<EDataType> dtps = new HashSet<EDataType>();
@@ -302,8 +317,9 @@ public class LookaheadMatcherTreat
 	
 	
 	/**
-	 * matches a pattern using TREAT caching or creates a new cache if pattern is previously not cached
-	 * @param chosenQuery Match this pattern (query)
+	 * Matches a pattern using TREAT caching or creates a new cache if pattern is previously not cached. Calls
+	 * PowerTreatUp(pattern) for the pattern if needed.
+	 * @param chosenQuery Match this query
 	 * @return The matches from cache or after match
 	 */
 	public Multiset<LookaheadMatching> matchThePattern(PQuery chosenQuery)
@@ -341,16 +357,26 @@ public class LookaheadMatcherTreat
 			FillPatternCallsPatterns(finded);
 		}
 	}
+	
+	/**
+	 * Subscribes to base index listener
+	 */
 	public void subscribeToIndexer() 
 	{
 		this.featureListeners = new MyFeatureListeners(this, this.navHelp);
 		navHelp.addBaseIndexChangeListener(this.featureListeners.baseIndexChangeListener);
 	}
+	/**
+	 * Unsubscribes from base index listener
+	 */
 	public void unsubscribeFromIndexer()
 	{
 		navHelp.removeBaseIndexChangeListener(this.featureListeners.baseIndexChangeListener);
 	}
 	
+	/**
+	 * Clears the whole TREAT cache, and all associated structures, indexes, subscriptions etc.
+	 */
 	public void emptyAll()
 	{
 		// statics to new values
