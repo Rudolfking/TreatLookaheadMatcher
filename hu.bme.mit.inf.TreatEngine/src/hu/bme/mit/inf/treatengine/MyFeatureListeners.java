@@ -72,7 +72,7 @@ public class MyFeatureListeners
 		@Override
 		public void instanceInserted(EClass clazz, EObject instance)
 		{
-			System.out.println("[Instance] inserted!");
+			// System.out.println("[Instance] inserted!");
 			modelChanges.add(new EClassChange(clazz, instance, true));
 			
 			

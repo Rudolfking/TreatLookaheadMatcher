@@ -75,7 +75,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					{
 						if (typeCons.isDatatype())
 						{
-							// this is some stupid object (Integer, Boolean etc.)
+							// this is some stupid object
 							if (mVar.getValue().getClass().equals(typeCons.getType().getClass()))
 							{
 								return 1;
@@ -126,30 +126,44 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			else if (boundSorcO != null && boundTargO == null)
 			{
 				EObject boundSorc = (EObject) boundSorcO;
-				// source bound: get all outgoind structuralfeature size
-				//costs[i] = boundSorc.getAllRelationFromByType((IRelation) conrest.GetType()).size();
-				EList<EStructuralFeature> tempL = boundSorc.eClass().getEAllStructuralFeatures();
-				
+				EList<EStructuralFeature> tempL = null;
+				try
+				{
+					// source bound: get all outgoind structuralfeature size
+					//costs[i] = boundSorc.getAllRelationFromByType((IRelation) conrest.GetType()).size();
+					tempL = boundSorc.eClass().getEAllStructuralFeatures();
+				}
+				catch (NullPointerException ex)
+				{
+					return 0;
+				}
 				int mtch = 0;
 				for (EStructuralFeature esf : tempL)
 				{
-					if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EObject)
+					try
 					{
-						// if an outgoing relation type has one other end, remember the "other end"
-						mtch++;
-					}
-					else if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EList<?>)
-					{
-						// if an outgoing relation type has other ends, remember the "other ends"
-						mtch += ((EList<EObject>) boundSorc.eGet(esf)).size();
-					}
-					else
-					{
-						if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof Object)
+						if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EObject)
 						{
-							// if an outgoing relation ends in some special wtf
+							// if an outgoing relation type has one other end, remember the "other end"
 							mtch++;
 						}
+						else if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EList<?>)
+						{
+							// if an outgoing relation type has other ends, remember the "other ends"
+							mtch += ((EList<EObject>) boundSorc.eGet(esf)).size();
+						}
+						else
+						{
+							if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof Object)
+							{
+								// if an outgoing relation ends in some special wtf
+								mtch++;
+							}
+						}
+					}
+					catch (NullPointerException e)
+					{
+						continue;
 					}
 				}
 				return mtch;
@@ -182,37 +196,51 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 					EObject boundTarg = (EObject) boundTargO;
 					if (!conCons.getEdge().isMany())
 					{
-						if (boundSorc.eGet(conCons.getEdge()) instanceof EObject)
+						try
 						{
-							// is there eobj at the end?
-							if (((EObject) boundSorc.eGet(conCons.getEdge())).equals(boundTarg))
+							if (boundSorc.eGet(conCons.getEdge()) instanceof EObject)
 							{
-								return 1;
+								// is there eobj at the end?
+								if (((EObject) boundSorc.eGet(conCons.getEdge())).equals(boundTarg))
+								{
+									return 1;
+								}
+								else
+								{
+									// the bound source did not lead to the bound target, wrong relation!
+									// throw new AssertionError("Cost might be 0, 'erdekes'");
+									return 0;
+								}
 							}
 							else
 							{
 								// the bound source did not lead to the bound target, wrong relation!
-								// throw new AssertionError("Cost might be 0, 'erdekes'");
+								// this is because not even EObject type is there
 								return 0;
 							}
 						}
-						else
+						catch (NullPointerException ex)
 						{
-							// the bound source did not lead to the bound target, wrong relation!
-							// this is because not even EObject type is there
 							return 0;
 						}
 					}
 					else
 					{
-						// list of target objects along this edge
-						if (((List<Object>) boundSorc.eGet(conCons.getEdge())).contains(boundTarg))
+						try
 						{
-							return 1; // the edge is okay, this is a match with cost 1
+							// list of target objects along this edge
+							if (((List<Object>) boundSorc.eGet(conCons.getEdge())).contains(boundTarg))
+							{
+								return 1; // the edge is okay, this is a match with cost 1
+							}
+							else
+							{
+								return 0; // no edges
+							}
 						}
-						else
+						catch(NullPointerException ex)
 						{
-							return 0; // no edges
+							return 0;
 						}
 					}
 				}
@@ -374,49 +402,65 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			else if (boundSorcO != null && boundTargO == null)
 			{
 				EObject boundSorc = (EObject) boundSorcO;
-				// source bound: get all outgoind structuralfeature size
-				//costs[i] = boundSorc.getAllRelationFromByType((IRelation) conrest.GetType()).size();
-				EList<EStructuralFeature> tempL = boundSorc.eClass().getEAllStructuralFeatures();
+				
+				EList<EStructuralFeature> tempL = null;
+				try
+				{
+					// source bound: get all outgoind structuralfeature size
+					//costs[i] = boundSorc.getAllRelationFromByType((IRelation) conrest.GetType()).size();
+					tempL = boundSorc.eClass().getEAllStructuralFeatures();
+				}
+				catch (NullPointerException ex)
+				{
+					return new ArrayList<Object[]>();
+				}
 				
 				int mtch = 0;
 				ArrayList<Object[]> temp = new ArrayList<Object[]>(); // possible endings
 				for (EStructuralFeature esf : tempL)
 				{
-					if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EObject)
+					try
 					{
-						// if an outgoing relation type has one other end, remember the "other end"
-						mtch++;
-						Object[] inTmp = new Object[2];
-						inTmp[0]=boundSorc;
-						inTmp[1]=(EObject) boundSorc.eGet(esf);
-						temp.add(inTmp);
-					}
-					else if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EList<?>)
-					{
-						// if an outgoing relation type has other ends, remember the "other ends"
-						@SuppressWarnings("unchecked")
-						EList<EObject> listaOf = (EList<EObject>) boundSorc.eGet(esf);
-						for (EObject lot : listaOf)
+						if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EObject)
 						{
-							// there is edge between boundSorc and lot, because EStructuralFeature was multiple-instance: we need all!
+							// if an outgoing relation type has one other end, remember the "other end"
 							mtch++;
 							Object[] inTmp = new Object[2];
 							inTmp[0]=boundSorc;
-							inTmp[1]=lot;
+							inTmp[1]=(EObject) boundSorc.eGet(esf);
 							temp.add(inTmp);
+						}
+						else if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof EList<?>)
+						{
+							// if an outgoing relation type has other ends, remember the "other ends"
+							@SuppressWarnings("unchecked")
+							EList<EObject> listaOf = (EList<EObject>) boundSorc.eGet(esf);
+							for (EObject lot : listaOf)
+							{
+								// there is edge between boundSorc and lot, because EStructuralFeature was multiple-instance: we need all!
+								mtch++;
+								Object[] inTmp = new Object[2];
+								inTmp[0]=boundSorc;
+								inTmp[1]=lot;
+								temp.add(inTmp);
+							}
+						}
+						else
+						{
+							if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof Object)
+							{
+								// if an outgoing relation ends in some special wtf
+								mtch++;
+								Object[] inTmp = new Object[2];
+								inTmp[0]=boundSorc;
+								inTmp[1]=boundSorc.eGet(esf);
+								temp.add(inTmp);
+							}
 						}
 					}
-					else
+					catch(NullPointerException ex)
 					{
-						if (esf.equals(conCons.getEdge()) && boundSorc.eGet(esf) instanceof Object)
-						{
-							// if an outgoing relation ends in some special wtf
-							mtch++;
-							Object[] inTmp = new Object[2];
-							inTmp[0]=boundSorc;
-							inTmp[1]=boundSorc.eGet(esf);
-							temp.add(inTmp);
-						}
+						continue;
 					}
 				}
 				cost = mtch; // items that match from this source
@@ -480,58 +524,70 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 				{
 					// source & target bound
 					EObject boundSorc = (EObject) boundSorcO;
-					EObject boundTarg = (EObject) boundTargO;
-					if (!conCons.getEdge().isMany())
+					if (!(boundSorc instanceof EClass))
 					{
-						if (boundSorc.eGet(conCons.getEdge()) instanceof EObject)
+						cost = 0;
+						returnList = new ArrayList<Object[]>();
+					}
+					EObject boundTarg = (EObject) boundTargO;
+					try
+					{
+						if (!conCons.getEdge().isMany())
 						{
-							// is there eobj at the end?
-							EObject targetOfSource = (EObject) boundSorc.eGet(conCons.getEdge());
-							if (targetOfSource.equals(boundTarg))
+							if (boundSorc.eGet(conCons.getEdge()) instanceof EObject)
 							{
-								cost = 1;
-								ArrayList<Object[]> temp = new ArrayList<Object[]>();
-								temp.add(new Object[2]);
-								temp.get(0)[0]=boundSorc;
-								temp.get(0)[1]=boundTarg;
-								returnList = temp;
+								// is there eobj at the end?
+								EObject targetOfSource = (EObject) boundSorc.eGet(conCons.getEdge());
+								if (targetOfSource.equals(boundTarg))
+								{
+									cost = 1;
+									ArrayList<Object[]> temp = new ArrayList<Object[]>();
+									temp.add(new Object[2]);
+									temp.get(0)[0]=boundSorc;
+									temp.get(0)[1]=boundTarg;
+									returnList = temp;
+								}
+								else
+								{
+									// the bound source did not lead to the bound target, wrong relation!
+									cost = 0;
+									returnList = new ArrayList<Object[]>();
+									System.out.println("Erdekes1");
+								}
 							}
 							else
 							{
 								// the bound source did not lead to the bound target, wrong relation!
+								// this is because not even EObject type is there
 								cost = 0;
 								returnList = new ArrayList<Object[]>();
-								System.out.println("Erdekes1");
+								System.out.println("Erdekes2");
 							}
 						}
 						else
 						{
-							// the bound source did not lead to the bound target, wrong relation!
-							// this is because not even EObject type is there
-							cost = 0;
-							returnList = new ArrayList<Object[]>();
-							System.out.println("Erdekes2");
+							// list of target objects along this edge
+							@SuppressWarnings("unchecked")
+							List<Object> targetObjects = (List<Object>) boundSorc.eGet(conCons.getEdge());
+							if (targetObjects.contains(boundTarg))
+							{
+								ArrayList<Object[]> temp = new ArrayList<Object[]>();
+								temp.add(new Object[2]);
+								temp.get(0)[0]=boundSorc;
+								temp.get(0)[1]=boundTarg;
+								cost = 1; // the edge is okay, this is a match with cost 1
+								returnList = temp;
+							}
+							else
+							{
+								cost = 0; // no edges
+								returnList = new ArrayList<Object[]>();
+							}
 						}
 					}
-					else
+					catch(NullPointerException ex)
 					{
-						// list of target objects along this edge
-						@SuppressWarnings("unchecked")
-						List<Object> targetObjects = (List<Object>) boundSorc.eGet(conCons.getEdge());
-						if (targetObjects.contains(boundTarg))
-						{
-							ArrayList<Object[]> temp = new ArrayList<Object[]>();
-							temp.add(new Object[2]);
-							temp.get(0)[0]=boundSorc;
-							temp.get(0)[1]=boundTarg;
-							cost = 1; // the edge is okay, this is a match with cost 1
-							returnList = temp;
-						}
-						else
-						{
-							cost = 0; // no edges
-							returnList = new ArrayList<Object[]>();
-						}
+						return new ArrayList<Object[]>();
 					}
 				}
 				else
@@ -623,7 +679,7 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 		for (EObject obj : sources)
 		{
 			EObject source = (EObject) obj;
-			Object target = source.eGet(fet);
+			Object target = source.eGet(fet); // must work, because source is holder of fet
 			boolean fetismany_hehe = fet.isMany();
 			if (fetismany_hehe)
 			{

@@ -1,7 +1,7 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
-import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
+import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.incquery.runtime.matchers.psystem.PConstraint;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
 import org.eclipse.incquery.runtime.matchers.psystem.basicenumerables.TypeUnary;
@@ -57,11 +57,12 @@ public class TypeConstraint extends AxisConstraint // implements IConstraint
 		if (inner.getAffectedVariables().size()>1)
 		{
 			// error
-			int h = 0;
-			int d = 5 / h;
+			throw new AssertionError("Unknown affected vars of TypeUnary!");
 		}
 		this.pVariable = (PVariable) inner.getVariablesTuple().get(0);
 		this.type = (EClassifier) inner.getTypeInfo(this.pVariable);
+		if (this.type instanceof EDataType)
+			this.isDatatype = true;
 	}
 
 	@Override
