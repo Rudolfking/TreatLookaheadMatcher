@@ -11,4 +11,5 @@ public abstract class AxisConstraint extends AConstraint
 	{
 		return false;
 	}
+	public abstract int getAffectedVariablesSize();
 }

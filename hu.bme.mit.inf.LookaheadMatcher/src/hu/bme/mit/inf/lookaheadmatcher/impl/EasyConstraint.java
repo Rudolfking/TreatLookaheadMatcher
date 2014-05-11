@@ -48,4 +48,9 @@ public class EasyConstraint extends AxisConstraint // implements IConstraint
 		this.onlyVariable = (PVariable) innerConstantConstraint.getVariablesTuple().get(0);
 		this.knownValue = innerConstantConstraint.getSupplierKey();
 	}
+	@Override
+	public int getAffectedVariablesSize()
+	{
+		return 1;
+	}
 }

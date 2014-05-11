@@ -335,7 +335,7 @@ public class LookaheadMatcherInterface
 				{
 					if (state.MatchingVariables.containsKey(knownOne.getKey()) == false)
 					{
-						System.err.println("Fucking big error, baaad");
+						System.err.println("Big error, baaad");
 					}
 					readyToMatchAlgo.bindToVariable(knownOne.getKey(), knownOne.getValue(), state.MatchingVariables);
 				}

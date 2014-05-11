@@ -15,13 +15,13 @@ import com.google.common.collect.Multiset;
 public class MatcherAlgorithm
 {
 	// the navigationHelper
-	private NavigationHelper navigationHelper;
+	// private NavigationHelper navigationHelper;
 
 	// to enumerate constraint
 	private IConstraintEnumerator constraintEnumerator;
 	
 	// how many matches do we have?
-	private int matchCounter = 0;
+	// private int matchCounter = 0;
 	
 	// write out every small detail?
 	private boolean verbose = false;
@@ -38,7 +38,7 @@ public class MatcherAlgorithm
 	
 	public Multiset<LookaheadMatching> getPatternMatches(AheadStructure patternState, boolean matchOne, NavigationHelper navHelper, ArrayList<Object> knownValues, IConstraintEnumerator consEnumerator)
 	{
-		this.navigationHelper = navHelper;
+		// this.navigationHelper = navHelper;
 		this.matchOne = matchOne;
 		actualPatternDefinition = patternState;
 		if (consEnumerator != null)
@@ -76,12 +76,12 @@ public class MatcherAlgorithm
 		
 		
 		// we should check the current match's eligibility: no mismatched relations and others
-		if (!checkCurrentPattern(FoundConstraints, MatchingVariables))
-		{
-			if (verbose)
-				System.out.println(", that's why the current partial matching is broken!");
-			return;
-		}
+//		if (!checkCurrentPattern(FoundConstraints, MatchingVariables))
+//		{
+//			if (verbose)
+//				System.out.println(", that's why the current partial matching is broken!");
+//			return;
+//		}
 		
 		
 		ArrayList<CheckableConstraint> currenctCheckable = new ArrayList<CheckableConstraint>(checkableConstraints);
@@ -112,7 +112,6 @@ public class MatcherAlgorithm
 		// condition of found patterns
 		if (SearchedConstraints.size() == 0 && currenctCheckable.size() == 0)
 		{
-			matchCounter++;
 			try
 			{
 				//System.out.println("match found!");
@@ -139,9 +138,7 @@ public class MatcherAlgorithm
 			}
 			catch (Exception e)
 			{
-				if (verbose)
-					System.err.println(e.getMessage()); // not all variables are bound (how can it be)
-				matchCounter--; // sorry-sorry-sorry-sorry
+				
 			}
 			if (matchOne == true)
 				oneMatched = true; // match only one, but as quick as we can
@@ -151,8 +148,8 @@ public class MatcherAlgorithm
 		
 		
 		// we should iterate through constraints and get costs
-		if (verbose)
-			System.out.println("New step");
+//		if (verbose)
+//			System.out.println("New step");
 		// create and initialize the array "costs"
 		int[] costs = new int[SearchedConstraints.size()];
 		for (int i = 0; i < costs.length; i++)
@@ -162,27 +159,25 @@ public class MatcherAlgorithm
 		
 		// the objects we can satisfy next
 		// a fix (searchedconstraints) size array of lists (each list is the corresponding constraint's matchable variables)
-		@SuppressWarnings("unchecked")
+		// @SuppressWarnings("unchecked")
 		//List<List<Object>> listOfSatisfieds[] = new (List<List<Object>>) new ArrayList[SearchedConstraints.size()];// CollectConstraintMatchings(SearchedConstraints, MatchingVariables, costs);
 		
 		int posSat = 0;
 		for (AxisConstraint constraint : SearchedConstraints)
 		{
-			// for now costs AND enumerable are collected (should be only costs!) TODO optimization
 			costs[posSat++] = constraintEnumerator.getCost(constraint, MatchingVariables);
-			//listOfSatisfieds[posSat++] = constraintEnumerator.enumerateConstraint(constraint, MatchingVariables);
 		}
 		
 		
 		
 		// we should choose the cheapest and declare as winner
-		if (verbose)
-			System.out.println("Costs for next move:");
-		if (verbose)
-		{
-			for (int i = 0; i < costs.length; i++)
-				System.out.println(costs[i]);
-		}
+//		if (verbose)
+//			System.out.println("Costs for next move:");
+//		if (verbose)
+//		{
+//			for (int i = 0; i < costs.length; i++)
+//				System.out.println(costs[i]);
+//		}
 		int min = Integer.MAX_VALUE;
 		int foundIndex = -1;
 		boolean isNullIn = false;
@@ -198,29 +193,29 @@ public class MatcherAlgorithm
 		}
 		if (isNullIn)
 		{
-			if (verbose)
-				System.out.println("There are some steps with 0 cost, so no use to go further..");
+//			if (verbose)
+//				System.out.println("There are some steps with 0 cost, so no use to go further..");
 			return;
 		}
 		if (foundIndex == -1 || min == Integer.MAX_VALUE) // no cost item
 		{
-			if (verbose)
-				System.out.println("No element in costs found..");
+//			if (verbose)
+//				System.out.println("No element in costs found..");
 			return; // we have simply no axisrestrictions left (patten matched? not? why?)
 		}
 		AxisConstraint winner = SearchedConstraints.get(foundIndex); // this is the found restriction!!
-		if (verbose)
-			System.out.println("The winner:");
-		if (winner instanceof TypeConstraint)
-		{
-			if (verbose)
-				System.out.println("Type:" + ((TypeConstraint) winner).getType().toString());
-		}
-		else if (winner instanceof RelationConstraint)
-		{
-			if (verbose)
-				System.out.println(" Connection:" + ((RelationConstraint) winner).getEdge().getName() + "From:" + ((RelationConstraint) winner).getSource().toString() + "  To:" + ((RelationConstraint) winner).getTarget().toString());
-		}
+//		if (verbose)
+//			System.out.println("The winner:");
+//		if (winner instanceof TypeConstraint)
+//		{
+//			if (verbose)
+//				System.out.println("Type:" + ((TypeConstraint) winner).getType().toString());
+//		}
+//		else if (winner instanceof RelationConstraint)
+//		{
+//			if (verbose)
+//				System.out.println(" Connection:" + ((RelationConstraint) winner).getEdge().getName() + "From:" + ((RelationConstraint) winner).getSource().toString() + "  To:" + ((RelationConstraint) winner).getTarget().toString());
+//		}
 		
 		
 		
@@ -234,7 +229,7 @@ public class MatcherAlgorithm
 		// loop through winner instances
 		if (winner instanceof FindConstraint)
 		{
-			int findedLen = ((FindConstraint) winner).getAffectedVariables().size(); // the item 'length'
+			// int findedLen = ((FindConstraint) winner).getAffectedVariables().size(); // the item 'length'
 			int minmin = winnerList.size(); // the items found
 			for (int i = 0; i < minmin; i++)
 			{
@@ -368,8 +363,8 @@ public class MatcherAlgorithm
 		// we should restore new variables, restore searched and remove found constraints
 		
 		// nothing found (?), so step one level up in the search tree
-		if (verbose)
-			System.out.println("Step up!");
+//		if (verbose)
+//			System.out.println("Step up!");
 		SearchedConstraints.add(winner);
 		FoundConstraints.remove(winner);
 		return;
@@ -437,8 +432,8 @@ public class MatcherAlgorithm
 	}
 	
 	// checks the current pattern if it passes on certain tests (integrity, etc.)
-	private boolean checkCurrentPattern(ArrayList<AxisConstraint> FoundConstraints, HashMap<PVariable, Object> MatchingVariables)
-	{
+//	private boolean checkCurrentPattern(ArrayList<AxisConstraint> FoundConstraints, HashMap<PVariable, Object> MatchingVariables)
+//	{
 		// all connection source-target variables are okay
 		// so a connection's source's (and target's) type suits
 		// with this check, we can restrict a connection without checking its source and target, 
@@ -531,8 +526,8 @@ public class MatcherAlgorithm
 				}
 			}
 		}*/
-		return true;// pattern passed
-	}
+//		return true;// pattern passed
+//	}
 	
 //	// collects ALL the instances from the model using the available constraints
 //	@SuppressWarnings("unchecked")

@@ -78,4 +78,10 @@ public class TypeConstraint extends AxisConstraint // implements IConstraint
 	public void setInnerTypeConstraint(PConstraint innerTypeConstraint) {
 		this.innerTypeConstraint = innerTypeConstraint;
 	}
+
+	@Override
+	public int getAffectedVariablesSize()
+	{
+		return 1;
+	}
 }

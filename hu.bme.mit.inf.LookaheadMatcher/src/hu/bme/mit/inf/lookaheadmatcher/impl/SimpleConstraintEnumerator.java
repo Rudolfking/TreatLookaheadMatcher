@@ -1,10 +1,11 @@
 package hu.bme.mit.inf.lookaheadmatcher.impl;
 
+import hu.bme.mit.inf.lookaheadmatcher.IConstraintEnumerator;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.emf.common.util.EList;
@@ -17,8 +18,6 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.incquery.runtime.base.api.NavigationHelper;
 import org.eclipse.incquery.runtime.matchers.psystem.PVariable;
-
-import hu.bme.mit.inf.lookaheadmatcher.IConstraintEnumerator;
 
 public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 
@@ -65,45 +64,53 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			boolean isFoundAndBad = false;
 			// if it is already bound, select 1 or 0, it (the only one) can be WRONG (if it is wrong, it will be 0)
 			// the way it can be a wrong bind: we bound it as a source/target of a relation, and it fails on the '.isInstanceOf(..)' test
-			for (Map.Entry<PVariable, Object> mVar : matchingVariables.entrySet())
+			if (matchingVariables.get(typeCons.getTypedVariable()) != null)
 			{
-				// if it is already bound
-				if (mVar.getValue() != null)
+				Object valNow = matchingVariables.get(typeCons.getTypedVariable());
+				if (typeCons.isDatatype())
 				{
-					// if this variable equals to the TypeConstraint's variable, which is already bound
-					if (mVar.getKey().getName().equals(typeCons.getTypedVariable().getName()))
+					// this is some stupid object
+					if (valNow.getClass().equals(typeCons.getType().getClass()))
 					{
-						if (typeCons.isDatatype())
-						{
-							// this is some stupid object
-							if (mVar.getValue().getClass().equals(typeCons.getType().getClass()))
-							{
-								return 1;
-							}
-							else
-							{
-								// it is not the searched type but already bound: costs[i] MUST be zero
-								// why? because the restriction is satisfied, the currently investigated variable (mVar.key) is bound, and their value doesn't pass on type test
-								// so they're of a different type and the binding is from wrong type, we have to cut this recursion tree part (vagy mi)
-								isFoundAndBad = true;
-							}
-						}
-						else
-						{
-							if (((EObject) mVar.getValue()).eClass().equals(typeCons.getType()))
-							{
-								// so the (already) matched EObj's metamodel class is equal to type: good
-								return 1;
-							}
-							else isFoundAndBad = true;
-						}
+						cost = 1;
+						return 1;
+					}
+					else
+					{
+						// it is not the searched type but already bound: costs[i] MUST be zero
+						// why? because the restriction is satisfied, the currently investigated variable (mVar.key) is bound, and their value doesn't pass on type test
+						// so they're of a different type and the binding is from wrong type, we have to cut this recursion tree part (vagy mi)
+						isFoundAndBad = true;
 					}
 				}
+				else
+				{
+					if (((EObject)valNow).eClass().equals(typeCons.getType()))
+					{
+						// so the (already) matched EObj's metamodel class is equal to type: good
+						cost = 1;
+						return 1;
+					}
+					else isFoundAndBad = true;
+				}
 			}
+//			for (Map.Entry<PVariable, Object> mVar : matchingVariables.entrySet())
+//			{
+//				// if it is already bound
+//				if (mVar.getValue() != null)
+//				{
+//					// if this variable equals to the TypeConstraint's variable, which is already bound
+//					if (mVar.getKey().getName().equals(typeCons.getTypedVariable().getName()))
+//					{
+//						
+//					}
+//				}
+//			}
 			
 			//if found and bad
 			if (isFoundAndBad)
 			{
+				cost = 0;
 				return 0;
 			}
 			else if (cost != 1) // if the COSTS[melyikszaml] not equals to 1 (see above)
@@ -331,47 +338,49 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			boolean isFoundAndBad = false;
 			// if it is already bound, select 1 or 0, it (the only one) can be WRONG (if it is wrong, it will be 0)
 			// the way it can be a wrong bind: we bound it as a source/target of a relation, and it fails on the '.isInstanceOf(..)' test
-			for (Map.Entry<PVariable, Object> mVar : matchingVariables.entrySet())
+			if (matchingVariables.get(typeCons.getTypedVariable()) != null)
 			{
-				// if it is already bound
-				if (mVar.getValue() != null)
+				Object valNow = matchingVariables.get(typeCons.getTypedVariable());
+				// if this variable equals to the TypeConstraint's variable, which is already bound
+				if (typeCons.isDatatype())
 				{
-					// if this variable equals to the TypeConstraint's variable, which is already bound
-					if (mVar.getKey().getName().equals(typeCons.getTypedVariable().getName()))
+					// this is some stupid object (Integer, Boolean etc.)
+					if (valNow.getClass().equals(typeCons.getType().getClass()))
 					{
-						if (typeCons.isDatatype())
-						{
-							// this is some stupid object (Integer, Boolean etc.)
-							if (mVar.getValue().getClass().equals(typeCons.getType().getClass()))
-							{
-								cost = 1;
-								ArrayList<Object[]> temp = new ArrayList<Object[]>();
-								temp.add(new Object[]{mVar.getValue()});
-								returnList = temp;
-							}
-							else
-							{
-								// it is not the searched type but already bound: costs[i] MUST be zero
-								// why? because the restriction is satisfied, the currently investigated variable (mVar.key) is bound, and their value doesn't pass on type test
-								// so they're of a different type and the binding is from wrong type, we have to cut this recursion tree part (vagy mi)
-								isFoundAndBad = true;
-							}
-						}
-						else
-						{
-							if (((EObject) mVar.getValue()).eClass().equals(typeCons.getType()))
-							{
-								// so the (already) matched EObj's metamodel class is equal to type: good
-								cost = 1;
-								ArrayList<Object[]> temp = new ArrayList<Object[]>();
-								temp.add(new Object[]{mVar.getValue()});
-								returnList = temp;
-							}
-							else isFoundAndBad = true;
-						}
+						cost = 1;
+						ArrayList<Object[]> temp = new ArrayList<Object[]>();
+						temp.add(new Object[]{valNow});
+						returnList = temp;
+					}
+					else
+					{
+						// it is not the searched type but already bound: costs[i] MUST be zero
+						// why? because the restriction is satisfied, the currently investigated variable (mVar.key) is bound, and their value doesn't pass on type test
+						// so they're of a different type and the binding is from wrong type, we have to cut this recursion tree part (vagy mi)
+						isFoundAndBad = true;
 					}
 				}
+				else
+				{
+					if (((EObject) valNow).eClass().equals(typeCons.getType()))
+					{
+						// so the (already) matched EObj's metamodel class is equal to type: good
+						cost = 1;
+						ArrayList<Object[]> temp = new ArrayList<Object[]>();
+						temp.add(new Object[]{valNow});
+						returnList = temp;
+					}
+					else isFoundAndBad = true;
+				}
 			}
+//			for (Map.Entry<PVariable, Object> mVar : matchingVariables.entrySet())
+//			{
+//				// if it is already bound
+//				if (mVar.getValue() != null)
+//				{
+//					
+//				}
+//			}
 			
 			//if found and bad
 			if (isFoundAndBad)
@@ -678,17 +687,17 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 		Collection<EObject> sources = this.navigationHelper.getHoldersOfFeature(fet);
 		for (EObject obj : sources)
 		{
-			EObject source = (EObject) obj;
-			Object target = source.eGet(fet); // must work, because source is holder of fet
+			//EObject source = (EObject) obj;
+			//Object target = source.eGet(fet); // must work, because source is holder of fet
 			boolean fetismany_hehe = fet.isMany();
 			if (fetismany_hehe)
 			{
 				@SuppressWarnings("unchecked")
-				EList<EObject> targets = (EList<EObject>) target;
+				EList<EObject> targets = (EList<EObject>) ((EObject) obj).eGet(fet);
 				for (EObject actTarget : targets)
 				{
 					Object[] objR = new Object[2];
-					objR[0] = source;
+					objR[0] = (EObject) obj;
 					objR[1] = actTarget;
 					ret.add(objR);
 				}
@@ -696,8 +705,8 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 			else
 			{
 				Object[] objR = new Object[2];
-				objR[0] = source;
-				objR[1] = target;
+				objR[0] = (EObject) obj;
+				objR[1] = ((EObject) obj).eGet(fet);
 				ret.add(objR);
 			}
 		}
@@ -723,10 +732,5 @@ public class SimpleConstraintEnumerator implements IConstraintEnumerator {
 //			}
 //		}
 //		return ret;
-	}
-
-	public int ejnyeGetCost()
-	{
-		return this.cost;
 	}
 }

@@ -109,4 +109,10 @@ public class FindConstraint extends AxisConstraint implements IConstraint
 	public void setInnerFindCall(PositivePatternCall innerFindCall) {
 		this.innerFindCall = innerFindCall;
 	}
+
+	@Override
+	public int getAffectedVariablesSize()
+	{
+		return this.affectedVariables.size();
+	}
 }

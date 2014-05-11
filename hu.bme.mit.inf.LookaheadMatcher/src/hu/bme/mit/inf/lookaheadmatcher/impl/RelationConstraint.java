@@ -73,4 +73,9 @@ public class RelationConstraint extends AxisConstraint // implements IConstraint
 	{
 		return this.source.getName()+"->-"+this.edge.getName()+"->-"+this.target.getName();
 	}
+	@Override
+	public int getAffectedVariablesSize()
+	{
+		return 2;
+	}
 }
